@@ -113,21 +113,18 @@ namespace MarineLang.LexicalAnalysis
 
             if (value == '\\')
             {
-                if (stream.MoveNext() == false)
+                var escapeChar = GetEscapeChar(stream);
+                if (escapeChar.HasValue == false)
                 {
                     stream.SetIndex(begin);
                     return null;
                 }
-                var value2 = ToEspaceChar(value.ToString() + stream.Current.c);
-                if (value2.HasValue == false)
-                {
-                    stream.SetIndex(begin);
-                    return null;
-                }
-                value = value2.Value;
+                value = escapeChar.Value;
             }
+            else
+                stream.MoveNext();
 
-            if (stream.MoveNext() == false || stream.Current.c != '\'')
+            if (stream.IsEnd || stream.Current.c != '\'')
             {
                 stream.SetIndex(begin);
                 return null;
@@ -136,6 +133,60 @@ namespace MarineLang.LexicalAnalysis
             stream.MoveNext();
 
             return new Token(TokenType.Char, "'" + value + "'", begin, stream.Index - 1);
+        }
+
+        static public Token GetStringLiteralToken(IndexedCharStream stream)
+        {
+            var indexedChar = stream.Current;
+            var begin = indexedChar.index;
+
+            if (indexedChar.c != '"')
+                return null;
+
+            var value = "";
+            stream.MoveNext();
+
+            while (stream.IsEnd == false && stream.Current.c != '"')
+            {
+                var escapeChar = GetEscapeChar(stream);
+                if (escapeChar.HasValue)
+                    value += escapeChar.Value;
+                else
+                {
+                    value += stream.Current.c;
+                    stream.MoveNext();
+                }
+            }
+
+            if (stream.IsEnd)
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+
+            stream.MoveNext();
+
+            return new Token(TokenType.String, "\"" + value + "\"", begin, stream.Index - 1);
+        }
+
+        static public char? GetEscapeChar(IndexedCharStream stream)
+        {
+            var value = stream.Current.c;
+            if (value != '\\')
+                return null;
+            if (stream.MoveNext() == false)
+            {
+                stream.SetIndex(stream.Index - 1);
+                return null;
+            }
+            var escapeChar = ToEspaceChar(value.ToString() + stream.Current.c);
+            if (escapeChar.HasValue == false)
+            {
+                stream.SetIndex(stream.Index - 1);
+                return null;
+            }
+            stream.MoveNext();
+            return escapeChar.Value;
         }
 
         static public char? ToEspaceChar(string str)
@@ -152,6 +203,8 @@ namespace MarineLang.LexicalAnalysis
                     return '\t';
                 case "\\'":
                     return '\'';
+                case "\\\"":
+                    return '\"';
             }
             return null;
         }

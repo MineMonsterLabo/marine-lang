@@ -12,6 +12,7 @@
         Int,
         Bool,
         Char,
+        String,
         End,
         Return,
         UnKnown,

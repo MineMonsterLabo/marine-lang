@@ -89,9 +89,9 @@ fun fuga() ret 123 end
         [InlineData("fun main() ret 'c' end", 'c')]
         [InlineData("fun main() ret '\\'' end", '\'')]
         [InlineData("fun main() ret '\\\\' end", '\\')]
-        [InlineData("fun main() ret '\n' end", '\n')]
-        [InlineData("fun main() ret '\t' end", '\t')]
-        [InlineData("fun main() ret '\r' end", '\r')]
+        [InlineData("fun main() ret '\\n' end", '\n')]
+        [InlineData("fun main() ret '\\t' end", '\t')]
+        [InlineData("fun main() ret '\\r' end", '\r')]
         [InlineData("fun main() ret 'あ' end", 'あ')]
         public void CallMarineLangFuncRetChar(string str, char c)
         {
@@ -102,6 +102,26 @@ fun fuga() ret 123 end
             var ret = vm.Run<char>("main");
 
             Assert.Equal(c, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret \"hoge\" end", "hoge")]
+        [InlineData("fun main() ret \"\\\"\" end", "\"")]
+        [InlineData("fun main() ret \"\\\\\" end", "\\")]
+        [InlineData("fun main() ret \"\\n\" end", "\n")]
+        [InlineData("fun main() ret \"\\t\" end", "\t")]
+        [InlineData("fun main() ret \"\\r\" end", "\r")]
+        [InlineData("fun main() ret \"あ\" end", "あ")]
+        [InlineData("fun main() ret \"あ\\rhoge\\\"\" end", "あ\rhoge\"")]
+        public void CallMarineLangFuncRetString(string str, string expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<string>("main");
+
+            Assert.Equal(expected, ret);
         }
     }
 }
