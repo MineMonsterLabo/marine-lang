@@ -54,13 +54,13 @@ namespace Example
 
             var parserResult = new Parser().Parse(tokenStream);
 
-            if (parserResult.isError)
+            if (parserResult.IsError)
             {
                 Console.WriteLine("パースエラー");
                 return;
             }
 
-            vm.SetProgram(parserResult.value);
+            vm.SetProgram(parserResult.Value);
         }
 
         static void hello()

@@ -7,7 +7,7 @@ namespace MarineLang.SyntaxAnalysis
 {
     public class Parser
     {
-        public ParseResult<ProgramAst> Parse(TokenStream stream)
+        public IParseResult<ProgramAst> Parse(TokenStream stream)
         {
             stream.MoveNext();
 
@@ -19,7 +19,7 @@ namespace MarineLang.SyntaxAnalysis
                 .Map(ProgramAst.Create);
         }
 
-        ParseResult<FuncDefinitionAst> ParseFuncDefinition(TokenStream stream)
+        IParseResult<FuncDefinitionAst> ParseFuncDefinition(TokenStream stream)
         {
             if (stream.Current.tokenType != TokenType.Func)
                 return ParseResult<FuncDefinitionAst>.Error("");
@@ -31,7 +31,7 @@ namespace MarineLang.SyntaxAnalysis
                 {
                     var paramListResult = ParserCombinator.Try(ParseParamList)(stream);
 
-                    if (paramListResult.isError)
+                    if (paramListResult.IsError)
                         return paramListResult.CastError<FuncDefinitionAst>();
 
                     return
@@ -45,37 +45,37 @@ namespace MarineLang.SyntaxAnalysis
             return ParseResult<FuncDefinitionAst>.Error("");
         }
 
-        ParseResult<StatementAst[]> ParseFuncBody(TokenStream stream)
+        IParseResult<StatementAst[]> ParseFuncBody(TokenStream stream)
         {
             var statementAsts = new List<StatementAst>();
             while (stream.IsEnd == false && stream.Current.tokenType != TokenType.End)
             {
                 var parseResult =
-                    ParserCombinator.Try(ParseExpr)(stream).Cast<StatementAst>()
-                    .ErrorReplace(
-                        () => ParserCombinator.Try(ParseReturn)(stream).Cast<StatementAst>()
-                    );
+                    ParserCombinator.Or<StatementAst>(
+                        ParserCombinator.Try(ParseExpr),
+                        ParserCombinator.Try(ParseReturn)
+                    )(stream);
 
-                if (parseResult.isError)
+                if (parseResult.IsError)
                     return parseResult.CastError<StatementAst[]>();
 
-                statementAsts.Add(parseResult.value);
+                statementAsts.Add(parseResult.Value);
             }
             stream.MoveNext();
 
             return ParseResult<StatementAst[]>.Success(statementAsts.ToArray());
         }
 
-        ParseResult<ExprAst> ParseExpr(TokenStream stream)
+        IParseResult<ExprAst> ParseExpr(TokenStream stream)
         {
             return
-                ParserCombinator.Try(ParseFuncCall)(stream).Cast<ExprAst>()
-                    .ErrorReplace(
-                        () => ParserCombinator.Try(ParseInt)(stream).Cast<ExprAst>()
-                    );
+                ParserCombinator.Or<ExprAst>(
+                    ParserCombinator.Try(ParseFuncCall),
+                    ParserCombinator.Try(ParseInt)
+                )(stream);
         }
 
-        ParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
+        IParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
         {
             if (stream.Current.tokenType != TokenType.Id)
                 return ParseResult<FuncCallAst>.Error("");
@@ -86,14 +86,14 @@ namespace MarineLang.SyntaxAnalysis
             {
                 var paramListResult = ParserCombinator.Try(ParseParamList)(stream);
 
-                if (paramListResult.isError == false)
+                if (paramListResult.IsError == false)
                     return ParseResult<FuncCallAst>.Success(new FuncCallAst { funcName = funcName });
             }
 
             return ParseResult<FuncCallAst>.Error("");
         }
 
-        ParseResult<ReturnAst> ParseReturn(TokenStream stream)
+        IParseResult<ReturnAst> ParseReturn(TokenStream stream)
         {
             if (stream.Current.tokenType != TokenType.Return)
                 return ParseResult<ReturnAst>.Error("");
@@ -106,7 +106,7 @@ namespace MarineLang.SyntaxAnalysis
             return ParseResult<ReturnAst>.Error("");
         }
 
-        ParseResult<ValueAst<int>> ParseInt(TokenStream stream)
+        IParseResult<ValueAst<int>> ParseInt(TokenStream stream)
         {
             if (stream.Current.tokenType != TokenType.Int)
                 return ParseResult<ValueAst<int>>.Error("");
@@ -118,7 +118,7 @@ namespace MarineLang.SyntaxAnalysis
             return ParseResult<ValueAst<int>>.Error("");
         }
 
-        ParseResult<Token[]> ParseParamList(TokenStream stream)
+        IParseResult<Token[]> ParseParamList(TokenStream stream)
         {
             if (stream.Current.tokenType == TokenType.LeftParen)
             {

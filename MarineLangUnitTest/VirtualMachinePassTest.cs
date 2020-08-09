@@ -18,11 +18,11 @@ namespace MarineLangUnitTest
 
             var tokenStream = TokenStream.Create(lexer.GetTokens(str).ToArray());
             var parseResult = parser.Parse(tokenStream);
-            if (parseResult.isError)
+            if (parseResult.IsError)
                 return null;
             var vm = new VirtualMachine();
 
-            vm.SetProgram(parseResult.value);
+            vm.SetProgram(parseResult.Value);
             return vm;
         }
 
