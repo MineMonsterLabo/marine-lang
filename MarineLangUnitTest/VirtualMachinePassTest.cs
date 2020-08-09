@@ -57,7 +57,7 @@ fun foo_bar() hello() end"
 fun main() ret fuga() end
 fun fuga() ret 123 end
 ")]
-        public void CallMarineLangFuncRet(string str)
+        public void CallMarineLangFuncRetInt(string str)
         {
             var vm = VmCreateHelper(str);
 
@@ -70,5 +70,20 @@ fun fuga() ret 123 end
 
             Assert.Equal(123, ret);
         }
+
+        [Theory]
+        [InlineData("fun main() ret false end", false)]
+        [InlineData("fun main() ret true end", true)]
+        public void CallMarineLangFuncRetBool(string str, bool flag)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<bool>("main");
+
+            Assert.Equal(flag, ret);
+        }
+
     }
 }
