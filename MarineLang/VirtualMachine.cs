@@ -1,4 +1,5 @@
-﻿using MarineLang.Models;
+﻿using MarineLang.BuiltInTypes;
+using MarineLang.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -20,9 +21,9 @@ namespace MarineLang
         {
             marineFuncDict = programAst.funcDefinitionAsts.ToDictionary(v => v.funcName);
         }
-        public void Run(string marineFuncName)
+        public RET Run<RET>(string marineFuncName)
         {
-            RunFuncDefinitionAst(marineFuncDict[marineFuncName], marineFuncDict);
+            return (RET)RunFuncDefinitionAst(marineFuncDict[marineFuncName], marineFuncDict);
         }
 
         void RunFuncCallAst(FuncCallAst funcCallAst, Dictionary<string, FuncDefinitionAst> marineFuncDict)
@@ -33,13 +34,16 @@ namespace MarineLang
                 methodInfoDict[funcCallAst.funcName].Invoke(null, new object[] { });
         }
 
-        void RunFuncDefinitionAst(FuncDefinitionAst funcDefinitionAst, Dictionary<string, FuncDefinitionAst> marineFuncDict)
+        object RunFuncDefinitionAst(FuncDefinitionAst funcDefinitionAst, Dictionary<string, FuncDefinitionAst> marineFuncDict)
         {
             foreach (var statementAst in funcDefinitionAst.statementAsts)
             {
                 if (statementAst.GetFuncCallAst() != null)
                     RunFuncCallAst(statementAst.GetFuncCallAst(), marineFuncDict);
+                else if (statementAst.GetReturnAst() != null)
+                    return statementAst.GetReturnAst().value;
             }
+            return new UnitType();
         }
     }
 }

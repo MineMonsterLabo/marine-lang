@@ -53,7 +53,7 @@ namespace MarineLang.SyntaxAnalysis
                 var parseResult =
                     ParserCombinator.Try(ParseFuncCall)(stream).Cast<StatementAst>()
                     .ErrorReplace(
-                        ParserCombinator.Try(ParseReturn)(stream).Cast<StatementAst>()
+                        () => ParserCombinator.Try(ParseReturn)(stream).Cast<StatementAst>()
                     );
 
                 if (parseResult.isError)

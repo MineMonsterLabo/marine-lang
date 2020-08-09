@@ -31,7 +31,7 @@ namespace Example
                 {
                     var marineFuncName = str.Replace("\\c", "");
                     marineFuncName = marineFuncName.Replace(" ", "");
-                    vm.Run(marineFuncName);
+                    vm.Run<object>(marineFuncName);
                 }
                 else
                     SetProgram(str);

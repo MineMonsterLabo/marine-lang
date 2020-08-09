@@ -1,4 +1,5 @@
 ﻿using MarineLang;
+using MarineLang.BuiltInTypes;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
@@ -41,7 +42,25 @@ fun foo_bar() hello() end"
 
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("hello"));
 
-            vm.Run("main");
+            vm.Run<UnitType>("main");
+        }
+
+        [Theory]
+        [InlineData("fun main() ret 123 end")]
+        [InlineData("fun main() ret 123 ret 115 end")]
+        [InlineData("fun main() ret 123 hogehoge() end")]
+        [InlineData("fun main() hello() ret 123 end")]
+        public void CallMarineLangFuncRet(string str)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("hello"));
+
+            var ret = vm.Run<int>("main");
+
+            Assert.Equal(123, ret);
         }
     }
 }

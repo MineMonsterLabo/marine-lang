@@ -29,10 +29,10 @@ namespace MarineLang.SyntaxAnalysis
             return ParseResult<TT>.Success((TT)(object)value);
         }
 
-        public ParseResult<T> ErrorReplace(ParseResult<T> result)
+        public ParseResult<T> ErrorReplace(Func<ParseResult<T>> func)
         {
             if (isError)
-                return result;
+                return func();
             return this;
         }
 
