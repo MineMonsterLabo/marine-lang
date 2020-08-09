@@ -22,9 +22,8 @@ namespace MarineLang
         static public bool ManySkip(IndexedCharStream stream)
         {
             if (Skip(stream) == false)
-            {
                 return false;
-            }
+
             while (stream.IsEnd == false && Skip(stream)) ;
             return true;
         }
@@ -95,7 +94,6 @@ namespace MarineLang
             var end = begin;
             var buf = stream.Current.c.ToString();
 
-
             while (stream.MoveNext())
             {
                 if (ManySkip(stream))
@@ -154,8 +152,6 @@ namespace MarineLang
         {
             return char.IsDigit(c) || IsLowerLetter(c) || c == '_';
         }
-
-
 
         enum TestResult
         {
