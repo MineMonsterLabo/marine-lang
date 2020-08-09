@@ -82,7 +82,7 @@ namespace MarineLang.LexicalAnalysis
              );
         }
 
-        static public Func<IndexedCharStream, Token> GetIntToken()
+        static public Func<IndexedCharStream, Token> GetIntLiteralToken()
         {
             return
                 GetTokenTest(TokenType.Int, (_, c) =>
