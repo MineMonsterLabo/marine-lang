@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace MarineLang
+namespace MarineLang.Streams
 {
     public struct IndexedChar
     {

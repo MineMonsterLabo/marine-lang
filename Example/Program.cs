@@ -3,6 +3,9 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.IO;
+using MarineLang.LexicalAnalysis;
+using MarineLang.SyntaxAnalysis;
+using MarineLang.Streams;
 
 namespace Example
 {

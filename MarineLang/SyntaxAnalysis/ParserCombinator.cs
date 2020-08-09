@@ -1,7 +1,8 @@
-﻿using System;
+﻿using MarineLang.Streams;
+using System;
 using System.Collections.Generic;
 
-namespace MarineLang
+namespace MarineLang.SyntaxAnalysis
 {
     public static class ParserCombinator
     {

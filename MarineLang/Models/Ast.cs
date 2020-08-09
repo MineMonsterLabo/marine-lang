@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace MarineLang
+namespace MarineLang.Models
 {
     public class ProgramAst
     {

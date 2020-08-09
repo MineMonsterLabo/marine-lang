@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MarineLang
+namespace MarineLang.SyntaxAnalysis
 {
     public struct ParseResult<T>
     {

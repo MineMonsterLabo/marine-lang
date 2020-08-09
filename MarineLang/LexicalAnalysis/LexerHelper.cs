@@ -1,6 +1,8 @@
-﻿using System;
+﻿using MarineLang.Models;
+using MarineLang.Streams;
+using System;
 
-namespace MarineLang
+namespace MarineLang.LexicalAnalysis
 {
     public static class LexerHelper
     {

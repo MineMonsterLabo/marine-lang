@@ -1,4 +1,8 @@
 using MarineLang;
+using MarineLang.LexicalAnalysis;
+using MarineLang.Models;
+using MarineLang.Streams;
+using MarineLang.SyntaxAnalysis;
 using System.Linq;
 using Xunit;
 

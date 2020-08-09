@@ -1,4 +1,6 @@
-﻿namespace MarineLang
+﻿using MarineLang.Models;
+
+namespace MarineLang.Streams
 {
     public class TokenStream : Stream<Token>
     {

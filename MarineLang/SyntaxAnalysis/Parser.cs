@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using MarineLang.Models;
+using MarineLang.Streams;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace MarineLang
+namespace MarineLang.SyntaxAnalysis
 {
     public class Parser
     {
