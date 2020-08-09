@@ -90,6 +90,72 @@ namespace MarineLang.LexicalAnalysis
                 );
         }
 
+        static public Token GetCharLiteralToken(IndexedCharStream stream)
+        {
+            var indexedChar = stream.Current;
+            var begin = indexedChar.index;
+
+            if (indexedChar.c != '\'')
+                return null;
+            if (stream.MoveNext() == false)
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+
+            var value = stream.Current.c;
+
+            if (value == '\'')
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+
+            if (value == '\\')
+            {
+                if (stream.MoveNext() == false)
+                {
+                    stream.SetIndex(begin);
+                    return null;
+                }
+                var value2 = ToEspaceChar(value.ToString() + stream.Current.c);
+                if (value2.HasValue == false)
+                {
+                    stream.SetIndex(begin);
+                    return null;
+                }
+                value = value2.Value;
+            }
+
+            if (stream.MoveNext() == false || stream.Current.c != '\'')
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+
+            stream.MoveNext();
+
+            return new Token(TokenType.Char, "'" + value + "'", begin, stream.Index - 1);
+        }
+
+        static public char? ToEspaceChar(string str)
+        {
+            switch (str)
+            {
+                case "\\\\":
+                    return '\\';
+                case "\\r":
+                    return '\r';
+                case "\\n":
+                    return '\n';
+                case "\\t":
+                    return '\t';
+                case "\\'":
+                    return '\'';
+            }
+            return null;
+        }
+
         static public Token GetUnknownToken(IndexedCharStream stream)
         {
             var begin = stream.Current.index;

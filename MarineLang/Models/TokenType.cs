@@ -11,6 +11,7 @@
         Plus,
         Int,
         Bool,
+        Char,
         End,
         Return,
         UnKnown,

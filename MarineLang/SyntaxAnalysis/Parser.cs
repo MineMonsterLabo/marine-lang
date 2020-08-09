@@ -72,7 +72,8 @@ namespace MarineLang.SyntaxAnalysis
                 ParserCombinator.Or<ExprAst>(
                     ParserCombinator.Try(ParseFuncCall),
                     ParserCombinator.Try(ParseInt),
-                    ParserCombinator.Try(ParseBool)
+                    ParserCombinator.Try(ParseBool),
+                    ParserCombinator.Try(ParseChar)
                 )(stream);
         }
 
@@ -129,6 +130,18 @@ namespace MarineLang.SyntaxAnalysis
                 return ParseResult<ValueAst>.Success(ValueAst.Create(value));
             }
             return ParseResult<ValueAst>.Error("");
+        }
+
+        IParseResult<ValueAst> ParseChar(TokenStream stream)
+        {
+            if (stream.Current.tokenType != TokenType.Char)
+                return ParseResult<ValueAst>.Error("");
+            var value = stream.Current.text[1];
+            stream.MoveNext();
+            return
+                ParseResult<ValueAst>.Success(
+                    ValueAst.Create(value)
+                );
         }
 
         IParseResult<Token[]> ParseParamList(TokenStream stream)

@@ -85,5 +85,23 @@ fun fuga() ret 123 end
             Assert.Equal(flag, ret);
         }
 
+        [Theory]
+        [InlineData("fun main() ret 'c' end", 'c')]
+        [InlineData("fun main() ret '\\'' end", '\'')]
+        [InlineData("fun main() ret '\\\\' end", '\\')]
+        [InlineData("fun main() ret '\n' end", '\n')]
+        [InlineData("fun main() ret '\t' end", '\t')]
+        [InlineData("fun main() ret '\r' end", '\r')]
+        [InlineData("fun main() ret 'あ' end", 'あ')]
+        public void CallMarineLangFuncRetChar(string str, char c)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<char>("main");
+
+            Assert.Equal(c, ret);
+        }
     }
 }
