@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MarineLang
+﻿namespace MarineLang
 {
     public class ProgramAst
     {
