@@ -22,14 +22,28 @@ namespace MarineLang.SyntaxAnalysis
             return ParseResult<TT>.Success(func(value));
         }
 
+        public ParseResult<TT> Cast<TT>()
+        {
+            if (isError)
+                return CastError<TT>();
+            return ParseResult<TT>.Success((TT)(object)value);
+        }
+
+        public ParseResult<T> ErrorReplace(ParseResult<T> result)
+        {
+            if (isError)
+                return result;
+            return this;
+        }
+
         public ParseResult<TT> CastError<TT>()
         {
             return ParseResult<TT>.Error(errorMessage);
         }
 
-        public static ParseResult<T> Success(T ast)
+        public static ParseResult<T> Success(T value)
         {
-            return new ParseResult<T>(false, "", ast);
+            return new ParseResult<T>(false, "", value);
         }
 
         public static ParseResult<T> Error(string errorMessage)

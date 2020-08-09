@@ -35,8 +35,11 @@ namespace MarineLang
 
         void RunFuncDefinitionAst(FuncDefinitionAst funcDefinitionAst, Dictionary<string, FuncDefinitionAst> marineFuncDict)
         {
-            foreach (var funcCallAst in funcDefinitionAst.statementAsts)
-                RunFuncCallAst(funcCallAst, marineFuncDict);
+            foreach (var statementAst in funcDefinitionAst.statementAsts)
+            {
+                if (statementAst.GetFuncCallAst() != null)
+                    RunFuncCallAst(statementAst.GetFuncCallAst(), marineFuncDict);
+            }
         }
     }
 }

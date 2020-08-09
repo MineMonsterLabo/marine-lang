@@ -12,6 +12,7 @@
         Int,
         Bool,
         End,
+        Return,
         UnKnown,
     }
 }
