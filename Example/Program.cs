@@ -31,7 +31,7 @@ namespace Example
                 {
                     var marineFuncName = str.Replace("\\c", "");
                     marineFuncName = marineFuncName.Replace(" ", "");
-                    vm.Run(marineFuncName);
+                    vm.Run<object>(marineFuncName);
                 }
                 else
                     SetProgram(str);
@@ -54,13 +54,13 @@ namespace Example
 
             var parserResult = new Parser().Parse(tokenStream);
 
-            if (parserResult.isError)
+            if (parserResult.IsError)
             {
                 Console.WriteLine("パースエラー");
                 return;
             }
 
-            vm.SetProgram(parserResult.value);
+            vm.SetProgram(parserResult.Value);
         }
 
         static void hello()

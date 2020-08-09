@@ -7,7 +7,7 @@ namespace MarineLang.SyntaxAnalysis
 {
     public class Parser
     {
-        public ParseResult<ProgramAst> Parse(TokenStream stream)
+        public IParseResult<ProgramAst> Parse(TokenStream stream)
         {
             stream.MoveNext();
 
@@ -19,7 +19,7 @@ namespace MarineLang.SyntaxAnalysis
                 .Map(ProgramAst.Create);
         }
 
-        ParseResult<FuncDefinitionAst> ParseFuncDefinition(TokenStream stream)
+        IParseResult<FuncDefinitionAst> ParseFuncDefinition(TokenStream stream)
         {
             if (stream.Current.tokenType != TokenType.Func)
                 return ParseResult<FuncDefinitionAst>.Error("");
@@ -31,13 +31,13 @@ namespace MarineLang.SyntaxAnalysis
                 {
                     var paramListResult = ParserCombinator.Try(ParseParamList)(stream);
 
-                    if (paramListResult.isError)
+                    if (paramListResult.IsError)
                         return paramListResult.CastError<FuncDefinitionAst>();
 
                     return
                         ParserCombinator.Try(ParseFuncBody)(stream)
-                        .Map(funcCallAstList =>
-                             FuncDefinitionAst.Create(funcName, funcCallAstList)
+                        .Map(statementAsts =>
+                             FuncDefinitionAst.Create(funcName, statementAsts)
                         );
                 }
             }
@@ -45,24 +45,37 @@ namespace MarineLang.SyntaxAnalysis
             return ParseResult<FuncDefinitionAst>.Error("");
         }
 
-        ParseResult<FuncCallAst[]> ParseFuncBody(TokenStream stream)
+        IParseResult<StatementAst[]> ParseFuncBody(TokenStream stream)
         {
-            var funcCallAstList = new List<FuncCallAst>();
+            var statementAsts = new List<StatementAst>();
             while (stream.IsEnd == false && stream.Current.tokenType != TokenType.End)
             {
-                var parseResult = ParserCombinator.Try(ParseFuncCall)(stream);
+                var parseResult =
+                    ParserCombinator.Or<StatementAst>(
+                        ParserCombinator.Try(ParseExpr),
+                        ParserCombinator.Try(ParseReturn)
+                    )(stream);
 
-                if (parseResult.isError)
-                    return parseResult.CastError<FuncCallAst[]>();
+                if (parseResult.IsError)
+                    return parseResult.CastError<StatementAst[]>();
 
-                funcCallAstList.Add(parseResult.value);
+                statementAsts.Add(parseResult.Value);
             }
             stream.MoveNext();
 
-            return ParseResult<FuncCallAst[]>.Success(funcCallAstList.ToArray());
+            return ParseResult<StatementAst[]>.Success(statementAsts.ToArray());
         }
 
-        ParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
+        IParseResult<ExprAst> ParseExpr(TokenStream stream)
+        {
+            return
+                ParserCombinator.Or<ExprAst>(
+                    ParserCombinator.Try(ParseFuncCall),
+                    ParserCombinator.Try(ParseInt)
+                )(stream);
+        }
+
+        IParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
         {
             if (stream.Current.tokenType != TokenType.Id)
                 return ParseResult<FuncCallAst>.Error("");
@@ -73,14 +86,39 @@ namespace MarineLang.SyntaxAnalysis
             {
                 var paramListResult = ParserCombinator.Try(ParseParamList)(stream);
 
-                if (paramListResult.isError == false)
+                if (paramListResult.IsError == false)
                     return ParseResult<FuncCallAst>.Success(new FuncCallAst { funcName = funcName });
             }
 
             return ParseResult<FuncCallAst>.Error("");
         }
 
-        ParseResult<Token[]> ParseParamList(TokenStream stream)
+        IParseResult<ReturnAst> ParseReturn(TokenStream stream)
+        {
+            if (stream.Current.tokenType != TokenType.Return)
+                return ParseResult<ReturnAst>.Error("");
+
+            if (stream.MoveNext())
+                return
+                    ParseExpr(stream)
+                    .Map(ReturnAst.Create);
+
+            return ParseResult<ReturnAst>.Error("");
+        }
+
+        IParseResult<ValueAst<int>> ParseInt(TokenStream stream)
+        {
+            if (stream.Current.tokenType != TokenType.Int)
+                return ParseResult<ValueAst<int>>.Error("");
+            if (int.TryParse(stream.Current.text, out int value))
+            {
+                stream.MoveNext();
+                return ParseResult<ValueAst<int>>.Success(ValueAst<int>.Create(value));
+            }
+            return ParseResult<ValueAst<int>>.Error("");
+        }
+
+        IParseResult<Token[]> ParseParamList(TokenStream stream)
         {
             if (stream.Current.tokenType == TokenType.LeftParen)
             {

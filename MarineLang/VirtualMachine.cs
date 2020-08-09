@@ -1,4 +1,5 @@
-﻿using MarineLang.Models;
+﻿using MarineLang.BuiltInTypes;
+using MarineLang.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -20,23 +21,38 @@ namespace MarineLang
         {
             marineFuncDict = programAst.funcDefinitionAsts.ToDictionary(v => v.funcName);
         }
-        public void Run(string marineFuncName)
+        public RET Run<RET>(string marineFuncName)
         {
-            RunFuncDefinitionAst(marineFuncDict[marineFuncName], marineFuncDict);
+            return (RET)RunFuncDefinitionAst(marineFuncDict[marineFuncName]);
         }
 
-        void RunFuncCallAst(FuncCallAst funcCallAst, Dictionary<string, FuncDefinitionAst> marineFuncDict)
+        object RunFuncCallAst(FuncCallAst funcCallAst)
         {
             if (marineFuncDict.ContainsKey(funcCallAst.funcName))
-                RunFuncDefinitionAst(marineFuncDict[funcCallAst.funcName], marineFuncDict);
+                return RunFuncDefinitionAst(marineFuncDict[funcCallAst.funcName]);
             else
-                methodInfoDict[funcCallAst.funcName].Invoke(null, new object[] { });
+                return methodInfoDict[funcCallAst.funcName].Invoke(null, new object[] { });
         }
 
-        void RunFuncDefinitionAst(FuncDefinitionAst funcDefinitionAst, Dictionary<string, FuncDefinitionAst> marineFuncDict)
+        object RunFuncDefinitionAst(FuncDefinitionAst funcDefinitionAst)
         {
-            foreach (var funcCallAst in funcDefinitionAst.statementAsts)
-                RunFuncCallAst(funcCallAst, marineFuncDict);
+            foreach (var statementAst in funcDefinitionAst.statementAsts)
+            {
+                if (statementAst.GetExprAst() != null)
+                    RunExpr(statementAst.GetExprAst());
+                else if (statementAst.GetReturnAst() != null)
+                    return RunExpr(statementAst.GetReturnAst().expr);
+            }
+            return new UnitType();
+        }
+
+        object RunExpr(ExprAst exprAst)
+        {
+            if (exprAst.GetFuncCallAst() != null)
+                return RunFuncCallAst(exprAst.GetFuncCallAst());
+            else if (exprAst.GetValueAst<int>() != null)
+                return exprAst.GetValueAst<int>().value;
+            return null;
         }
     }
 }

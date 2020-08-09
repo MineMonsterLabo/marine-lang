@@ -2,37 +2,48 @@
 
 namespace MarineLang.SyntaxAnalysis
 {
-    public struct ParseResult<T>
+
+    public interface IParseResult<out T>
     {
-        public readonly bool isError;
-        public readonly string errorMessage;
-        public readonly T value;
+        bool IsError { get; }
+        string ErrorMessage { get; }
+        T Value { get; }
+
+        IParseResult<TT> Map<TT>(Func<T, TT> func);
+
+        IParseResult<TT> CastError<TT>();
+    }
+    public struct ParseResult<T> : IParseResult<T>
+    {
+        public bool IsError { get; }
+        public string ErrorMessage { get; }
+        public T Value { get; }
 
         public ParseResult(bool isError, string errorMessage, T value)
         {
-            this.isError = isError;
-            this.errorMessage = errorMessage;
-            this.value = value;
+            IsError = isError;
+            ErrorMessage = errorMessage;
+            Value = value;
         }
 
-        public ParseResult<TT> Map<TT>(Func<T, TT> func)
+        public IParseResult<TT> Map<TT>(Func<T, TT> func)
         {
-            if (isError)
-                return ParseResult<TT>.Error(errorMessage);
-            return ParseResult<TT>.Success(func(value));
+            if (IsError)
+                return ParseResult<TT>.Error(ErrorMessage);
+            return ParseResult<TT>.Success(func(Value));
         }
 
-        public ParseResult<TT> CastError<TT>()
+        public IParseResult<TT> CastError<TT>()
         {
-            return ParseResult<TT>.Error(errorMessage);
+            return ParseResult<TT>.Error(ErrorMessage);
         }
 
-        public static ParseResult<T> Success(T ast)
+        public static IParseResult<T> Success(T value)
         {
-            return new ParseResult<T>(false, "", ast);
+            return new ParseResult<T>(false, "", value);
         }
 
-        public static ParseResult<T> Error(string errorMessage)
+        public static IParseResult<T> Error(string errorMessage)
         {
             return new ParseResult<T>(true, errorMessage, default);
         }
