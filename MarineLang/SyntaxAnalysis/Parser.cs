@@ -51,21 +51,28 @@ namespace MarineLang.SyntaxAnalysis
             while (stream.IsEnd == false && stream.Current.tokenType != TokenType.End)
             {
                 var parseResult =
-                    ParserCombinator.Try(ParseFuncCall)(stream).Cast<StatementAst>()
+                    ParserCombinator.Try(ParseExpr)(stream).Cast<StatementAst>()
                     .ErrorReplace(
                         () => ParserCombinator.Try(ParseReturn)(stream).Cast<StatementAst>()
                     );
 
                 if (parseResult.isError)
-                {
                     return parseResult.CastError<StatementAst[]>();
-                }
 
                 statementAsts.Add(parseResult.value);
             }
             stream.MoveNext();
 
             return ParseResult<StatementAst[]>.Success(statementAsts.ToArray());
+        }
+
+        ParseResult<ExprAst> ParseExpr(TokenStream stream)
+        {
+            return
+                ParserCombinator.Try(ParseFuncCall)(stream).Cast<ExprAst>()
+                    .ErrorReplace(
+                        () => ParserCombinator.Try(ParseInt)(stream).Cast<ExprAst>()
+                    );
         }
 
         ParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
@@ -93,22 +100,22 @@ namespace MarineLang.SyntaxAnalysis
 
             if (stream.MoveNext())
                 return
-                    ParseInt(stream)
-                    .Map(value => new ReturnAst { value = value });
+                    ParseExpr(stream)
+                    .Map(ReturnAst.Create);
 
             return ParseResult<ReturnAst>.Error("");
         }
 
-        ParseResult<int> ParseInt(TokenStream stream)
+        ParseResult<ValueAst<int>> ParseInt(TokenStream stream)
         {
             if (stream.Current.tokenType != TokenType.Int)
-                return ParseResult<int>.Error("");
+                return ParseResult<ValueAst<int>>.Error("");
             if (int.TryParse(stream.Current.text, out int value))
             {
                 stream.MoveNext();
-                return ParseResult<int>.Success(value);
+                return ParseResult<ValueAst<int>>.Success(ValueAst<int>.Create(value));
             }
-            return ParseResult<int>.Error("");
+            return ParseResult<ValueAst<int>>.Error("");
         }
 
         ParseResult<Token[]> ParseParamList(TokenStream stream)

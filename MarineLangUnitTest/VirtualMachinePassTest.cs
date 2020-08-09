@@ -27,6 +27,8 @@ namespace MarineLangUnitTest
         }
 
         public static void hello() { }
+        public static int ret_123() { return 123; }
+
 
         [Theory]
         [InlineData("fun main() hello() end")]
@@ -50,12 +52,18 @@ fun foo_bar() hello() end"
         [InlineData("fun main() ret 123 ret 115 end")]
         [InlineData("fun main() ret 123 hogehoge() end")]
         [InlineData("fun main() hello() ret 123 end")]
+        [InlineData("fun main() ret ret_123() end")]
+        [InlineData(@"
+fun main() ret fuga() end
+fun fuga() ret 123 end
+")]
         public void CallMarineLangFuncRet(string str)
         {
             var vm = VmCreateHelper(str);
 
             Assert.NotNull(vm);
 
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("ret_123"));
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("hello"));
 
             var ret = vm.Run<int>("main");

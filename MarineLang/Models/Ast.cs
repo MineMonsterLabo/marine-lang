@@ -23,11 +23,34 @@ namespace MarineLang.Models
         }
     }
 
-    public abstract class StatementAst
+    public class ExprAst : StatementAst
     {
         public FuncCallAst GetFuncCallAst()
         {
             return this as FuncCallAst;
+        }
+
+        public ValueAst<V> GetValueAst<V>()
+        {
+            return this as ValueAst<V>;
+        }
+    }
+
+    public class ValueAst<V> : ExprAst
+    {
+        public V value;
+
+        public static ValueAst<V> Create(V value)
+        {
+            return new ValueAst<V> { value = value };
+        }
+    }
+
+    public abstract class StatementAst
+    {
+        public ExprAst GetExprAst()
+        {
+            return this as ExprAst;
         }
 
         public ReturnAst GetReturnAst()
@@ -36,13 +59,18 @@ namespace MarineLang.Models
         }
     }
 
-    public class FuncCallAst : StatementAst
+    public class FuncCallAst : ExprAst
     {
         public string funcName;
     }
 
     public class ReturnAst : StatementAst
     {
-        public int value;
+        public ExprAst expr;
+
+        public static ReturnAst Create(ExprAst expr)
+        {
+            return new ReturnAst { expr = expr };
+        }
     }
 }

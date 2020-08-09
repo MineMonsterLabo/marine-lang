@@ -71,7 +71,10 @@ namespace MarineLangUnitTest
             var funcDefinitionAst = result.value.funcDefinitionAsts[0];
             Assert.Equal("hoge_fuga", funcDefinitionAst.funcName);
             Assert.Single(funcDefinitionAst.statementAsts);
-            Assert.Equal("f", funcDefinitionAst.statementAsts[0].GetFuncCallAst().funcName);
+            Assert.Equal(
+                "f",
+                funcDefinitionAst.statementAsts[0].GetExprAst().GetFuncCallAst().funcName
+            );
         }
 
         [Theory]
@@ -87,7 +90,12 @@ namespace MarineLangUnitTest
             var funcDefinitionAst = result.value.funcDefinitionAsts[0];
             Assert.Equal("func", funcDefinitionAst.funcName);
             Assert.Single(funcDefinitionAst.statementAsts);
-            Assert.Equal(111, funcDefinitionAst.statementAsts[0].GetReturnAst().value);
+            Assert.Equal(
+                111,
+                funcDefinitionAst.statementAsts[0]
+                .GetReturnAst().expr
+                .GetValueAst<int>().value
+            );
         }
     }
 }
