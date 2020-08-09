@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarineLang", "MarineLang\Ma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Example\Example.csproj", "{ADF7F10F-F253-4628-B1CC-549FA4BA1FA7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarineLangUnitTest", "MarineLangUnitTest\MarineLangUnitTest.csproj", "{7B738B83-A76D-4DA2-82CA-3E8A1F9680AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{ADF7F10F-F253-4628-B1CC-549FA4BA1FA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADF7F10F-F253-4628-B1CC-549FA4BA1FA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADF7F10F-F253-4628-B1CC-549FA4BA1FA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B738B83-A76D-4DA2-82CA-3E8A1F9680AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B738B83-A76D-4DA2-82CA-3E8A1F9680AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B738B83-A76D-4DA2-82CA-3E8A1F9680AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B738B83-A76D-4DA2-82CA-3E8A1F9680AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
