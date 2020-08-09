@@ -13,6 +13,7 @@
         Bool,
         Char,
         String,
+        Float,
         End,
         Return,
         UnKnown,

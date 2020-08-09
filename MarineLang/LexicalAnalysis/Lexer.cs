@@ -25,6 +25,7 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetStringTokenTailSkip("true", TokenType.Bool, stream) ??
                     LexerHelper.GetStringTokenTailSkip("false", TokenType.Bool, stream) ??
                     LexerHelper.GetStringTokenTailSkip("ret", TokenType.Return, stream) ??
+                    LexerHelper.GetFloatLiteralToken(stream) ??
                     LexerHelper.GetIntLiteralToken()(stream) ??
                     LexerHelper.GetCharLiteralToken(stream) ??
                     LexerHelper.GetStringLiteralToken(stream) ??

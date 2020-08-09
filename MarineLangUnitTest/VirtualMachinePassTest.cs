@@ -16,7 +16,8 @@ namespace MarineLangUnitTest
             var lexer = new Lexer();
             var parser = new Parser();
 
-            var tokenStream = TokenStream.Create(lexer.GetTokens(str).ToArray());
+            var tokens = lexer.GetTokens(str).ToArray();
+            var tokenStream = TokenStream.Create(tokens);
             var parseResult = parser.Parse(tokenStream);
             if (parseResult.IsError)
                 return null;
@@ -120,6 +121,21 @@ fun fuga() ret 123 end
             Assert.NotNull(vm);
 
             var ret = vm.Run<string>("main");
+
+            Assert.Equal(expected, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret 1.2 end", 1.2f)]
+        [InlineData("fun main() ret 5.0 end", 5.0f)]
+        [InlineData("fun main() ret 3.3333214 end", 3.3333214f)]
+        public void CallMarineLangFuncRetFloat(string str, float expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<float>("main");
 
             Assert.Equal(expected, ret);
         }

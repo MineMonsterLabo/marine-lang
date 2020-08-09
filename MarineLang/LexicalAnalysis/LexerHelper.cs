@@ -1,6 +1,7 @@
 ﻿using MarineLang.Models;
 using MarineLang.Streams;
 using System;
+using System.Security.Cryptography;
 
 namespace MarineLang.LexicalAnalysis
 {
@@ -207,6 +208,40 @@ namespace MarineLang.LexicalAnalysis
                     return '\"';
             }
             return null;
+        }
+
+        static public Token GetFloatLiteralToken(IndexedCharStream stream)
+        {
+            var begin = stream.Index;
+            var buf = "";
+
+            var head = GetIntLiteralToken()(stream)?.text;
+            if (head == null)
+                return null;
+
+            buf += head;
+
+            if (
+                stream.IsEnd ||
+                stream.Current.c != '.' ||
+                stream.MoveNext() == false
+            )
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+            buf += '.';
+
+            var tail = GetIntLiteralToken()(stream)?.text;
+            if (tail == null)
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+            buf += tail;
+
+            return new Token(TokenType.Float, buf, begin, stream.Index - 1);
+
         }
 
         static public Token GetUnknownToken(IndexedCharStream stream)

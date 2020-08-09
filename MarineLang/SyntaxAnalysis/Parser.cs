@@ -71,6 +71,7 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParserCombinator.Or<ExprAst>(
                     ParserCombinator.Try(ParseFuncCall),
+                    ParserCombinator.Try(ParseFloat),
                     ParserCombinator.Try(ParseInt),
                     ParserCombinator.Try(ParseBool),
                     ParserCombinator.Try(ParseChar),
@@ -114,6 +115,18 @@ namespace MarineLang.SyntaxAnalysis
             if (stream.Current.tokenType != TokenType.Int)
                 return ParseResult<ValueAst>.Error("");
             if (int.TryParse(stream.Current.text, out int value))
+            {
+                stream.MoveNext();
+                return ParseResult<ValueAst>.Success(ValueAst.Create(value));
+            }
+            return ParseResult<ValueAst>.Error("");
+        }
+
+        IParseResult<ValueAst> ParseFloat(TokenStream stream)
+        {
+            if (stream.Current.tokenType != TokenType.Float)
+                return ParseResult<ValueAst>.Error("");
+            if (float.TryParse(stream.Current.text, out float value))
             {
                 stream.MoveNext();
                 return ParseResult<ValueAst>.Success(ValueAst.Create(value));
