@@ -91,7 +91,13 @@ namespace MarineLang.SyntaxAnalysis
                 var paramListResult = ParserCombinator.Try(ParseParamList)(stream);
 
                 if (paramListResult.IsError == false)
-                    return ParseResult<FuncCallAst>.Success(new FuncCallAst { funcName = funcName });
+                    return ParseResult<FuncCallAst>.Success(
+                        new FuncCallAst
+                        {
+                            funcName = funcName,
+                            args = paramListResult.Value
+                        }
+                    );
             }
 
             return ParseResult<FuncCallAst>.Error("");
@@ -171,17 +177,37 @@ namespace MarineLang.SyntaxAnalysis
                 );
         }
 
-        IParseResult<Token[]> ParseParamList(TokenStream stream)
+        IParseResult<ExprAst[]> ParseParamList(TokenStream stream)
         {
-            if (stream.Current.tokenType == TokenType.LeftParen)
+            if (ParseToken(stream, TokenType.LeftParen).IsError == false)
             {
-                if (stream.MoveNext() && stream.Current.tokenType == TokenType.RightParen)
+                var list = new List<ExprAst>();
+                var isFirst = true;
+                while (stream.IsEnd == false)
                 {
-                    stream.MoveNext();
-                    return ParseResult<Token[]>.Success(new Token[] { });
+                    if (ParseToken(stream, TokenType.RightParen).IsError == false)
+                        return ParseResult<ExprAst[]>.Success(list.ToArray());
+                    if (isFirst == false && ParseToken(stream, TokenType.Comma).IsError)
+                        break;
+                    isFirst = false;
+                    var exprResult = ParseExpr(stream);
+                    if (exprResult.IsError)
+                        break;
+                    list.Add(exprResult.Value);
                 }
             }
-            return ParseResult<Token[]>.Error("");
+            return ParseResult<ExprAst[]>.Error("");
+        }
+
+        IParseResult<Token> ParseToken(TokenStream stream, TokenType tokenType)
+        {
+            if (stream.Current.tokenType == tokenType)
+            {
+                var token = stream.Current;
+                stream.MoveNext();
+                return ParseResult<Token>.Success(token);
+            }
+            return ParseResult<Token>.Error("");
         }
     }
 }

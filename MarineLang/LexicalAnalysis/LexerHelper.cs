@@ -1,12 +1,19 @@
 ﻿using MarineLang.Models;
 using MarineLang.Streams;
 using System;
-using System.Security.Cryptography;
 
 namespace MarineLang.LexicalAnalysis
 {
     public static class LexerHelper
     {
+        static public bool Delimiter(IndexedCharStream stream)
+        {
+            if (Skip(stream))
+                return true;
+            if (char.IsLetterOrDigit(stream.Current.c) == false && stream.Current.c != '_')
+                return true;
+            return false;
+        }
         static public bool Skip(IndexedCharStream stream)
         {
             if (
@@ -56,13 +63,13 @@ namespace MarineLang.LexicalAnalysis
              );
         }
 
-        static public Token GetStringTokenTailSkip(string str, TokenType tokenType, IndexedCharStream stream)
+        static public Token GetStringTokenTailDelimiter(string str, TokenType tokenType, IndexedCharStream stream)
         {
             var backUpIndex = stream.Index;
             var token = GetStringToken(str, tokenType)(stream);
             if (token == null)
                 return null;
-            if (stream.IsEnd == true || Skip(stream))
+            if (stream.IsEnd == true || Delimiter(stream))
                 return token;
 
             stream.SetIndex(backUpIndex);

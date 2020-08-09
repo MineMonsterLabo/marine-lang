@@ -62,6 +62,7 @@ namespace MarineLang.Models
     public class FuncCallAst : ExprAst
     {
         public string funcName;
+        public ExprAst[] args;
     }
 
     public class ReturnAst : StatementAst

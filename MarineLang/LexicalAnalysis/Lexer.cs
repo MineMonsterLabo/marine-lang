@@ -20,11 +20,11 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetStringToken("||", TokenType.Op)(stream) ??
                     LexerHelper.GetStringToken("==", TokenType.Op)(stream) ??
                     LexerHelper.GetStringToken("!=", TokenType.Op)(stream) ??
-                    LexerHelper.GetStringTokenTailSkip("fun", TokenType.Func, stream) ??
-                    LexerHelper.GetStringTokenTailSkip("end", TokenType.End, stream) ??
-                    LexerHelper.GetStringTokenTailSkip("true", TokenType.Bool, stream) ??
-                    LexerHelper.GetStringTokenTailSkip("false", TokenType.Bool, stream) ??
-                    LexerHelper.GetStringTokenTailSkip("ret", TokenType.Return, stream) ??
+                    LexerHelper.GetStringTokenTailDelimiter("fun", TokenType.Func, stream) ??
+                    LexerHelper.GetStringTokenTailDelimiter("end", TokenType.End, stream) ??
+                    LexerHelper.GetStringTokenTailDelimiter("true", TokenType.Bool, stream) ??
+                    LexerHelper.GetStringTokenTailDelimiter("false", TokenType.Bool, stream) ??
+                    LexerHelper.GetStringTokenTailDelimiter("ret", TokenType.Return, stream) ??
                     LexerHelper.GetFloatLiteralToken(stream) ??
                     LexerHelper.GetIntLiteralToken()(stream) ??
                     LexerHelper.GetCharLiteralToken(stream) ??

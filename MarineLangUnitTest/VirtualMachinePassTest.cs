@@ -24,12 +24,20 @@ namespace MarineLangUnitTest
             var vm = new VirtualMachine();
 
             vm.SetProgram(parseResult.Value);
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("ret_123"));
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("hello"));
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("plus"));
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("two"));
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("not"));
+
             return vm;
         }
 
         public static void hello() { }
         public static int ret_123() { return 123; }
-
+        public static int plus(int a, int b) { return a + b; }
+        public static int two(int a) { return a * 2; }
+        public static bool not(bool a) { return !a; }
 
         [Theory]
         [InlineData("fun main() hello() end")]
@@ -42,8 +50,6 @@ fun foo_bar() hello() end"
             var vm = VmCreateHelper(str);
 
             Assert.NotNull(vm);
-
-            vm.Register(typeof(VirtualMachinePassTest).GetMethod("hello"));
 
             vm.Run<UnitType>("main");
         }
@@ -63,9 +69,6 @@ fun fuga() ret 123 end
             var vm = VmCreateHelper(str);
 
             Assert.NotNull(vm);
-
-            vm.Register(typeof(VirtualMachinePassTest).GetMethod("ret_123"));
-            vm.Register(typeof(VirtualMachinePassTest).GetMethod("hello"));
 
             var ret = vm.Run<int>("main");
 
@@ -136,6 +139,34 @@ fun fuga() ret 123 end
             Assert.NotNull(vm);
 
             var ret = vm.Run<float>("main");
+
+            Assert.Equal(expected, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret plus(3,2) end", 5)]
+        [InlineData("fun main() ret two(3) end", 6)]
+        [InlineData("fun main() ret plus(1,two(two(3))) end", 13)]
+        public void CallCsharpFuncWithArgs(string str, float expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<int>("main");
+
+            Assert.Equal(expected, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret not(not(false)) end", false)]
+        public void CallCsharpFuncWithArgs2(string str, bool expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<bool>("main");
 
             Assert.Equal(expected, ret);
         }
