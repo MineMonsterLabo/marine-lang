@@ -16,7 +16,9 @@ namespace Example
         static void Main(string[] args)
         {
             vm = new VirtualMachine();
-            vm.Register(typeof(Program).GetMethod("hello", BindingFlags.Static | BindingFlags.NonPublic));
+            vm.Register(typeof(Program).GetMethod("print", BindingFlags.Static | BindingFlags.NonPublic));
+            vm.Register(typeof(Program).GetMethod("plus", BindingFlags.Static | BindingFlags.NonPublic));
+            vm.Register(typeof(Program).GetMethod("to_string", BindingFlags.Static | BindingFlags.NonPublic));
 
             while (true)
             {
@@ -63,9 +65,19 @@ namespace Example
             vm.SetProgram(parserResult.Value);
         }
 
-        static void hello()
+        static void print(string str)
         {
-            Console.WriteLine("hello world");
+            Console.WriteLine(str);
+        }
+
+        static int plus(int a, int b)
+        {
+            return a + b;
+        }
+
+        static string to_string(int a)
+        {
+            return a.ToString();
         }
     }
 }
