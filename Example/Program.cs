@@ -3,6 +3,9 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.IO;
+using MarineLang.LexicalAnalysis;
+using MarineLang.SyntaxAnalysis;
+using MarineLang.Streams;
 
 namespace Example
 {
@@ -57,7 +60,7 @@ namespace Example
                 return;
             }
 
-            vm.SetProgram(parserResult.ast);
+            vm.SetProgram(parserResult.value);
         }
 
         static void hello()

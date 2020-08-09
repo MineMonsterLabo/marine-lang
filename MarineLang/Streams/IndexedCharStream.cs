@@ -1,12 +1,13 @@
 ﻿using System.Linq;
 
-namespace MarineLang
+namespace MarineLang.Streams
 {
     public struct IndexedChar
     {
         public int index;
         public char c;
     }
+
     public class IndexedCharStream : Stream<IndexedChar>
     {
         public static IndexedCharStream Create(string str)

@@ -1,4 +1,7 @@
 ﻿using MarineLang;
+using MarineLang.LexicalAnalysis;
+using MarineLang.Streams;
+using MarineLang.SyntaxAnalysis;
 using System.Linq;
 using Xunit;
 
@@ -18,7 +21,7 @@ namespace MarineLangUnitTest
                 return null;
             var vm = new VirtualMachine();
 
-            vm.SetProgram(parseResult.ast);
+            vm.SetProgram(parseResult.value);
             return vm;
         }
 

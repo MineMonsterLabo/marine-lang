@@ -1,4 +1,4 @@
-﻿namespace MarineLang
+﻿namespace MarineLang.Models
 {
     public class Token
     {

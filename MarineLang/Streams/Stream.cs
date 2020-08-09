@@ -1,4 +1,4 @@
-﻿namespace MarineLang
+﻿namespace MarineLang.Streams
 {
     public class Stream<T>
     {
