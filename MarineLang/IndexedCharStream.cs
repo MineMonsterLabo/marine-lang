@@ -7,6 +7,7 @@ namespace MarineLang
         public int index;
         public char c;
     }
+
     public class IndexedCharStream : Stream<IndexedChar>
     {
         public static IndexedCharStream Create(string str)
