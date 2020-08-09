@@ -27,6 +27,8 @@ namespace MarineLangUnitTest
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("ret_123"));
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("hello"));
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("plus"));
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("two"));
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("not"));
 
             return vm;
         }
@@ -34,6 +36,8 @@ namespace MarineLangUnitTest
         public static void hello() { }
         public static int ret_123() { return 123; }
         public static int plus(int a, int b) { return a + b; }
+        public static int two(int a) { return a * 2; }
+        public static bool not(bool a) { return !a; }
 
         [Theory]
         [InlineData("fun main() hello() end")]
@@ -141,6 +145,8 @@ fun fuga() ret 123 end
 
         [Theory]
         [InlineData("fun main() ret plus(3,2) end", 5)]
+        [InlineData("fun main() ret two(3) end", 6)]
+        [InlineData("fun main() ret plus(1,two(two(3))) end", 13)]
         public void CallCsharpFuncWithArgs(string str, float expected)
         {
             var vm = VmCreateHelper(str);
@@ -148,6 +154,19 @@ fun fuga() ret 123 end
             Assert.NotNull(vm);
 
             var ret = vm.Run<int>("main");
+
+            Assert.Equal(expected, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret not(not(false)) end", false)]
+        public void CallCsharpFuncWithArgs2(string str, bool expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<bool>("main");
 
             Assert.Equal(expected, ret);
         }
