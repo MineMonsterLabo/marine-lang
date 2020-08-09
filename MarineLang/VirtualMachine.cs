@@ -31,7 +31,9 @@ namespace MarineLang
             if (marineFuncDict.ContainsKey(funcCallAst.funcName))
                 return RunFuncDefinitionAst(marineFuncDict[funcCallAst.funcName]);
             else
-                return methodInfoDict[funcCallAst.funcName].Invoke(null, new object[] { });
+                return
+                    methodInfoDict[funcCallAst.funcName]
+                    .Invoke(null, funcCallAst.args.Select(expr => RunExpr(expr)).ToArray());
         }
 
         object RunFuncDefinitionAst(FuncDefinitionAst funcDefinitionAst)
