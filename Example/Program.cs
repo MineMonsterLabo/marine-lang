@@ -57,7 +57,7 @@ namespace Example
                 return;
             }
 
-            vm.SetProgram(parserResult.ast);
+            vm.SetProgram(parserResult.value);
         }
 
         static void hello()

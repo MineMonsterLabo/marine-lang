@@ -18,7 +18,7 @@ namespace MarineLangUnitTest
                 return null;
             var vm = new VirtualMachine();
 
-            vm.SetProgram(parseResult.ast);
+            vm.SetProgram(parseResult.value);
             return vm;
         }
 

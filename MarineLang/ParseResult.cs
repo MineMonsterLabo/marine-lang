@@ -1,26 +1,40 @@
-﻿namespace MarineLang
+﻿using System;
+
+namespace MarineLang
 {
-    public struct ParseResult<AST>
+    public struct ParseResult<T>
     {
         public readonly bool isError;
         public readonly string errorMessage;
-        public readonly AST ast;
+        public readonly T value;
 
-        public ParseResult(bool isError, string errorMessage, AST ast)
+        public ParseResult(bool isError, string errorMessage, T value)
         {
             this.isError = isError;
             this.errorMessage = errorMessage;
-            this.ast = ast;
+            this.value = value;
         }
 
-        public static ParseResult<AST> Success(AST ast)
+        public ParseResult<TT> Map<TT>(Func<T, TT> func)
         {
-            return new ParseResult<AST>(false, "", ast);
+            if (isError)
+                return ParseResult<TT>.Error(errorMessage);
+            return ParseResult<TT>.Success(func(value));
         }
 
-        public static ParseResult<AST> Error(string errorMessage)
+        public ParseResult<TT> CastError<TT>()
         {
-            return new ParseResult<AST>(true, errorMessage, default);
+            return ParseResult<TT>.Error(errorMessage);
+        }
+
+        public static ParseResult<T> Success(T ast)
+        {
+            return new ParseResult<T>(false, "", ast);
+        }
+
+        public static ParseResult<T> Error(string errorMessage)
+        {
+            return new ParseResult<T>(true, errorMessage, default);
         }
     }
 }

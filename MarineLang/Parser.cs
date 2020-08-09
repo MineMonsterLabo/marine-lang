@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace MarineLang
 {
@@ -7,60 +8,56 @@ namespace MarineLang
         public ParseResult<ProgramAst> Parse(TokenStream stream)
         {
             stream.MoveNext();
-            var funcDefinitionAstList = new List<FuncDefinitionAst>();
-            while (stream.IsEnd == false)
-            {
-                var parseResult = ParseFuncDefinition(stream);
-                if (parseResult.isError)
-                {
-                    return ParseResult<ProgramAst>.Error("");
-                }
-                funcDefinitionAstList.Add(parseResult.ast);
-            }
 
-            return ParseResult<ProgramAst>.Success(
-                new ProgramAst { funcDefinitionAsts = funcDefinitionAstList.ToArray() }
-            );
+            return
+                ParserCombinator.Many(
+                    ParserCombinator.Try(ParseFuncDefinition)
+                )(stream)
+                .Map(Enumerable.ToArray)
+                .Map(ProgramAst.Create);
         }
 
         ParseResult<FuncDefinitionAst> ParseFuncDefinition(TokenStream stream)
         {
             if (stream.Current.tokenType != TokenType.Func)
                 return ParseResult<FuncDefinitionAst>.Error("");
-            var backUpIndex = stream.Index;
 
             if (stream.MoveNext() && stream.Current.tokenType == TokenType.Id)
             {
                 var funcName = stream.Current.text;
                 if (stream.MoveNext())
                 {
-                    var paramListResult = ParseParamList(stream);
+                    var paramListResult = ParserCombinator.Try(ParseParamList)(stream);
 
                     if (paramListResult.isError)
-                        return ParseResult<FuncDefinitionAst>.Error("");
+                        return paramListResult.CastError<FuncDefinitionAst>();
 
-                    var funcCallAstList = new List<FuncCallAst>();
-                    while (stream.IsEnd == false && stream.Current.tokenType != TokenType.End)
-                    {
-
-                        var parseResult = ParseFuncCall(stream);
-                        if (parseResult.isError)
-                        {
-                            stream.SetIndex(backUpIndex);
-                            return ParseResult<FuncDefinitionAst>.Error("");
-                        }
-                        funcCallAstList.Add(parseResult.ast);
-                    }
-                    stream.MoveNext();
-
-                    return ParseResult<FuncDefinitionAst>.Success(
-                        new FuncDefinitionAst { funcName = funcName, statementAsts = funcCallAstList.ToArray() }
-                    );
+                    return
+                        ParserCombinator.Try(ParseFuncBody)(stream)
+                        .Map(funcCallAstList =>
+                             FuncDefinitionAst.Create(funcName, funcCallAstList)
+                        );
                 }
             }
 
-            stream.SetIndex(backUpIndex);
             return ParseResult<FuncDefinitionAst>.Error("");
+        }
+
+        ParseResult<FuncCallAst[]> ParseFuncBody(TokenStream stream)
+        {
+            var funcCallAstList = new List<FuncCallAst>();
+            while (stream.IsEnd == false && stream.Current.tokenType != TokenType.End)
+            {
+                var parseResult = ParserCombinator.Try(ParseFuncCall)(stream);
+
+                if (parseResult.isError)
+                    return parseResult.CastError<FuncCallAst[]>();
+
+                funcCallAstList.Add(parseResult.value);
+            }
+            stream.MoveNext();
+
+            return ParseResult<FuncCallAst[]>.Success(funcCallAstList.ToArray());
         }
 
         ParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
@@ -70,24 +67,19 @@ namespace MarineLang
 
             var funcName = stream.Current.text;
 
-            var backUpIndex = stream.Index;
-
             if (stream.MoveNext())
             {
-                var paramListResult = ParseParamList(stream);
+                var paramListResult = ParserCombinator.Try(ParseParamList)(stream);
 
                 if (paramListResult.isError == false)
                     return ParseResult<FuncCallAst>.Success(new FuncCallAst { funcName = funcName });
             }
 
-            stream.SetIndex(backUpIndex);
             return ParseResult<FuncCallAst>.Error("");
         }
 
         ParseResult<Token[]> ParseParamList(TokenStream stream)
         {
-            var backUpIndex = stream.Index;
-
             if (stream.Current.tokenType == TokenType.LeftParen)
             {
                 if (stream.MoveNext() && stream.Current.tokenType == TokenType.RightParen)
@@ -96,7 +88,6 @@ namespace MarineLang
                     return ParseResult<Token[]>.Success(new Token[] { });
                 }
             }
-            stream.SetIndex(backUpIndex);
             return ParseResult<Token[]>.Error("");
         }
     }
