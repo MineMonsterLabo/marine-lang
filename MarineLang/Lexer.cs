@@ -49,16 +49,14 @@ namespace MarineLang
 
         bool Skip(IndexedCharStream stream)
         {
-            if (stream.Current.c == ' ' || stream.Current.c == '\n')
+            if (
+                stream.Current.c == ' ' ||
+                stream.Current.c == '\n' ||
+                stream.Current.c == '\r' ||
+                stream.Current.c == '\t'
+                )
             {
                 stream.MoveNext();
-                return true;
-            }
-            if (stream.Current.c == '\r')
-            {
-                stream.MoveNext();
-                if (stream.IsEnd == false && stream.Current.c == '\n')
-                    stream.MoveNext();
                 return true;
             }
             return false;
