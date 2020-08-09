@@ -30,19 +30,19 @@ namespace MarineLang.Models
             return this as FuncCallAst;
         }
 
-        public ValueAst<V> GetValueAst<V>()
+        public ValueAst GetValueAst<V>()
         {
-            return this as ValueAst<V>;
+            return this as ValueAst;
         }
     }
 
-    public class ValueAst<V> : ExprAst
+    public class ValueAst : ExprAst
     {
-        public V value;
+        public object value;
 
-        public static ValueAst<V> Create(V value)
+        public static ValueAst Create(object value)
         {
-            return new ValueAst<V> { value = value };
+            return new ValueAst { value = value };
         }
     }
 

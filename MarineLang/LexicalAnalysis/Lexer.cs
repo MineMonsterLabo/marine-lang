@@ -1,6 +1,5 @@
 ﻿using MarineLang.Models;
 using MarineLang.Streams;
-using System;
 using System.Collections.Generic;
 
 namespace MarineLang.LexicalAnalysis
@@ -26,7 +25,10 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetStringTokenTailSkip("true", TokenType.Bool, stream) ??
                     LexerHelper.GetStringTokenTailSkip("false", TokenType.Bool, stream) ??
                     LexerHelper.GetStringTokenTailSkip("ret", TokenType.Return, stream) ??
-                    LexerHelper.GetIntToken()(stream) ??
+                    LexerHelper.GetFloatLiteralToken(stream) ??
+                    LexerHelper.GetIntLiteralToken()(stream) ??
+                    LexerHelper.GetCharLiteralToken(stream) ??
+                    LexerHelper.GetStringLiteralToken(stream) ??
                     LexerHelper.GetCharToken(stream, '(', TokenType.LeftParen) ??
                     LexerHelper.GetCharToken(stream, ')', TokenType.RightParen) ??
                     LexerHelper.GetCharToken(stream, '.', TokenType.Op) ??

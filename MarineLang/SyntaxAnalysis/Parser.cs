@@ -71,7 +71,11 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParserCombinator.Or<ExprAst>(
                     ParserCombinator.Try(ParseFuncCall),
-                    ParserCombinator.Try(ParseInt)
+                    ParserCombinator.Try(ParseFloat),
+                    ParserCombinator.Try(ParseInt),
+                    ParserCombinator.Try(ParseBool),
+                    ParserCombinator.Try(ParseChar),
+                    ParserCombinator.Try(ParseString)
                 )(stream);
         }
 
@@ -106,16 +110,65 @@ namespace MarineLang.SyntaxAnalysis
             return ParseResult<ReturnAst>.Error("");
         }
 
-        IParseResult<ValueAst<int>> ParseInt(TokenStream stream)
+        IParseResult<ValueAst> ParseInt(TokenStream stream)
         {
             if (stream.Current.tokenType != TokenType.Int)
-                return ParseResult<ValueAst<int>>.Error("");
+                return ParseResult<ValueAst>.Error("");
             if (int.TryParse(stream.Current.text, out int value))
             {
                 stream.MoveNext();
-                return ParseResult<ValueAst<int>>.Success(ValueAst<int>.Create(value));
+                return ParseResult<ValueAst>.Success(ValueAst.Create(value));
             }
-            return ParseResult<ValueAst<int>>.Error("");
+            return ParseResult<ValueAst>.Error("");
+        }
+
+        IParseResult<ValueAst> ParseFloat(TokenStream stream)
+        {
+            if (stream.Current.tokenType != TokenType.Float)
+                return ParseResult<ValueAst>.Error("");
+            if (float.TryParse(stream.Current.text, out float value))
+            {
+                stream.MoveNext();
+                return ParseResult<ValueAst>.Success(ValueAst.Create(value));
+            }
+            return ParseResult<ValueAst>.Error("");
+        }
+
+        IParseResult<ValueAst> ParseBool(TokenStream stream)
+        {
+            if (stream.Current.tokenType != TokenType.Bool)
+                return ParseResult<ValueAst>.Error("");
+            if (bool.TryParse(stream.Current.text, out bool value))
+            {
+                stream.MoveNext();
+                return ParseResult<ValueAst>.Success(ValueAst.Create(value));
+            }
+            return ParseResult<ValueAst>.Error("");
+        }
+
+        IParseResult<ValueAst> ParseChar(TokenStream stream)
+        {
+            if (stream.Current.tokenType != TokenType.Char)
+                return ParseResult<ValueAst>.Error("");
+            var value = stream.Current.text[1];
+            stream.MoveNext();
+            return
+                ParseResult<ValueAst>.Success(
+                    ValueAst.Create(value)
+                );
+        }
+
+        IParseResult<ValueAst> ParseString(TokenStream stream)
+        {
+            if (stream.Current.tokenType != TokenType.String)
+                return ParseResult<ValueAst>.Error("");
+            var text = stream.Current.text;
+            var value = text.Length == 2 ? "" : text.Substring(1, text.Length - 2);
+            stream.MoveNext();
+            return
+                ParseResult<ValueAst>.Success(
+                    ValueAst.Create(value)
+                );
         }
 
         IParseResult<Token[]> ParseParamList(TokenStream stream)

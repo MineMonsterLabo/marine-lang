@@ -1,6 +1,7 @@
 ﻿using MarineLang.Models;
 using MarineLang.Streams;
 using System;
+using System.Security.Cryptography;
 
 namespace MarineLang.LexicalAnalysis
 {
@@ -82,12 +83,165 @@ namespace MarineLang.LexicalAnalysis
              );
         }
 
-        static public Func<IndexedCharStream, Token> GetIntToken()
+        static public Func<IndexedCharStream, Token> GetIntLiteralToken()
         {
             return
                 GetTokenTest(TokenType.Int, (_, c) =>
                    char.IsDigit(c) ? TestResult.Pass : TestResult.End
                 );
+        }
+
+        static public Token GetCharLiteralToken(IndexedCharStream stream)
+        {
+            var indexedChar = stream.Current;
+            var begin = indexedChar.index;
+
+            if (indexedChar.c != '\'')
+                return null;
+            if (stream.MoveNext() == false)
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+
+            var value = stream.Current.c;
+
+            if (value == '\'')
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+
+            if (value == '\\')
+            {
+                var escapeChar = GetEscapeChar(stream);
+                if (escapeChar.HasValue == false)
+                {
+                    stream.SetIndex(begin);
+                    return null;
+                }
+                value = escapeChar.Value;
+            }
+            else
+                stream.MoveNext();
+
+            if (stream.IsEnd || stream.Current.c != '\'')
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+
+            stream.MoveNext();
+
+            return new Token(TokenType.Char, "'" + value + "'", begin, stream.Index - 1);
+        }
+
+        static public Token GetStringLiteralToken(IndexedCharStream stream)
+        {
+            var indexedChar = stream.Current;
+            var begin = indexedChar.index;
+
+            if (indexedChar.c != '"')
+                return null;
+
+            var value = "";
+            stream.MoveNext();
+
+            while (stream.IsEnd == false && stream.Current.c != '"')
+            {
+                var escapeChar = GetEscapeChar(stream);
+                if (escapeChar.HasValue)
+                    value += escapeChar.Value;
+                else
+                {
+                    value += stream.Current.c;
+                    stream.MoveNext();
+                }
+            }
+
+            if (stream.IsEnd)
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+
+            stream.MoveNext();
+
+            return new Token(TokenType.String, "\"" + value + "\"", begin, stream.Index - 1);
+        }
+
+        static public char? GetEscapeChar(IndexedCharStream stream)
+        {
+            var value = stream.Current.c;
+            if (value != '\\')
+                return null;
+            if (stream.MoveNext() == false)
+            {
+                stream.SetIndex(stream.Index - 1);
+                return null;
+            }
+            var escapeChar = ToEspaceChar(value.ToString() + stream.Current.c);
+            if (escapeChar.HasValue == false)
+            {
+                stream.SetIndex(stream.Index - 1);
+                return null;
+            }
+            stream.MoveNext();
+            return escapeChar.Value;
+        }
+
+        static public char? ToEspaceChar(string str)
+        {
+            switch (str)
+            {
+                case "\\\\":
+                    return '\\';
+                case "\\r":
+                    return '\r';
+                case "\\n":
+                    return '\n';
+                case "\\t":
+                    return '\t';
+                case "\\'":
+                    return '\'';
+                case "\\\"":
+                    return '\"';
+            }
+            return null;
+        }
+
+        static public Token GetFloatLiteralToken(IndexedCharStream stream)
+        {
+            var begin = stream.Index;
+            var buf = "";
+
+            var head = GetIntLiteralToken()(stream)?.text;
+            if (head == null)
+                return null;
+
+            buf += head;
+
+            if (
+                stream.IsEnd ||
+                stream.Current.c != '.' ||
+                stream.MoveNext() == false
+            )
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+            buf += '.';
+
+            var tail = GetIntLiteralToken()(stream)?.text;
+            if (tail == null)
+            {
+                stream.SetIndex(begin);
+                return null;
+            }
+            buf += tail;
+
+            return new Token(TokenType.Float, buf, begin, stream.Index - 1);
+
         }
 
         static public Token GetUnknownToken(IndexedCharStream stream)

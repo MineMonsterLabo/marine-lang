@@ -16,7 +16,8 @@ namespace MarineLangUnitTest
             var lexer = new Lexer();
             var parser = new Parser();
 
-            var tokenStream = TokenStream.Create(lexer.GetTokens(str).ToArray());
+            var tokens = lexer.GetTokens(str).ToArray();
+            var tokenStream = TokenStream.Create(tokens);
             var parseResult = parser.Parse(tokenStream);
             if (parseResult.IsError)
                 return null;
@@ -57,7 +58,7 @@ fun foo_bar() hello() end"
 fun main() ret fuga() end
 fun fuga() ret 123 end
 ")]
-        public void CallMarineLangFuncRet(string str)
+        public void CallMarineLangFuncRetInt(string str)
         {
             var vm = VmCreateHelper(str);
 
@@ -69,6 +70,74 @@ fun fuga() ret 123 end
             var ret = vm.Run<int>("main");
 
             Assert.Equal(123, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret false end", false)]
+        [InlineData("fun main() ret true end", true)]
+        public void CallMarineLangFuncRetBool(string str, bool flag)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<bool>("main");
+
+            Assert.Equal(flag, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret 'c' end", 'c')]
+        [InlineData("fun main() ret '\\'' end", '\'')]
+        [InlineData("fun main() ret '\\\\' end", '\\')]
+        [InlineData("fun main() ret '\\n' end", '\n')]
+        [InlineData("fun main() ret '\\t' end", '\t')]
+        [InlineData("fun main() ret '\\r' end", '\r')]
+        [InlineData("fun main() ret 'あ' end", 'あ')]
+        public void CallMarineLangFuncRetChar(string str, char c)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<char>("main");
+
+            Assert.Equal(c, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret \"hoge\" end", "hoge")]
+        [InlineData("fun main() ret \"\\\"\" end", "\"")]
+        [InlineData("fun main() ret \"\\\\\" end", "\\")]
+        [InlineData("fun main() ret \"\\n\" end", "\n")]
+        [InlineData("fun main() ret \"\\t\" end", "\t")]
+        [InlineData("fun main() ret \"\\r\" end", "\r")]
+        [InlineData("fun main() ret \"あ\" end", "あ")]
+        [InlineData("fun main() ret \"あ\\rhoge\\\"\" end", "あ\rhoge\"")]
+        public void CallMarineLangFuncRetString(string str, string expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<string>("main");
+
+            Assert.Equal(expected, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret 1.2 end", 1.2f)]
+        [InlineData("fun main() ret 5.0 end", 5.0f)]
+        [InlineData("fun main() ret 3.3333214 end", 3.3333214f)]
+        public void CallMarineLangFuncRetFloat(string str, float expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<float>("main");
+
+            Assert.Equal(expected, ret);
         }
     }
 }
