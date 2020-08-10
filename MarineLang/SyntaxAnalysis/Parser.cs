@@ -26,7 +26,8 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParseToken(TokenType.Func)
                 .InCompleteError(new Error($"関数定義が間違っています \"{stream.Current.text}\"", position))
-                .Right(ParseToken(TokenType.Id)).InCompleteError(new Error($"関数定義に関数名がありません ", position))
+                .Right(ParseToken(TokenType.Id))
+                .InCompleteError(new Error($"関数定義に関数名がありません ", position))
                 .Bind(funcNameToken =>
                      ParserCombinator.Try(ParseVariableList)
                         .Bind(varList =>
@@ -34,7 +35,8 @@ namespace MarineLang.SyntaxAnalysis
                             .MapResult(statementAsts => FuncDefinitionAst.Create(funcNameToken.text, varList, statementAsts))
                         )
 
-                 ).Left(ParseToken(TokenType.End)).InCompleteError(new Error($"関数定義にendがありません ", position))
+                 ).Left(ParseToken(TokenType.End))
+                 .InCompleteError(new Error($"関数定義にendがありません ", position))
                 (stream);
         }
 
@@ -106,18 +108,11 @@ namespace MarineLang.SyntaxAnalysis
 
         IParseResult<ReAssignmentAst> ParseReAssignment(TokenStream stream)
         {
-            var varNameResult =
-                ParseToken(TokenType.Id)
-                .Left(ParseToken(TokenType.AssignmentOp))
-                (stream);
-
-            if (varNameResult.IsError || stream.IsEnd)
-                return ParseResult<ReAssignmentAst>.CreateError(new Error());
-
-            return ParseExpr()(stream)
-                .Map(expr =>
-                    ReAssignmentAst.Create(varNameResult.Value.text, expr)
-                );
+            return
+               ParseToken(TokenType.Id)
+               .Left(ParseToken(TokenType.AssignmentOp))
+               .Bind(varNameToken => ParseExpr().MapResult(expr => ReAssignmentAst.Create(varNameToken.text, expr)))
+               (stream);
         }
 
         IParseResult<ValueAst> ParseInt(TokenStream stream)
@@ -143,11 +138,8 @@ namespace MarineLang.SyntaxAnalysis
         IParseResult<ValueAst> ParseBool(TokenStream stream)
         {
             return ParseToken(TokenType.Bool)
-                .BindResult(token =>
-                    (bool.TryParse(token.text, out bool value)) ?
-                        ParseResult<ValueAst>.CreateSuccess(ValueAst.Create(value)) :
-                        ParseResult<ValueAst>.CreateError(new Error())
-                )(stream);
+                .MapResult(token => ValueAst.Create(bool.Parse(token.text)))
+                (stream);
         }
 
         IParseResult<ValueAst> ParseChar(TokenStream stream)
@@ -194,16 +186,7 @@ namespace MarineLang.SyntaxAnalysis
 
         Func<TokenStream, IParseResult<Token>> ParseToken(TokenType tokenType)
         {
-            return stream =>
-            {
-                if (stream.Current.tokenType == tokenType)
-                {
-                    var token = stream.Current;
-                    stream.MoveNext();
-                    return ParseResult<Token>.CreateSuccess(token);
-                }
-                return ParseResult<Token>.CreateError(new Error("", ErrorKind.InComplete));
-            };
+            return ParserCombinator.TestOnce(token => token.tokenType == tokenType);
         }
     }
 }

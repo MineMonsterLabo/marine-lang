@@ -1,4 +1,5 @@
-﻿using MarineLang.Streams;
+﻿using MarineLang.Models;
+using MarineLang.Streams;
 using System;
 using System.Collections.Generic;
 
@@ -80,6 +81,20 @@ namespace MarineLang.SyntaxAnalysis
                     list.Add(result.Value);
                 }
                 return ParseResult<T[]>.CreateSuccess(list.ToArray());
+            };
+        }
+
+        public static Func<TokenStream, IParseResult<Token>> TestOnce(Func<Token, bool> test)
+        {
+            return stream =>
+            {
+                if (test(stream.Current))
+                {
+                    var token = stream.Current;
+                    stream.MoveNext();
+                    return ParseResult<Token>.CreateSuccess(token);
+                }
+                return ParseResult<Token>.CreateError(new Error("", ErrorKind.InComplete));
             };
         }
     }
