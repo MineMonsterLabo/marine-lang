@@ -11,6 +11,7 @@ namespace MarineLang
 
         Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
         Dictionary<string, FuncDefinitionAst> marineFuncDict;
+        Stack<Dictionary<string, object>> variables = new Stack<Dictionary<string, object>>();
 
         public void Register(MethodInfo methodInfo)
         {
@@ -19,6 +20,7 @@ namespace MarineLang
 
         public void SetProgram(ProgramAst programAst)
         {
+            variables.Clear();
             marineFuncDict = programAst.funcDefinitionAsts.ToDictionary(v => v.funcName);
         }
         public RET Run<RET>(string marineFuncName)
@@ -38,13 +40,29 @@ namespace MarineLang
 
         object RunFuncDefinitionAst(FuncDefinitionAst funcDefinitionAst)
         {
+            variables.Push(new Dictionary<string, object>());
             foreach (var statementAst in funcDefinitionAst.statementAsts)
             {
                 if (statementAst.GetExprAst() != null)
                     RunExpr(statementAst.GetExprAst());
+                else if (statementAst.GetAssignmentAst() != null)
+                {
+                    var assignment = statementAst.GetAssignmentAst();
+                    variables.Peek()[assignment.varName] = RunExpr(assignment.expr);
+                }
+                else if (statementAst.GetReAssignmentAst() != null)
+                {
+                    var assignment = statementAst.GetReAssignmentAst();
+                    variables.Peek()[assignment.varName] = RunExpr(assignment.expr);
+                }
                 else if (statementAst.GetReturnAst() != null)
-                    return RunExpr(statementAst.GetReturnAst().expr);
+                {
+                    var ret = RunExpr(statementAst.GetReturnAst().expr);
+                    variables.Pop();
+                    return ret;
+                }
             }
+            variables.Pop();
             return new UnitType();
         }
 
@@ -52,8 +70,10 @@ namespace MarineLang
         {
             if (exprAst.GetFuncCallAst() != null)
                 return RunFuncCallAst(exprAst.GetFuncCallAst());
-            else if (exprAst.GetValueAst<int>() != null)
-                return exprAst.GetValueAst<int>().value;
+            else if (exprAst.GetValueAst() != null)
+                return exprAst.GetValueAst().value;
+            else if (exprAst.GetVariableAst() != null)
+                return variables.Peek()[exprAst.GetVariableAst().varName];
             return null;
         }
     }

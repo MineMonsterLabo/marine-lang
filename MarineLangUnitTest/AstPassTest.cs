@@ -94,7 +94,7 @@ namespace MarineLangUnitTest
                 111,
                 funcDefinitionAst.statementAsts[0]
                 .GetReturnAst().expr
-                .GetValueAst<int>().value
+                .GetValueAst().value
             );
         }
     }
