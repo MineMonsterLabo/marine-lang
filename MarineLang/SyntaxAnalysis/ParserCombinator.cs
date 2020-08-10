@@ -58,5 +58,29 @@ namespace MarineLang.SyntaxAnalysis
                     return parseResult;
                 };
         }
+
+        public static Func<TokenStream, IParseResult<T[]>> Separated<T, TT>
+            (Func<TokenStream, IParseResult<T>> parser, Func<TokenStream, IParseResult<TT>> separateParser)
+        {
+            return stream =>
+            {
+                var isFirst = true;
+                var list = new List<T>();
+
+                while (stream.IsEnd == false)
+                {
+                    if (isFirst == false && separateParser(stream).IsError)
+                        break;
+                    var result = parser(stream);
+                    if (result.IsError && isFirst == false)
+                        return ParseResult<T[]>.Error("");
+                    isFirst = false;
+                    if (result.IsError)
+                        break;
+                    list.Add(result.Value);
+                }
+                return ParseResult<T[]>.Success(list.ToArray());
+            };
+        }
     }
 }

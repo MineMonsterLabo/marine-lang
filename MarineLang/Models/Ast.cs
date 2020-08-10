@@ -15,11 +15,12 @@ namespace MarineLang.Models
     public class FuncDefinitionAst
     {
         public string funcName;
+        public VariableAst[] args;
         public StatementAst[] statementAsts;
 
-        public static FuncDefinitionAst Create(string funcName, StatementAst[] statementAsts)
+        public static FuncDefinitionAst Create(string funcName, VariableAst[] args, StatementAst[] statementAsts)
         {
-            return new FuncDefinitionAst { funcName = funcName, statementAsts = statementAsts };
+            return new FuncDefinitionAst { funcName = funcName, args = args, statementAsts = statementAsts };
         }
     }
 
