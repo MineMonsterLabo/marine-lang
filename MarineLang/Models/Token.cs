@@ -4,15 +4,13 @@
     {
         public readonly TokenType tokenType;
         public readonly string text;
-        public readonly int begin;
-        public readonly int end;
+        public readonly Position position;
 
-        public Token(TokenType tokenType, string text, int begin, int end)
+        public Token(TokenType tokenType, string text, Position position)
         {
             this.tokenType = tokenType;
             this.text = text;
-            this.begin = begin;
-            this.end = end;
+            this.position = position;
         }
     }
 }

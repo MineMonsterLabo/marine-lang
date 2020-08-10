@@ -17,7 +17,7 @@ namespace MarineLang.SyntaxAnalysis
                         var parseResult = parser(stream);
 
                         if (parseResult.IsError)
-                            return ParseResult<IEnumerable<T>>.Error("");
+                            return parseResult.CastError<IEnumerable<T>>();
 
                         list.Add(parseResult.Value);
                     }

@@ -21,8 +21,11 @@ namespace MarineLang.SyntaxAnalysis
 
         IParseResult<FuncDefinitionAst> ParseFuncDefinition(TokenStream stream)
         {
+            var position = stream.Current.position;
+
             if (stream.Current.tokenType != TokenType.Func)
-                return ParseResult<FuncDefinitionAst>.Error("");
+                return ParseResult<FuncDefinitionAst>
+                    .Error($"関数定義が間違っています \"{stream.Current.text}\"", position);
 
             if (stream.MoveNext() && stream.Current.tokenType == TokenType.Id)
             {
@@ -34,15 +37,28 @@ namespace MarineLang.SyntaxAnalysis
                     if (variableListResult.IsError)
                         return variableListResult.CastError<FuncDefinitionAst>();
 
-                    return
+                    var funcDefinitionResult =
                         ParserCombinator.Try(ParseFuncBody)(stream)
                         .Map(statementAsts =>
                              FuncDefinitionAst.Create(funcName, variableListResult.Value, statementAsts)
                         );
+
+                    if (funcDefinitionResult.IsError)
+                        return funcDefinitionResult;
+
+                    if (stream.IsEnd == true || stream.Current.tokenType != TokenType.End)
+                        return
+                             ParseResult<FuncDefinitionAst>.Error($"関数定義にendがありません ", position);
+
+                    stream.MoveNext();
+
+                    return funcDefinitionResult;
+
                 }
             }
 
-            return ParseResult<FuncDefinitionAst>.Error("");
+            return
+                ParseResult<FuncDefinitionAst>.Error($"関数定義に関数名がありません ", position);
         }
 
         IParseResult<StatementAst[]> ParseFuncBody(TokenStream stream)
@@ -63,7 +79,6 @@ namespace MarineLang.SyntaxAnalysis
 
                 statementAsts.Add(parseResult.Value);
             }
-            stream.MoveNext();
 
             return ParseResult<StatementAst[]>.Success(statementAsts.ToArray());
         }
