@@ -29,15 +29,15 @@ namespace MarineLang.SyntaxAnalysis
                 var funcName = stream.Current.text;
                 if (stream.MoveNext())
                 {
-                    var paramListResult = ParserCombinator.Try(ParseParamList)(stream);
+                    var variableListResult = ParserCombinator.Try(ParseVariableList)(stream);
 
-                    if (paramListResult.IsError)
-                        return paramListResult.CastError<FuncDefinitionAst>();
+                    if (variableListResult.IsError)
+                        return variableListResult.CastError<FuncDefinitionAst>();
 
                     return
                         ParserCombinator.Try(ParseFuncBody)(stream)
                         .Map(statementAsts =>
-                             FuncDefinitionAst.Create(funcName, statementAsts)
+                             FuncDefinitionAst.Create(funcName, variableListResult.Value, statementAsts)
                         );
                 }
             }
@@ -231,22 +231,28 @@ namespace MarineLang.SyntaxAnalysis
         {
             if (ParseToken(stream, TokenType.LeftParen).IsError == false)
             {
-                var list = new List<ExprAst>();
-                var isFirst = true;
-                while (stream.IsEnd == false)
-                {
+                var exprListResult
+                    = ParserCombinator.Separated(ParseExpr, stream2 => ParseToken(stream2, TokenType.Comma))
+                    (stream);
+                if (exprListResult.IsError == false)
                     if (ParseToken(stream, TokenType.RightParen).IsError == false)
-                        return ParseResult<ExprAst[]>.Success(list.ToArray());
-                    if (isFirst == false && ParseToken(stream, TokenType.Comma).IsError)
-                        break;
-                    isFirst = false;
-                    var exprResult = ParseExpr(stream);
-                    if (exprResult.IsError)
-                        break;
-                    list.Add(exprResult.Value);
-                }
+                        return ParseResult<ExprAst[]>.Success(exprListResult.Value);
             }
             return ParseResult<ExprAst[]>.Error("");
+        }
+
+        IParseResult<VariableAst[]> ParseVariableList(TokenStream stream)
+        {
+            if (ParseToken(stream, TokenType.LeftParen).IsError == false)
+            {
+                var exprListResult
+                    = ParserCombinator.Separated(ParseVariable, stream2 => ParseToken(stream2, TokenType.Comma))
+                    (stream);
+                if (exprListResult.IsError == false)
+                    if (ParseToken(stream, TokenType.RightParen).IsError == false)
+                        return ParseResult<VariableAst[]>.Success(exprListResult.Value);
+            }
+            return ParseResult<VariableAst[]>.Error("");
         }
 
         IParseResult<Token> ParseToken(TokenStream stream, TokenType tokenType)

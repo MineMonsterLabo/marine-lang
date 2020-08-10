@@ -192,5 +192,35 @@ fun f() let a=3 ret a end
 
             Assert.Equal(expected, ret);
         }
+
+        [Theory]
+        [InlineData("fun main() ret id(4) end fun id(a) ret a", 4)]
+        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret a", "abc")]
+        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret b", 'c')]
+        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret c", 4)]
+        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret d", 3.5f)]
+        public void CallMarineFuncWithArgs<T>(string str, T expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<T>("main");
+
+            Assert.Equal(expected, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main(a,b) ret plus(a,b) end ")]
+        public void CallMarineFuncWithArgs2(string str)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<int>("main", 12, 8);
+
+            Assert.Equal(20, ret);
+        }
     }
 }

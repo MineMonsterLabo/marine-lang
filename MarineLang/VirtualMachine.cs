@@ -23,24 +23,33 @@ namespace MarineLang
             variables.Clear();
             marineFuncDict = programAst.funcDefinitionAsts.ToDictionary(v => v.funcName);
         }
-        public RET Run<RET>(string marineFuncName)
+        public RET Run<RET>(string marineFuncName, params object[] args)
         {
-            return (RET)RunFuncDefinitionAst(marineFuncDict[marineFuncName]);
+            return (RET)RunFuncDefinitionAst(marineFuncDict[marineFuncName], args);
         }
 
         object RunFuncCallAst(FuncCallAst funcCallAst)
         {
+            var args = funcCallAst.args.Select(expr => RunExpr(expr)).ToArray();
+
             if (marineFuncDict.ContainsKey(funcCallAst.funcName))
-                return RunFuncDefinitionAst(marineFuncDict[funcCallAst.funcName]);
+                return RunFuncDefinitionAst(marineFuncDict[funcCallAst.funcName], args);
             else
                 return
                     methodInfoDict[funcCallAst.funcName]
-                    .Invoke(null, funcCallAst.args.Select(expr => RunExpr(expr)).ToArray());
+                    .Invoke(null, args);
         }
 
-        object RunFuncDefinitionAst(FuncDefinitionAst funcDefinitionAst)
+        object RunFuncDefinitionAst(FuncDefinitionAst funcDefinitionAst, object[] args)
         {
             variables.Push(new Dictionary<string, object>());
+
+            for (var i = 0; i < funcDefinitionAst.args.Length; i++)
+            {
+                var variable = funcDefinitionAst.args[i];
+                variables.Peek()[variable.varName] = args[i];
+            }
+
             foreach (var statementAst in funcDefinitionAst.statementAsts)
             {
                 if (statementAst.GetExprAst() != null)
