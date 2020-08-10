@@ -1,19 +1,18 @@
-﻿using MarineLang.Models;
-using MarineLang.Streams;
+﻿using MarineLang.Streams;
 using System;
 
 namespace MarineLang.SyntaxAnalysis
 {
     public static class ParserCombinatorExtension
     {
-        public static Func<TokenStream, IParseResult<T>> Error<T>
-            (this Func<TokenStream, IParseResult<T>> parser, string errorMessage, Position position = default)
+        public static Func<TokenStream, IParseResult<T>> InCompleteError<T>
+            (this Func<TokenStream, IParseResult<T>> parser, Error error)
         {
             return stream =>
             {
                 var result = parser(stream);
-                if (result.IsError)
-                    return ParseResult<T>.Error(errorMessage, position);
+                if (result.IsError && result.Error.ErrorKind == ErrorKind.InComplete)
+                    return ParseResult<T>.CreateError(error);
                 return result;
             };
         }
@@ -27,7 +26,7 @@ namespace MarineLang.SyntaxAnalysis
                 if (result.IsError)
                     return result.CastError<TT>();
                 if (stream.IsEnd)
-                    return ParseResult<TT>.Error("末尾です");
+                    return ParseResult<TT>.CreateError(new Error("", ErrorKind.InComplete));
                 return parser2(stream);
             };
         }
@@ -41,7 +40,7 @@ namespace MarineLang.SyntaxAnalysis
                 if (result.IsError == false)
                 {
                     if (stream.IsEnd)
-                        return ParseResult<T>.Error("末尾です");
+                        return ParseResult<T>.CreateError(new Error("", ErrorKind.InComplete));
                     var result2 = parser2(stream);
                     if (result2.IsError)
                         return result2.CastError<T>();
@@ -59,7 +58,7 @@ namespace MarineLang.SyntaxAnalysis
                 if (result.IsError)
                     return result.CastError<TT>();
                 if (stream.IsEnd)
-                    return ParseResult<TT>.Error("末尾です");
+                    return ParseResult<TT>.CreateError(new Error("", ErrorKind.InComplete));
                 return func(result.Value)(stream);
             };
         }
@@ -73,7 +72,7 @@ namespace MarineLang.SyntaxAnalysis
         public static Func<TokenStream, IParseResult<TT>> MapResult<T, TT>
           (this Func<TokenStream, IParseResult<T>> parser, Func<T, TT> func)
         {
-            return parser.BindResult(t => ParseResult<TT>.Success(func(t)));
+            return parser.BindResult(t => ParseResult<TT>.CreateSuccess(func(t)));
         }
     }
 }

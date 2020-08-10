@@ -25,8 +25,8 @@ namespace MarineLang.SyntaxAnalysis
             var position = stream.Current.position;
             return
                 ParseToken(TokenType.Func)
-                .Error($"関数定義が間違っています \"{stream.Current.text}\"", position)
-                .Right(ParseToken(TokenType.Id).Error($"関数定義に関数名がありません ", position))
+                .InCompleteError(new Error($"関数定義が間違っています \"{stream.Current.text}\"", position))
+                .Right(ParseToken(TokenType.Id)).InCompleteError(new Error($"関数定義に関数名がありません ", position))
                 .Bind(funcNameToken =>
                      ParserCombinator.Try(ParseVariableList)
                         .Bind(varList =>
@@ -34,7 +34,7 @@ namespace MarineLang.SyntaxAnalysis
                             .MapResult(statementAsts => FuncDefinitionAst.Create(funcNameToken.text, varList, statementAsts))
                         )
 
-                 ).Left(ParseToken(TokenType.End).Error($"関数定義にendがありません ", position))
+                 ).Left(ParseToken(TokenType.End)).InCompleteError(new Error($"関数定義にendがありません ", position))
                 (stream);
         }
 
@@ -57,7 +57,7 @@ namespace MarineLang.SyntaxAnalysis
                 statementAsts.Add(parseResult.Value);
             }
 
-            return ParseResult<StatementAst[]>.Success(statementAsts.ToArray());
+            return ParseResult<StatementAst[]>.CreateSuccess(statementAsts.ToArray());
         }
 
         Func<TokenStream, IParseResult<ExprAst>> ParseExpr()
@@ -71,7 +71,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseChar),
                     ParserCombinator.Try(ParseString),
                     ParserCombinator.Try(ParseVariable)
-                ).Error("式が必要です");
+                ).InCompleteError(new Error("式が必要です"));
         }
 
         IParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
@@ -112,7 +112,7 @@ namespace MarineLang.SyntaxAnalysis
                 (stream);
 
             if (varNameResult.IsError || stream.IsEnd)
-                return ParseResult<ReAssignmentAst>.Error("");
+                return ParseResult<ReAssignmentAst>.CreateError(new Error());
 
             return ParseExpr()(stream)
                 .Map(expr =>
@@ -125,8 +125,8 @@ namespace MarineLang.SyntaxAnalysis
             return ParseToken(TokenType.Int)
                 .BindResult(token =>
                  (int.TryParse(token.text, out int value)) ?
-                     ParseResult<ValueAst>.Success(ValueAst.Create(value)) :
-                     ParseResult<ValueAst>.Error("")
+                     ParseResult<ValueAst>.CreateSuccess(ValueAst.Create(value)) :
+                     ParseResult<ValueAst>.CreateError(new Error())
              )(stream);
         }
 
@@ -135,8 +135,8 @@ namespace MarineLang.SyntaxAnalysis
             return ParseToken(TokenType.Float)
                .BindResult(token =>
                     (float.TryParse(token.text, out float value)) ?
-                        ParseResult<ValueAst>.Success(ValueAst.Create(value)) :
-                        ParseResult<ValueAst>.Error("")
+                        ParseResult<ValueAst>.CreateSuccess(ValueAst.Create(value)) :
+                        ParseResult<ValueAst>.CreateError(new Error())
                 )(stream);
         }
 
@@ -145,8 +145,8 @@ namespace MarineLang.SyntaxAnalysis
             return ParseToken(TokenType.Bool)
                 .BindResult(token =>
                     (bool.TryParse(token.text, out bool value)) ?
-                        ParseResult<ValueAst>.Success(ValueAst.Create(value)) :
-                        ParseResult<ValueAst>.Error("")
+                        ParseResult<ValueAst>.CreateSuccess(ValueAst.Create(value)) :
+                        ParseResult<ValueAst>.CreateError(new Error())
                 )(stream);
         }
 
@@ -200,9 +200,9 @@ namespace MarineLang.SyntaxAnalysis
                 {
                     var token = stream.Current;
                     stream.MoveNext();
-                    return ParseResult<Token>.Success(token);
+                    return ParseResult<Token>.CreateSuccess(token);
                 }
-                return ParseResult<Token>.Error("");
+                return ParseResult<Token>.CreateError(new Error("", ErrorKind.InComplete));
             };
         }
     }

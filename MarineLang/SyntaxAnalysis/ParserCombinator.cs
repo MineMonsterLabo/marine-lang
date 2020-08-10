@@ -21,7 +21,7 @@ namespace MarineLang.SyntaxAnalysis
 
                         list.Add(parseResult.Value);
                     }
-                    return ParseResult<IEnumerable<T>>.Success(list);
+                    return ParseResult<IEnumerable<T>>.CreateSuccess(list);
                 };
         }
 
@@ -46,7 +46,7 @@ namespace MarineLang.SyntaxAnalysis
             return
                 stream =>
                 {
-                    var parseResult = ParseResult<T>.Error("");
+                    var parseResult = ParseResult<T>.CreateError(new Error());
 
                     foreach (var parser in parsers)
                     {
@@ -73,13 +73,13 @@ namespace MarineLang.SyntaxAnalysis
                         break;
                     var result = parser(stream);
                     if (result.IsError && isFirst == false)
-                        return ParseResult<T[]>.Error("");
+                        return ParseResult<T[]>.CreateError(new Error());
                     isFirst = false;
                     if (result.IsError)
                         break;
                     list.Add(result.Value);
                 }
-                return ParseResult<T[]>.Success(list.ToArray());
+                return ParseResult<T[]>.CreateSuccess(list.ToArray());
             };
         }
     }
