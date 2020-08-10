@@ -160,6 +160,7 @@ fun fuga() ret 123 end
 
         [Theory]
         [InlineData("fun main() ret not(not(false)) end", false)]
+        [InlineData("fun main() ret not(not(true)) end", true)]
         public void CallCsharpFuncWithArgs2(string str, bool expected)
         {
             var vm = VmCreateHelper(str);
@@ -167,6 +168,27 @@ fun fuga() ret 123 end
             Assert.NotNull(vm);
 
             var ret = vm.Run<bool>("main");
+
+            Assert.Equal(expected, ret);
+        }
+
+        [Theory]
+        [InlineData("fun main() let abc_d=false ret abc_d end", false)]
+        [InlineData("fun main() let hoge=5 hoge=3 ret hoge end", 3)]
+        [InlineData("fun main() let left=5 let right=3 ret plus(left,right) end", 8)]
+        [InlineData("fun main() let str=\"あいうえお\"ret str end", "あいうえお")]
+        [InlineData("fun main() let ccc = '$'let aa=\"abab\" ret ccc end", '$')]
+        [InlineData(@"
+fun main() let a = 13 ret plus(f(),a) end
+fun f() let a=3 ret a end
+", 16)]
+        public void Variable<T>(string str, T expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<T>("main");
 
             Assert.Equal(expected, ret);
         }

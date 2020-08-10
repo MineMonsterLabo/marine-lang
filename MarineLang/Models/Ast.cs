@@ -30,9 +30,14 @@ namespace MarineLang.Models
             return this as FuncCallAst;
         }
 
-        public ValueAst GetValueAst<V>()
+        public ValueAst GetValueAst()
         {
             return this as ValueAst;
+        }
+
+        public VariableAst GetVariableAst()
+        {
+            return this as VariableAst;
         }
     }
 
@@ -46,6 +51,16 @@ namespace MarineLang.Models
         }
     }
 
+    public class VariableAst : ExprAst
+    {
+        public string varName;
+
+        public static VariableAst Create(string varName)
+        {
+            return new VariableAst { varName = varName };
+        }
+    }
+
     public abstract class StatementAst
     {
         public ExprAst GetExprAst()
@@ -56,6 +71,16 @@ namespace MarineLang.Models
         public ReturnAst GetReturnAst()
         {
             return this as ReturnAst;
+        }
+
+        public AssignmentAst GetAssignmentAst()
+        {
+            return this as AssignmentAst;
+        }
+
+        public ReAssignmentAst GetReAssignmentAst()
+        {
+            return this as ReAssignmentAst;
         }
     }
 
@@ -72,6 +97,28 @@ namespace MarineLang.Models
         public static ReturnAst Create(ExprAst expr)
         {
             return new ReturnAst { expr = expr };
+        }
+    }
+
+    public class AssignmentAst : StatementAst
+    {
+        public ExprAst expr;
+        public string varName;
+
+        public static AssignmentAst Create(string varName, ExprAst expr)
+        {
+            return new AssignmentAst { varName = varName, expr = expr };
+        }
+    }
+
+    public class ReAssignmentAst : StatementAst
+    {
+        public ExprAst expr;
+        public string varName;
+
+        public static ReAssignmentAst Create(string varName, ExprAst expr)
+        {
+            return new ReAssignmentAst { varName = varName, expr = expr };
         }
     }
 }

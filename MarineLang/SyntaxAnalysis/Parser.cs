@@ -52,8 +52,10 @@ namespace MarineLang.SyntaxAnalysis
             {
                 var parseResult =
                     ParserCombinator.Or<StatementAst>(
-                        ParserCombinator.Try(ParseExpr),
-                        ParserCombinator.Try(ParseReturn)
+                        ParserCombinator.Try(ParseReturn),
+                        ParserCombinator.Try(ParseAssignment),
+                        ParserCombinator.Try(ParseReAssignment),
+                        ParserCombinator.Try(ParseExpr)
                     )(stream);
 
                 if (parseResult.IsError)
@@ -75,7 +77,8 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseInt),
                     ParserCombinator.Try(ParseBool),
                     ParserCombinator.Try(ParseChar),
-                    ParserCombinator.Try(ParseString)
+                    ParserCombinator.Try(ParseString),
+                    ParserCombinator.Try(ParseVariable)
                 )(stream);
         }
 
@@ -114,6 +117,41 @@ namespace MarineLang.SyntaxAnalysis
                     .Map(ReturnAst.Create);
 
             return ParseResult<ReturnAst>.Error("");
+        }
+
+        IParseResult<AssignmentAst> ParseAssignment(TokenStream stream)
+        {
+            if (ParseToken(stream, TokenType.Let).IsError || stream.IsEnd)
+                return ParseResult<AssignmentAst>.Error("");
+
+            var varNameResult = ParseToken(stream, TokenType.Id);
+            if (varNameResult.IsError || stream.IsEnd)
+                return ParseResult<AssignmentAst>.Error("");
+            if (ParseToken(stream, TokenType.AssignmentOp).IsError || stream.IsEnd)
+                return ParseResult<AssignmentAst>.Error("");
+            var exprResult = ParseExpr(stream);
+            if (exprResult.IsError)
+                return ParseResult<AssignmentAst>.Error("");
+
+            return ParseResult<AssignmentAst>.Success(
+                AssignmentAst.Create(varNameResult.Value.text, exprResult.Value)
+            );
+        }
+
+        IParseResult<ReAssignmentAst> ParseReAssignment(TokenStream stream)
+        {
+            var varNameResult = ParseToken(stream, TokenType.Id);
+            if (varNameResult.IsError || stream.IsEnd)
+                return ParseResult<ReAssignmentAst>.Error("");
+            if (ParseToken(stream, TokenType.AssignmentOp).IsError || stream.IsEnd)
+                return ParseResult<ReAssignmentAst>.Error("");
+            var exprResult = ParseExpr(stream);
+            if (exprResult.IsError)
+                return ParseResult<ReAssignmentAst>.Error("");
+
+            return ParseResult<ReAssignmentAst>.Success(
+                ReAssignmentAst.Create(varNameResult.Value.text, exprResult.Value)
+            );
         }
 
         IParseResult<ValueAst> ParseInt(TokenStream stream)
@@ -174,6 +212,18 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParseResult<ValueAst>.Success(
                     ValueAst.Create(value)
+                );
+        }
+
+        IParseResult<VariableAst> ParseVariable(TokenStream stream)
+        {
+            var variableResult = ParseToken(stream, TokenType.Id);
+            if (variableResult.IsError)
+                return ParseResult<VariableAst>.Error("");
+
+            return
+                ParseResult<VariableAst>.Success(
+                    VariableAst.Create(variableResult.Value.text)
                 );
         }
 

@@ -27,6 +27,8 @@
             Index = index;
             if (items.Length <= Index)
                 IsEnd = true;
+            else
+                IsEnd = false;
         }
     }
 }
