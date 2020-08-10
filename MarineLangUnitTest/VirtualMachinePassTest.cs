@@ -178,6 +178,10 @@ fun fuga() ret 123 end
         [InlineData("fun main() let left=5 let right=3 ret plus(left,right) end", 8)]
         [InlineData("fun main() let str=\"あいうえお\"ret str end", "あいうえお")]
         [InlineData("fun main() let ccc = '$'let aa=\"abab\" ret ccc end", '$')]
+        [InlineData(@"
+fun main() let a = 13 ret plus(f(),a) end
+fun f() let a=3 ret a end
+", 16)]
         public void Variable<T>(string str, T expected)
         {
             var vm = VmCreateHelper(str);
