@@ -194,11 +194,11 @@ fun f() let a=3 ret a end
         }
 
         [Theory]
-        [InlineData("fun main() ret id(4) end fun id(a) ret a", 4)]
-        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret a", "abc")]
-        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret b", 'c')]
-        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret c", 4)]
-        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret d", 3.5f)]
+        [InlineData("fun main() ret id(4) end fun id(a) ret a end", 4)]
+        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret a end", "abc")]
+        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret b end", 'c')]
+        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret c end", 4)]
+        [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret d end", 3.5f)]
         public void CallMarineFuncWithArgs<T>(string str, T expected)
         {
             var vm = VmCreateHelper(str);

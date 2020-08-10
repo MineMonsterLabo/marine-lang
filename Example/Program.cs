@@ -59,6 +59,7 @@ namespace Example
             if (parserResult.IsError)
             {
                 Console.WriteLine("パースエラー");
+                Console.WriteLine(parserResult.FullErrorMessage);
                 return;
             }
 

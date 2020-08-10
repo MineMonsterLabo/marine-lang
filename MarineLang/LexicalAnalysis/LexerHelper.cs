@@ -44,7 +44,7 @@ namespace MarineLang.LexicalAnalysis
             if (indexedChar.c == c)
             {
                 stream.MoveNext();
-                return new Token(tokenType, indexedChar.c.ToString(), indexedChar.index, indexedChar.index);
+                return new Token(tokenType, indexedChar.c.ToString(), indexedChar.position);
             }
             return null;
         }
@@ -101,13 +101,13 @@ namespace MarineLang.LexicalAnalysis
         static public Token GetCharLiteralToken(IndexedCharStream stream)
         {
             var indexedChar = stream.Current;
-            var begin = indexedChar.index;
+            var backUpIndex = stream.Index;
 
             if (indexedChar.c != '\'')
                 return null;
             if (stream.MoveNext() == false)
             {
-                stream.SetIndex(begin);
+                stream.SetIndex(backUpIndex);
                 return null;
             }
 
@@ -115,7 +115,7 @@ namespace MarineLang.LexicalAnalysis
 
             if (value == '\'')
             {
-                stream.SetIndex(begin);
+                stream.SetIndex(backUpIndex);
                 return null;
             }
 
@@ -124,7 +124,7 @@ namespace MarineLang.LexicalAnalysis
                 var escapeChar = GetEscapeChar(stream);
                 if (escapeChar.HasValue == false)
                 {
-                    stream.SetIndex(begin);
+                    stream.SetIndex(backUpIndex);
                     return null;
                 }
                 value = escapeChar.Value;
@@ -134,19 +134,19 @@ namespace MarineLang.LexicalAnalysis
 
             if (stream.IsEnd || stream.Current.c != '\'')
             {
-                stream.SetIndex(begin);
+                stream.SetIndex(backUpIndex);
                 return null;
             }
 
             stream.MoveNext();
 
-            return new Token(TokenType.Char, "'" + value + "'", begin, stream.Index - 1);
+            return new Token(TokenType.Char, "'" + value + "'", indexedChar.position);
         }
 
         static public Token GetStringLiteralToken(IndexedCharStream stream)
         {
             var indexedChar = stream.Current;
-            var begin = indexedChar.index;
+            var backUpIndex = stream.Index;
 
             if (indexedChar.c != '"')
                 return null;
@@ -168,13 +168,13 @@ namespace MarineLang.LexicalAnalysis
 
             if (stream.IsEnd)
             {
-                stream.SetIndex(begin);
+                stream.SetIndex(backUpIndex);
                 return null;
             }
 
             stream.MoveNext();
 
-            return new Token(TokenType.String, "\"" + value + "\"", begin, stream.Index - 1);
+            return new Token(TokenType.String, "\"" + value + "\"", indexedChar.position);
         }
 
         static public char? GetEscapeChar(IndexedCharStream stream)
@@ -219,7 +219,8 @@ namespace MarineLang.LexicalAnalysis
 
         static public Token GetFloatLiteralToken(IndexedCharStream stream)
         {
-            var begin = stream.Index;
+            var indexedChar = stream.Current;
+            var backUpIndex = stream.Index;
             var buf = "";
 
             var head = GetIntLiteralToken()(stream)?.text;
@@ -234,7 +235,7 @@ namespace MarineLang.LexicalAnalysis
                 stream.MoveNext() == false
             )
             {
-                stream.SetIndex(begin);
+                stream.SetIndex(backUpIndex);
                 return null;
             }
             buf += '.';
@@ -242,29 +243,27 @@ namespace MarineLang.LexicalAnalysis
             var tail = GetIntLiteralToken()(stream)?.text;
             if (tail == null)
             {
-                stream.SetIndex(begin);
+                stream.SetIndex(backUpIndex);
                 return null;
             }
             buf += tail;
 
-            return new Token(TokenType.Float, buf, begin, stream.Index - 1);
+            return new Token(TokenType.Float, buf, indexedChar.position);
 
         }
 
         static public Token GetUnknownToken(IndexedCharStream stream)
         {
-            var begin = stream.Current.index;
-            var end = begin;
+            var indexedChar = stream.Current;
             var buf = stream.Current.c.ToString();
 
             while (stream.MoveNext())
             {
                 if (ManySkip(stream))
                     break;
-                end = stream.Current.index;
                 buf += stream.Current.c;
             }
-            return new Token(TokenType.UnKnown, buf, begin, end);
+            return new Token(TokenType.UnKnown, buf, indexedChar.position);
 
         }
 
@@ -274,21 +273,19 @@ namespace MarineLang.LexicalAnalysis
             return stream =>
             {
                 var backUpIndex = stream.Index;
-                var begin = stream.Current.index;
-                var end = begin;
+                var firstIndexedChar = stream.Current;
                 var buf = "";
                 var isContinue = false;
 
                 while (stream.IsEnd == false)
                 {
                     var indexedChar = stream.Current;
-                    var testResult = test(indexedChar.index - backUpIndex, indexedChar.c);
+                    var testResult = test(stream.Index - backUpIndex, indexedChar.c);
                     if (testResult == TestResult.End)
                         break;
 
                     isContinue = testResult == TestResult.Continue;
 
-                    end = indexedChar.index;
                     buf += indexedChar.c;
                     stream.MoveNext();
                 }
@@ -302,7 +299,7 @@ namespace MarineLang.LexicalAnalysis
                     return null;
                 }
 
-                return new Token(tokenType, buf, begin, end);
+                return new Token(tokenType, buf, firstIndexedChar.position);
             };
         }
 
