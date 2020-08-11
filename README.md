@@ -15,46 +15,48 @@ Unityで簡易でパワフルなスクリプト言語を動かしたい！(特�
 - if式あるよ
 - ブレークポイントのサポート
 
-## BNF
+## EBNF
 
-`[]`は0~1回のみ
+```ebnf
+program        = {func_definition} ;
 
-`{}`は0回以上
+func_definition
+               = 'func' , id , variable_list , func_body , 'end' ;
+func_body      = {statement} ;
+statement      =  ret_statement |
+                  assignment |
+                  re_assignment |
+                  expr ;
+ret_statement  = 'ret' , expr ;
+assignment     = 'let' , re_assignment ;
+re_assignment  = id , '=' , expr ;
+expr           = func_call | 
+                 float_literal | 
+                 int_literal | 
+                 bool_literal | 
+                 char_literal | 
+                 string_literal |
+                 variable ;
+func_call      = id , param_list ;
+param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
+variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;
 
-```
-:program       := :skip_many {:func_definition} :skip_many
-:skip_many     := {:skip}
-:skip          := ' ' | '\n' | '\r' | '\t'
-:func_definition      
-               := 'func' :skip_many :id :skip_many :variable_list 
-                  :skip_many :func_body 
-                  'end'
-:func_body     := {:statement :skip_many}
-:statement     := :ret_statement |
-                  :assignment |
-                  :re_assignment |
-                  :expr | 
-:ret_statement := 'ret' :skip_many :expr
-:assignment    := 'let' :skip_many :id :skip_many '=' :skip_many :expr
-:re_assignment := :id :skip_many '=' :skip_many :expr
-:expr          := :func_call | 
-                  :float_literal | 
-                  :int_literal | 
-                  :bool_literal | 
-                  :char_literal | 
-                  :string_literal |
-                  :variable
-:func_call     := :id :skip_many :param_list
-:float_literal := :int_literal '.' :int_literal
-:int_literal   := [0-9]+
-:bool_literal  := 'true' | 'false'
-:char_literal  := "省略"
-:string_literal:= "省略"
-:variable      := :id
-:param_list    := '(' :skip_many [ :expr :skip_many {',' :skip_many :expr} :skip_many ] ')'
-:variable_list := '(' :skip_many [ :variable :skip_many {',' :skip_many :variable} :skip_many ] ')'
-:id            := :lower_letter {id_char}
-:id_char       := :digit | :lower_letter | '_';
-:lower_letter  := "省略"
-:digit  := "省略"
+
+トークン
+
+float_literal  = int_literal , '.' , int_literal ;
+int_literal    = digit ;
+bool_literal   = 'true' | 'false' ;
+char_literal   = ? 省略 ? ;
+string_literal = ? 省略 ? ;
+variable       = id ;
+id             = lower_letter , {id_char} ;
+id_char        = digit | lower_letter | '_' ;
+lower_letter   = ? 省略 ?;
+digit          = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+
+
+スキップ
+
+skip           = ' ' | '\n' | '\r' | '\t' ;
 ```
