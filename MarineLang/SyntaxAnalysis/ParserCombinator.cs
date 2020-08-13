@@ -47,16 +47,13 @@ namespace MarineLang.SyntaxAnalysis
             return
                 stream =>
                 {
-                    var parseResult = ParseResult<T>.CreateError(new Error());
-
                     foreach (var parser in parsers)
                     {
-                        parseResult = parser(stream);
-
-                        if (parseResult.IsError == false)
+                        var parseResult = parser(stream);
+                        if (parseResult.IsError == false || parseResult.Error.ErrorKind == ErrorKind.ForceError)
                             return parseResult;
                     }
-                    return parseResult;
+                    return ParseResult<T>.CreateError(new Error("", ErrorKind.InComplete)); ;
                 };
         }
 
@@ -74,7 +71,7 @@ namespace MarineLang.SyntaxAnalysis
                         break;
                     var result = parser(stream);
                     if (result.IsError && isFirst == false)
-                        return ParseResult<T[]>.CreateError(new Error());
+                        return ParseResult<T[]>.CreateError(new Error("", ErrorKind.InComplete));
                     isFirst = false;
                     if (result.IsError)
                         break;
@@ -88,9 +85,9 @@ namespace MarineLang.SyntaxAnalysis
         {
             return stream =>
             {
-                if (test(stream.Current))
+                var token = stream.Current;
+                if (test(token))
                 {
-                    var token = stream.Current;
                     stream.MoveNext();
                     return ParseResult<Token>.CreateSuccess(token);
                 }

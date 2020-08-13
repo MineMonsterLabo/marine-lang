@@ -1,4 +1,5 @@
-﻿using MarineLang.Streams;
+﻿using MarineLang.Models;
+using MarineLang.Streams;
 using System;
 
 namespace MarineLang.SyntaxAnalysis
@@ -6,15 +7,39 @@ namespace MarineLang.SyntaxAnalysis
     public static class ParserCombinatorExtension
     {
         public static Func<TokenStream, IParseResult<T>> InCompleteError<T>
-            (this Func<TokenStream, IParseResult<T>> parser, Error error)
+            (this Func<TokenStream, IParseResult<T>> parser, Func<TokenStream, Error> func)
         {
             return stream =>
             {
                 var result = parser(stream);
                 if (result.IsError && result.Error.ErrorKind == ErrorKind.InComplete)
-                    return ParseResult<T>.CreateError(error);
+                    return ParseResult<T>.CreateError(func(stream));
                 return result;
             };
+        }
+
+        public static Func<TokenStream, IParseResult<T>> InCompleteError<T>
+            (this Func<TokenStream, IParseResult<T>> parser, string errorMessage, Position position, ErrorKind errorKind = ErrorKind.None)
+        {
+            return parser.InCompleteError(stream =>
+               new Error(errorMessage, errorKind, position)
+           );
+        }
+
+        public static Func<TokenStream, IParseResult<T>> InCompleteErrorWithPositionEnd<T>
+            (this Func<TokenStream, IParseResult<T>> parser, string errorMessage, ErrorKind errorKind = ErrorKind.None)
+        {
+            return parser.InCompleteError(stream =>
+                new Error(errorMessage, errorKind, stream.LastCurrent.PositionEnd)
+            );
+        }
+
+        public static Func<TokenStream, IParseResult<T>> InCompleteErrorWithPositionHead<T>
+            (this Func<TokenStream, IParseResult<T>> parser, string errorMessage, ErrorKind errorKind = ErrorKind.None)
+        {
+            return parser.InCompleteError(stream =>
+                new Error(errorMessage, errorKind, stream.LastCurrent.position)
+            );
         }
 
         public static Func<TokenStream, IParseResult<TT>> Right<T, TT>
@@ -64,9 +89,15 @@ namespace MarineLang.SyntaxAnalysis
         }
 
         public static Func<TokenStream, IParseResult<TT>> BindResult<T, TT>
-                 (this Func<TokenStream, IParseResult<T>> parser, Func<T, IParseResult<TT>> func)
+            (this Func<TokenStream, IParseResult<T>> parser, Func<T, IParseResult<TT>> func)
         {
-            return parser.Bind<T, TT>(t => stream => func(t));
+            return stream =>
+            {
+                var result = parser(stream);
+                if (result.IsError)
+                    return result.CastError<TT>();
+                return func(result.Value);
+            };
         }
 
         public static Func<TokenStream, IParseResult<TT>> MapResult<T, TT>

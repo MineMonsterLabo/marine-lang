@@ -5,7 +5,8 @@ namespace MarineLang.SyntaxAnalysis
     public enum ErrorKind
     {
         InComplete,
-        None
+        ForceError,
+        None,
     }
 
     public class Error

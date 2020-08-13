@@ -22,21 +22,22 @@ namespace MarineLang.SyntaxAnalysis
 
         IParseResult<FuncDefinitionAst> ParseFuncDefinition(TokenStream stream)
         {
-            var position = stream.Current.position;
+            var headToken = stream.Current;
             return
                 ParseToken(TokenType.Func)
-                .InCompleteError(new Error($"関数定義が間違っています \"{stream.Current.text}\"", position))
+                .InCompleteErrorWithPositionEnd($"関数定義が間違っています \"{stream.Current.text}\"")
                 .Right(ParseToken(TokenType.Id))
-                .InCompleteError(new Error($"関数定義に関数名がありません ", position))
+                .InCompleteError($"関数定義に関数名がありません", headToken.PositionEnd)
                 .Bind(funcNameToken =>
                      ParserCombinator.Try(ParseVariableList)
+                     .InCompleteError("関数定義には()が必要です", funcNameToken.PositionEnd)
                         .Bind(varList =>
                             ParserCombinator.Try(ParseFuncBody)
                             .MapResult(statementAsts => FuncDefinitionAst.Create(funcNameToken.text, varList, statementAsts))
                         )
 
                  ).Left(ParseToken(TokenType.End))
-                 .InCompleteError(new Error($"関数定義にendがありません ", position))
+                 .InCompleteErrorWithPositionEnd($"関数の終わりにendがありません")
                 (stream);
         }
 
@@ -73,7 +74,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseChar),
                     ParserCombinator.Try(ParseString),
                     ParserCombinator.Try(ParseVariable)
-                ).InCompleteError(new Error("式が必要です"));
+                );
         }
 
         IParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
@@ -91,7 +92,7 @@ namespace MarineLang.SyntaxAnalysis
         IParseResult<ReturnAst> ParseReturn(TokenStream stream)
         {
             return ParseToken(TokenType.Return)
-                .Right(ParseExpr())
+                .Right(ParseExpr().InCompleteErrorWithPositionHead("retの後には式が必要です", ErrorKind.ForceError))
                 .MapResult(ReturnAst.Create)
                 (stream);
         }
