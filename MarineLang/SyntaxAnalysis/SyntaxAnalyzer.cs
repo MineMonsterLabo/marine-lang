@@ -1,6 +1,5 @@
 ﻿using MarineLang.Models;
 using MarineLang.Streams;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -63,7 +62,7 @@ namespace MarineLang.SyntaxAnalysis
             return ParseResult<StatementAst[]>.CreateSuccess(statementAsts.ToArray());
         }
 
-        Func<TokenStream, IParseResult<ExprAst>> ParseExpr()
+        Parser<ExprAst> ParseExpr()
         {
             return
                 ParserCombinator.Or<ExprAst>(
@@ -185,7 +184,7 @@ namespace MarineLang.SyntaxAnalysis
                 (stream);
         }
 
-        Func<TokenStream, IParseResult<Token>> ParseToken(TokenType tokenType)
+        Parser<Token> ParseToken(TokenType tokenType)
         {
             return ParserCombinator.TestOnce(token => token.tokenType == tokenType);
         }

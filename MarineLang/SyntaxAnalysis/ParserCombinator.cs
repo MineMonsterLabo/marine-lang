@@ -1,5 +1,4 @@
 ﻿using MarineLang.Models;
-using MarineLang.Streams;
 using System;
 using System.Collections.Generic;
 
@@ -7,7 +6,7 @@ namespace MarineLang.SyntaxAnalysis
 {
     public static class ParserCombinator
     {
-        public static Func<TokenStream, IParseResult<IEnumerable<T>>> Many<T>(Func<TokenStream, IParseResult<T>> parser)
+        public static Parser<IEnumerable<T>> Many<T>(Parser<T> parser)
         {
             return
                 stream =>
@@ -26,7 +25,7 @@ namespace MarineLang.SyntaxAnalysis
                 };
         }
 
-        public static Func<TokenStream, IParseResult<T>> Try<T>(Func<TokenStream, IParseResult<T>> parser)
+        public static Parser<T> Try<T>(Parser<T> parser)
         {
             return
                 stream =>
@@ -41,8 +40,7 @@ namespace MarineLang.SyntaxAnalysis
                 };
         }
 
-        public static Func<TokenStream, IParseResult<T>> Or<T>
-            (params Func<TokenStream, IParseResult<T>>[] parsers)
+        public static Parser<T> Or<T>(params Parser<T>[] parsers)
         {
             return
                 stream =>
@@ -53,12 +51,11 @@ namespace MarineLang.SyntaxAnalysis
                         if (parseResult.IsError == false || parseResult.Error.ErrorKind == ErrorKind.ForceError)
                             return parseResult;
                     }
-                    return ParseResult<T>.CreateError(new Error("", ErrorKind.InComplete)); ;
+                    return ParseResult<T>.CreateError(new Error(ErrorKind.InComplete)); ;
                 };
         }
 
-        public static Func<TokenStream, IParseResult<T[]>> Separated<T, TT>
-            (Func<TokenStream, IParseResult<T>> parser, Func<TokenStream, IParseResult<TT>> separateParser)
+        public static Parser<T[]> Separated<T, TT>(Parser<T> parser, Parser<TT> separateParser)
         {
             return stream =>
             {
@@ -71,7 +68,7 @@ namespace MarineLang.SyntaxAnalysis
                         break;
                     var result = parser(stream);
                     if (result.IsError && isFirst == false)
-                        return ParseResult<T[]>.CreateError(new Error("", ErrorKind.InComplete));
+                        return ParseResult<T[]>.CreateError(new Error(ErrorKind.InComplete));
                     isFirst = false;
                     if (result.IsError)
                         break;
@@ -81,7 +78,7 @@ namespace MarineLang.SyntaxAnalysis
             };
         }
 
-        public static Func<TokenStream, IParseResult<Token>> TestOnce(Func<Token, bool> test)
+        public static Parser<Token> TestOnce(Func<Token, bool> test)
         {
             return stream =>
             {
@@ -91,7 +88,7 @@ namespace MarineLang.SyntaxAnalysis
                     stream.MoveNext();
                     return ParseResult<Token>.CreateSuccess(token);
                 }
-                return ParseResult<Token>.CreateError(new Error("", ErrorKind.InComplete));
+                return ParseResult<Token>.CreateError(new Error(ErrorKind.InComplete));
             };
         }
     }

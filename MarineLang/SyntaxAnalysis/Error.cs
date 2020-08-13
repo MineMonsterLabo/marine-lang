@@ -31,6 +31,13 @@ namespace MarineLang.SyntaxAnalysis
             ErrorPosition = errorPosition;
         }
 
+        public Error(ErrorKind errorKind)
+        {
+            ErrorMessage = "";
+            ErrorKind = errorKind;
+            ErrorPosition = default;
+        }
+
         public Error()
         {
             ErrorMessage = "";
