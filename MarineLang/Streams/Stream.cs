@@ -1,4 +1,6 @@
-﻿namespace MarineLang.Streams
+﻿using System;
+
+namespace MarineLang.Streams
 {
     public class Stream<T>
     {
@@ -7,6 +9,7 @@
         public bool IsEnd { get; private set; } = false;
 
         public T Current => items[Index];
+        public T LastCurrent => items[Math.Min(Index, items.Length - 1)];
 
         public Stream(T[] items)
         {

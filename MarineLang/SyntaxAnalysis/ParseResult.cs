@@ -1,5 +1,4 @@
-﻿using MarineLang.Models;
-using System;
+﻿using System;
 
 namespace MarineLang.SyntaxAnalysis
 {
@@ -7,8 +6,7 @@ namespace MarineLang.SyntaxAnalysis
     public interface IParseResult<out T>
     {
         bool IsError { get; }
-        string ErrorMessage { get; }
-        string FullErrorMessage { get; }
+        Error Error { get; }
 
         T Value { get; }
 
@@ -16,42 +14,39 @@ namespace MarineLang.SyntaxAnalysis
 
         IParseResult<TT> CastError<TT>();
     }
+
     public class ParseResult<T> : IParseResult<T>
     {
-        public bool IsError { get; }
-        public string ErrorMessage { get; }
-        public string FullErrorMessage => $"{ErrorMessage} {ErrorPosition}";
-        public Position ErrorPosition { get; }
+        public bool IsError => Error != null;
+        public Error Error { get; }
         public T Value { get; }
 
-        public ParseResult(bool isError, string errorMessage, Position errorPosition, T value)
+        public ParseResult(Error error, T value)
         {
-            IsError = isError;
-            ErrorMessage = errorMessage;
-            ErrorPosition = errorPosition;
             Value = value;
+            Error = error;
         }
 
         public IParseResult<TT> Map<TT>(Func<T, TT> func)
         {
             if (IsError)
-                return ParseResult<TT>.Error(ErrorMessage, ErrorPosition);
-            return ParseResult<TT>.Success(func(Value));
+                return ParseResult<TT>.CreateError(Error);
+            return ParseResult<TT>.CreateSuccess(func(Value));
         }
 
         public IParseResult<TT> CastError<TT>()
         {
-            return ParseResult<TT>.Error(ErrorMessage, ErrorPosition);
+            return ParseResult<TT>.CreateError(Error);
         }
 
-        public static IParseResult<T> Success(T value)
+        public static IParseResult<T> CreateSuccess(T value)
         {
-            return new ParseResult<T>(false, "", default, value);
+            return new ParseResult<T>(null, value);
         }
 
-        public static IParseResult<T> Error(string errorMessage, Position errorPosition = default)
+        public static IParseResult<T> CreateError(Error error)
         {
-            return new ParseResult<T>(true, errorMessage, errorPosition, default);
+            return new ParseResult<T>(error, default);
         }
     }
 }

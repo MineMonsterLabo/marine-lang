@@ -54,12 +54,12 @@ namespace Example
 
             var tokenStream = TokenStream.Create(tokens.ToArray());
 
-            var parserResult = new Parser().Parse(tokenStream);
+            var parserResult = new SyntaxAnalyzer().Parse(tokenStream);
 
             if (parserResult.IsError)
             {
                 Console.WriteLine("パースエラー");
-                Console.WriteLine(parserResult.FullErrorMessage);
+                Console.WriteLine(parserResult.Error.FullErrorMessage);
                 return;
             }
 
