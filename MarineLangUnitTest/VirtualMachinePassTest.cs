@@ -14,7 +14,7 @@ namespace MarineLangUnitTest
         public VirtualMachine VmCreateHelper(string str)
         {
             var lexer = new Lexer();
-            var parser = new Parser();
+            var parser = new SyntaxAnalyzer();
 
             var tokens = lexer.GetTokens(str).ToArray();
             var tokenStream = TokenStream.Create(tokens);

@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace MarineLang.SyntaxAnalysis
 {
-    public class Parser
+    public class SyntaxAnalyzer
     {
         public IParseResult<ProgramAst> Parse(TokenStream stream)
         {
