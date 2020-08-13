@@ -24,19 +24,19 @@ namespace MarineLang.SyntaxAnalysis
             var headToken = stream.Current;
             return
                 ParseToken(TokenType.Func)
-                .InCompleteErrorWithPositionEnd($"関数定義が間違っています \"{stream.Current.text}\"")
+                .InCompleteErrorWithPositionEnd($"関数定義が間違っています \"{stream.Current.text}\"", ErrorCode.NonFuncWord)
                 .Right(ParseToken(TokenType.Id))
-                .InCompleteError($"関数定義に関数名がありません", headToken.PositionEnd)
+                .InCompleteError($"関数定義に関数名がありません", ErrorCode.NonFuncName, headToken.PositionEnd)
                 .Bind(funcNameToken =>
                      ParserCombinator.Try(ParseVariableList)
-                     .InCompleteError("関数定義には()が必要です", funcNameToken.PositionEnd)
+                     .InCompleteError("関数定義には()が必要です", ErrorCode.NonFuncParen, funcNameToken.PositionEnd)
                         .Bind(varList =>
                             ParserCombinator.Try(ParseFuncBody)
                             .MapResult(statementAsts => FuncDefinitionAst.Create(funcNameToken.text, varList, statementAsts))
                         )
 
                  ).Left(ParseToken(TokenType.End))
-                 .InCompleteErrorWithPositionEnd($"関数の終わりにendがありません")
+                 .InCompleteErrorWithPositionEnd($"関数の終わりにendがありません", ErrorCode.NonEndWord)
                 (stream);
         }
 
@@ -91,7 +91,7 @@ namespace MarineLang.SyntaxAnalysis
         IParseResult<ReturnAst> ParseReturn(TokenStream stream)
         {
             return ParseToken(TokenType.Return)
-                .Right(ParseExpr().InCompleteErrorWithPositionHead("retの後には式が必要です", ErrorKind.ForceError))
+                .Right(ParseExpr().InCompleteErrorWithPositionHead("retの後には式が必要です", ErrorCode.NonRetExpr, ErrorKind.ForceError))
                 .MapResult(ReturnAst.Create)
                 (stream);
         }
