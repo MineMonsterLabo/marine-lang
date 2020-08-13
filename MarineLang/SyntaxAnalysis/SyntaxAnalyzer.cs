@@ -101,8 +101,11 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParseToken(TokenType.Let)
                 .Right(ParseToken(TokenType.Id))
+                .InCompleteErrorWithPositionHead("letの後には変数名が必要です", ErrorCode.NonLetVarName, ErrorKind.ForceError)
                 .Left(ParseToken(TokenType.AssignmentOp))
+                .InCompleteErrorWithPositionHead("letに=がありません", ErrorCode.NonLetEqual, ErrorKind.ForceError)
                 .Bind(varNameToken => ParseExpr().MapResult(expr => AssignmentAst.Create(varNameToken.text, expr)))
+                .InCompleteErrorWithPositionHead("letに式がありません", ErrorCode.NonLetExpr, ErrorKind.ForceError)
                 (stream);
         }
 
