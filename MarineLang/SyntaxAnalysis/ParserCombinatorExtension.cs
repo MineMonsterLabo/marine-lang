@@ -73,6 +73,17 @@ namespace MarineLang.SyntaxAnalysis
             };
         }
 
+        public static Parser<T> ExpectCanMoveNext<T>(this Parser<T> parser)
+        {
+            return stream =>
+            {
+                var result = parser(stream);
+                if (result.IsError == false && stream.IsEnd)
+                    return ParseResult<T>.CreateError(new Error(ErrorKind.InComplete));
+                return result;
+            };
+        }
+
         public static Parser<TT> Bind<T, TT>(this Parser<T> parser, Func<T, Parser<TT>> func)
         {
             return stream =>

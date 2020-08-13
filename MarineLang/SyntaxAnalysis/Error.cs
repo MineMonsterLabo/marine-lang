@@ -18,7 +18,7 @@ namespace MarineLang.SyntaxAnalysis
         NonRetExpr,
         NonLetVarName,
         NonLetEqual,
-        NonLetExpr,
+        NonEqualExpr,
         Unknown
     }
 
