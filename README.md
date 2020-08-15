@@ -30,7 +30,10 @@ statement      =  ret_statement |
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment ;
 re_assignment  = id , '=' , expr ;
-expr           = func_call | 
+expr           = plus
+plus           = term , ['+' , plus]
+term           =
+                 func_call | 
                  float_literal | 
                  int_literal | 
                  bool_literal | 
