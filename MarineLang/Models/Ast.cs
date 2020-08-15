@@ -69,17 +69,17 @@ namespace MarineLang.Models
 
     public class BinaryOpAst : ExprAst
     {
-        public TokenType binaryKind;
+        public TokenType opKind;
         public ExprAst leftExpr;
         public ExprAst rightExpr;
 
-        public static BinaryOpAst Create(ExprAst leftExpr, ExprAst rightExpr, TokenType binaryKind)
+        public static BinaryOpAst Create(ExprAst leftExpr, ExprAst rightExpr, TokenType opKind)
         {
             return new BinaryOpAst
             {
                 leftExpr = leftExpr,
                 rightExpr = rightExpr,
-                binaryKind = binaryKind
+                opKind = opKind
             };
         }
     }
