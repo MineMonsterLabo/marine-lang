@@ -178,10 +178,26 @@ fun f() let a=3 ret a end
         }
 
         [Theory]
-        [InlineData("fun main() ret 1+5 end", 6)]
-        [InlineData("fun main() ret \"a\"+\"b\"+\"c\" end", "abc")]
-        [InlineData("fun main() ret 3.5+1.5 end", 3.5f + 1.5f)]
-        public void PlusOperator<T>(string str, T expected)
+        [InlineData("fun main() ret 1 + 5 end", 6)]
+        [InlineData("fun main() ret \"a\" + \"b\" + \"c\" end", "abc")]
+        [InlineData("fun main() ret 3.5 + 1.5 end", 3.5f + 1.5f)]
+        [InlineData("fun main() ret 2 * 3 + 10 / 2 end", 11)]
+        [InlineData("fun main() ret 2 / 8 end", 0)]
+        [InlineData("fun main() ret 5-4-3 end", 5 - 4 - 3)]
+        [InlineData("fun main() ret 5 == 4 end", false)]
+        [InlineData("fun main() ret 5 != 5-1 end", true)]
+        [InlineData("fun main() ret true || false end", true)]
+        [InlineData("fun main() ret true && false end", false)]
+        [InlineData("fun main() ret true && false || true end", true)]
+        [InlineData("fun main() ret 1 > 0 end", true)]
+        [InlineData("fun main() ret 10 > 6 + 5 end", false)]
+        [InlineData("fun main() ret 100.0 / 10.0 < 6.0 + 5.0 end", true)]
+        [InlineData("fun main() ret 10 > 10 end", false)]
+        [InlineData("fun main() ret 10 < 10 end", false)]
+        [InlineData("fun main() ret 10 >= 10 end", true)]
+        [InlineData("fun main() ret 10 <= 10 end", true)]
+        [InlineData("fun main() ret 10 <= 9 end", false)]
+        public void Operator<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }
