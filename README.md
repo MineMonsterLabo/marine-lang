@@ -19,7 +19,6 @@ Unityで簡易でパワフルなスクリプト言語を動かしたい！(特�
 
 ```ebnf
 program        = {func_definition} ;
-
 func_definition
                = 'func' , id , variable_list , func_body , 'end' ;
 func_body      = {statement} ;
@@ -30,8 +29,10 @@ statement      =  ret_statement |
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment ;
 re_assignment  = id , '=' , expr ;
-expr           = binary_op_expr
-binary_op_expr = term , [binary_op , binary_op_expr]
+expr           = if_expr | binary_op_expr ;
+if_expr        = 'if' , expr , block , [ 'else' , block ] ;
+block          = '{' , {statement} , '}'
+binary_op_expr = term , [binary_op , binary_op_expr] ;
 term           =
                  '(' , expr , ')'
                  func_call | 
