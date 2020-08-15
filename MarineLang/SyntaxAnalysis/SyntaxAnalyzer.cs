@@ -137,7 +137,8 @@ namespace MarineLang.SyntaxAnalysis
         Parser<ExprAst> ParseTerm()
         {
             return
-                ParserCombinator.Or<ExprAst>(
+                ParserCombinator.Or(
+                    ParserCombinator.Try(ParseParenExpr()),
                     ParserCombinator.Try(ParseFuncCall),
                     ParserCombinator.Try(ParseFloat),
                     ParserCombinator.Try(ParseInt),
@@ -146,6 +147,14 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseString),
                     ParserCombinator.Try(ParseVariable)
                 );
+        }
+
+        Parser<ExprAst> ParseParenExpr()
+        {
+            return
+             ParseToken(TokenType.LeftParen)
+             .Right(ParseExpr())
+             .Left(ParseToken(TokenType.RightParen));
         }
 
 

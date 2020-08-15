@@ -33,6 +33,7 @@ re_assignment  = id , '=' , expr ;
 expr           = binary_op_expr
 binary_op_expr = term , [binary_op , binary_op_expr]
 term           =
+                 '(' , expr , ')'
                  func_call | 
                  float_literal | 
                  int_literal | 

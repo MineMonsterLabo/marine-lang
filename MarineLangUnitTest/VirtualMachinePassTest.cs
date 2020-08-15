@@ -201,5 +201,15 @@ fun f() let a=3 ret a end
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData("fun main() ret (4+5)*2 end ", (4 + 5) * 2)]
+        [InlineData("fun main() ret (4+5)*(3-7) end ", (4 + 5) * (3 - 7))]
+        [InlineData("fun main() ret ((plus((8),(2)))) end ", 10)]
+        public void ParenExpr<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
     }
 }
