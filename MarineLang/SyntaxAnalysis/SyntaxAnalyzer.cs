@@ -67,10 +67,10 @@ namespace MarineLang.SyntaxAnalysis
         Parser<ExprAst> ParseExpr()
         {
             return
-               ParseOp();
+               ParseBinaryOp();
         }
 
-        Parser<ExprAst> ParseOp()
+        Parser<ExprAst> ParseBinaryOp()
         {
             return stream =>
             {
@@ -82,11 +82,11 @@ namespace MarineLang.SyntaxAnalysis
                 if (opResult.IsError)
                     return termResult;
                 return
-                    ParseOp2(termResult.Value, opResult.Value.tokenType)(stream);
+                    ParseBinaryOp2(termResult.Value, opResult.Value.tokenType)(stream);
             };
         }
 
-        Parser<ExprAst> ParseOp2(ExprAst beforeExpr, TokenType beforeTokenType)
+        Parser<ExprAst> ParseBinaryOp2(ExprAst beforeExpr, TokenType beforeTokenType)
         {
             return stream =>
             {
@@ -102,9 +102,9 @@ namespace MarineLang.SyntaxAnalysis
                 var tokenType = opResult.Value.tokenType;
                 if (GetOpPriority(beforeTokenType) >= GetOpPriority(tokenType))
                     return
-                        ParseOp2(BinaryOpAst.Create(beforeExpr, termResult.Value, beforeTokenType), tokenType)(stream);
+                        ParseBinaryOp2(BinaryOpAst.Create(beforeExpr, termResult.Value, beforeTokenType), tokenType)(stream);
                 return
-                    ParseOp2(termResult.Value, tokenType)
+                    ParseBinaryOp2(termResult.Value, tokenType)
                     .MapResult(expr => BinaryOpAst.Create(beforeExpr, expr, beforeTokenType))
                     (stream);
             };
