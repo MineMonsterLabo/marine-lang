@@ -40,6 +40,11 @@ namespace MarineLang.Models
         {
             return this as VariableAst;
         }
+
+        public BinaryOpAst GetBinaryOpAst()
+        {
+            return this as BinaryOpAst;
+        }
     }
 
     public class ValueAst : ExprAst
@@ -59,6 +64,23 @@ namespace MarineLang.Models
         public static VariableAst Create(string varName)
         {
             return new VariableAst { varName = varName };
+        }
+    }
+
+    public class BinaryOpAst : ExprAst
+    {
+        public TokenType binaryKind;
+        public ExprAst leftExpr;
+        public ExprAst rightExpr;
+
+        public static BinaryOpAst Create(ExprAst leftExpr, ExprAst rightExpr, TokenType binaryKind)
+        {
+            return new BinaryOpAst
+            {
+                leftExpr = leftExpr,
+                rightExpr = rightExpr,
+                binaryKind = binaryKind
+            };
         }
     }
 

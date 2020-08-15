@@ -67,6 +67,29 @@ namespace MarineLang.SyntaxAnalysis
         Parser<ExprAst> ParseExpr()
         {
             return
+               ParsePlus();
+        }
+
+        Parser<ExprAst> ParsePlus()
+        {
+            return stream =>
+            {
+                var termResult = ParseTerm()(stream);
+                if (termResult.IsError || stream.IsEnd)
+                    return termResult;
+
+                var plusResult = ParseToken(TokenType.Plus)(stream);
+                if (plusResult.IsError)
+                    return termResult;
+                return
+                    ParsePlus()(stream)
+                    .Map(expr => BinaryOpAst.Create(termResult.Value, expr, TokenType.Plus));
+            };
+        }
+
+        Parser<ExprAst> ParseTerm()
+        {
+            return
                 ParserCombinator.Or<ExprAst>(
                     ParserCombinator.Try(ParseFuncCall),
                     ParserCombinator.Try(ParseFloat),
@@ -77,6 +100,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseVariable)
                 );
         }
+
 
         IParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
         {

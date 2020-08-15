@@ -83,6 +83,20 @@ namespace MarineLang
                 return exprAst.GetValueAst().value;
             else if (exprAst.GetVariableAst() != null)
                 return variables.Peek()[exprAst.GetVariableAst().varName];
+            else if (exprAst.GetBinaryOpAst() != null)
+            {
+                var binaryOpAst = exprAst.GetBinaryOpAst();
+                var leftValue = RunExpr(binaryOpAst.leftExpr);
+                var rightValue = RunExpr(binaryOpAst.rightExpr);
+
+                switch (leftValue)
+                {
+                    case int v: return v + (int)rightValue;
+                    case float v: return v + (float)rightValue;
+                    case string v: return v + rightValue;
+                }
+            }
+
             return null;
         }
     }
