@@ -33,6 +33,17 @@ namespace MarineLangUnitTest
             return vm;
         }
 
+        internal void RunReturnCheck<RET>(string str, RET expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<RET>("main");
+
+            Assert.Equal(expected, ret);
+        }
+
         public static void hello() { }
         public static int ret_123() { return 123; }
         public static int plus(int a, int b) { return a + b; }
@@ -47,11 +58,7 @@ fun foo_bar() hello() end"
         )]
         public void CallMarineLangFunc(string str)
         {
-            var vm = VmCreateHelper(str);
-
-            Assert.NotNull(vm);
-
-            vm.Run<UnitType>("main");
+            RunReturnCheck(str, new UnitType());
         }
 
         [Theory]
@@ -66,13 +73,7 @@ fun fuga() ret 123 end
 ")]
         public void CallMarineLangFuncRetInt(string str)
         {
-            var vm = VmCreateHelper(str);
-
-            Assert.NotNull(vm);
-
-            var ret = vm.Run<int>("main");
-
-            Assert.Equal(123, ret);
+            RunReturnCheck(str, 123);
         }
 
         [Theory]
@@ -80,13 +81,7 @@ fun fuga() ret 123 end
         [InlineData("fun main() ret true end", true)]
         public void CallMarineLangFuncRetBool(string str, bool flag)
         {
-            var vm = VmCreateHelper(str);
-
-            Assert.NotNull(vm);
-
-            var ret = vm.Run<bool>("main");
-
-            Assert.Equal(flag, ret);
+            RunReturnCheck(str, flag);
         }
 
         [Theory]
@@ -99,13 +94,7 @@ fun fuga() ret 123 end
         [InlineData("fun main() ret 'あ' end", 'あ')]
         public void CallMarineLangFuncRetChar(string str, char c)
         {
-            var vm = VmCreateHelper(str);
-
-            Assert.NotNull(vm);
-
-            var ret = vm.Run<char>("main");
-
-            Assert.Equal(c, ret);
+            RunReturnCheck(str, c);
         }
 
         [Theory]
@@ -119,13 +108,8 @@ fun fuga() ret 123 end
         [InlineData("fun main() ret \"あ\\rhoge\\\"\" end", "あ\rhoge\"")]
         public void CallMarineLangFuncRetString(string str, string expected)
         {
-            var vm = VmCreateHelper(str);
+            RunReturnCheck(str, expected);
 
-            Assert.NotNull(vm);
-
-            var ret = vm.Run<string>("main");
-
-            Assert.Equal(expected, ret);
         }
 
         [Theory]
@@ -134,28 +118,16 @@ fun fuga() ret 123 end
         [InlineData("fun main() ret 3.3333214 end", 3.3333214f)]
         public void CallMarineLangFuncRetFloat(string str, float expected)
         {
-            var vm = VmCreateHelper(str);
-
-            Assert.NotNull(vm);
-
-            var ret = vm.Run<float>("main");
-
-            Assert.Equal(expected, ret);
+            RunReturnCheck(str, expected);
         }
 
         [Theory]
         [InlineData("fun main() ret plus(3,2) end", 5)]
         [InlineData("fun main() ret two(3) end", 6)]
         [InlineData("fun main() ret plus(1,two(two(3))) end", 13)]
-        public void CallCsharpFuncWithArgs(string str, float expected)
+        public void CallCsharpFuncWithArgs(string str, int expected)
         {
-            var vm = VmCreateHelper(str);
-
-            Assert.NotNull(vm);
-
-            var ret = vm.Run<int>("main");
-
-            Assert.Equal(expected, ret);
+            RunReturnCheck(str, expected);
         }
 
         [Theory]
@@ -163,13 +135,7 @@ fun fuga() ret 123 end
         [InlineData("fun main() ret not(not(true)) end", true)]
         public void CallCsharpFuncWithArgs2(string str, bool expected)
         {
-            var vm = VmCreateHelper(str);
-
-            Assert.NotNull(vm);
-
-            var ret = vm.Run<bool>("main");
-
-            Assert.Equal(expected, ret);
+            RunReturnCheck(str, expected);
         }
 
         [Theory]
@@ -184,13 +150,7 @@ fun f() let a=3 ret a end
 ", 16)]
         public void Variable<T>(string str, T expected)
         {
-            var vm = VmCreateHelper(str);
-
-            Assert.NotNull(vm);
-
-            var ret = vm.Run<T>("main");
-
-            Assert.Equal(expected, ret);
+            RunReturnCheck(str, expected);
         }
 
         [Theory]
@@ -201,13 +161,7 @@ fun f() let a=3 ret a end
         [InlineData("fun main() ret f(\"abc\",'c',4,3.5) end fun f(a,b,c,d) ret d end", 3.5f)]
         public void CallMarineFuncWithArgs<T>(string str, T expected)
         {
-            var vm = VmCreateHelper(str);
-
-            Assert.NotNull(vm);
-
-            var ret = vm.Run<T>("main");
-
-            Assert.Equal(expected, ret);
+            RunReturnCheck(str, expected);
         }
 
         [Theory]

@@ -1,6 +1,6 @@
 ﻿namespace MarineLang.BuiltInTypes
 {
-    public class UnitType
+    public struct UnitType
     {
     }
 }
