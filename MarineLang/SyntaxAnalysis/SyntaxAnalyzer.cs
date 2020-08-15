@@ -24,7 +24,7 @@ namespace MarineLang.SyntaxAnalysis
             var headToken = stream.Current;
             return
                 ParseToken(TokenType.Func)
-                .InCompleteErrorWithPositionEnd($"関数定義が間違っています \"{stream.Current.text}\"", ErrorCode.NonFuncWord)
+                .InCompleteErrorWithPositionHead($"関数定義が間違っています \"{stream.Current.text}\"", ErrorCode.NonFuncWord)
                 .Right(ParseToken(TokenType.Id))
                 .InCompleteError($"関数定義に関数名がありません", ErrorCode.NonFuncName, headToken.PositionEnd)
                 .ExpectCanMoveNext()
@@ -93,6 +93,9 @@ namespace MarineLang.SyntaxAnalysis
         IParseResult<ReturnAst> ParseReturn(TokenStream stream)
         {
             return ParseToken(TokenType.Return)
+                .InCompleteErrorWithPositionHead("retを期待してます", ErrorCode.Unknown)
+                .ExpectCanMoveNext()
+                .InCompleteErrorWithPositionEnd("retの後には式が必要です", ErrorCode.NonRetExpr, ErrorKind.ForceError)
                 .Right(ParseExpr().InCompleteErrorWithPositionHead("retの後には式が必要です", ErrorCode.NonRetExpr, ErrorKind.ForceError))
                 .MapResult(ReturnAst.Create)
                 (stream);
@@ -102,14 +105,21 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParseToken(TokenType.Let)
+                .InCompleteErrorWithPositionHead("letを期待してます", ErrorCode.Unknown)
+                .ExpectCanMoveNext()
+                .InCompleteErrorWithPositionEnd("letの後には変数名が必要です", ErrorCode.NonLetVarName, ErrorKind.ForceError)
                 .Right(
                     ParseToken(TokenType.Id)
                     .InCompleteErrorWithPositionHead("letの後には変数名が必要です", ErrorCode.NonLetVarName, ErrorKind.ForceError)
                 )
+                .ExpectCanMoveNext()
+                .InCompleteErrorWithPositionEnd("letに=がありません", ErrorCode.NonLetEqual, ErrorKind.ForceError)
                 .Left(
                     ParseToken(TokenType.AssignmentOp)
                     .InCompleteErrorWithPositionHead("letに=がありません", ErrorCode.NonLetEqual, ErrorKind.ForceError)
                  )
+                .ExpectCanMoveNext()
+                .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
                 .Bind(varNameToken =>
                     ParseExpr()
                     .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
@@ -122,7 +132,11 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                ParseToken(TokenType.Id)
+                .InCompleteErrorWithPositionHead("変数名を期待してます", ErrorCode.Unknown)
                .Left(ParseToken(TokenType.AssignmentOp))
+                .InCompleteErrorWithPositionHead("=を期待してます", ErrorCode.Unknown)
+                .ExpectCanMoveNext()
+                    .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
                .Bind(varNameToken =>
                     ParseExpr()
                     .MapResult(expr => ReAssignmentAst.Create(varNameToken.text, expr))
