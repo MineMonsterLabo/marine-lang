@@ -83,7 +83,89 @@ namespace MarineLang
                 return exprAst.GetValueAst().value;
             else if (exprAst.GetVariableAst() != null)
                 return variables.Peek()[exprAst.GetVariableAst().varName];
+            else if (exprAst.GetBinaryOpAst() != null)
+                return RunBinaryOp(exprAst.GetBinaryOpAst());
+
+            return null;
+        }
+
+        object RunBinaryOp(BinaryOpAst binaryOpAst)
+        {
+            var leftValue = RunExpr(binaryOpAst.leftExpr);
+            var rightValue = RunExpr(binaryOpAst.rightExpr);
+
+            switch (binaryOpAst.opKind)
+            {
+                case TokenType.PlusOp:
+                    switch (leftValue)
+                    {
+                        case int v: return v + (int)rightValue;
+                        case float v: return v + (float)rightValue;
+                        case string v: return v + rightValue;
+                    }
+                    break;
+                case TokenType.MinusOp:
+                    switch (leftValue)
+                    {
+                        case int v: return v - (int)rightValue;
+                        case float v: return v - (float)rightValue;
+                    }
+                    break;
+                case TokenType.MulOp:
+                    switch (leftValue)
+                    {
+                        case int v: return v * (int)rightValue;
+                        case float v: return v * (float)rightValue;
+                    }
+                    break;
+                case TokenType.DivOp:
+                    switch (leftValue)
+                    {
+                        case int v: return v / (int)rightValue;
+                        case float v: return v / (float)rightValue;
+                    }
+                    break;
+                case TokenType.EqualOp:
+                    return leftValue.Equals(rightValue);
+                case TokenType.NotEqualOp:
+                    return !leftValue.Equals(rightValue);
+                case TokenType.OrOp:
+                    return (bool)leftValue || (bool)rightValue;
+                case TokenType.AndOp:
+                    return (bool)leftValue && (bool)rightValue;
+                case TokenType.GreaterOp:
+                    switch (leftValue)
+                    {
+                        case int v: return v > (int)rightValue;
+                        case float v: return v > (float)rightValue;
+                    }
+                    break;
+                case TokenType.GreaterEqualOp:
+                    switch (leftValue)
+                    {
+                        case int v: return v >= (int)rightValue;
+                        case float v: return v >= (float)rightValue;
+                    }
+                    break;
+
+                case TokenType.LessOp:
+                    switch (leftValue)
+                    {
+                        case int v: return v < (int)rightValue;
+                        case float v: return v < (float)rightValue;
+                    }
+                    break;
+
+                case TokenType.LessEqualOp:
+                    switch (leftValue)
+                    {
+                        case int v: return v <= (int)rightValue;
+                        case float v: return v <= (float)rightValue;
+                    }
+                    break;
+            }
             return null;
         }
     }
+
 }

@@ -16,10 +16,12 @@ namespace MarineLang.LexicalAnalysis
             while (stream.IsEnd == false)
             {
                 yield return
-                    LexerHelper.GetStringToken("&&", TokenType.Op)(stream) ??
-                    LexerHelper.GetStringToken("||", TokenType.Op)(stream) ??
-                    LexerHelper.GetStringToken("==", TokenType.Op)(stream) ??
-                    LexerHelper.GetStringToken("!=", TokenType.Op)(stream) ??
+                    LexerHelper.GetStringToken("&&", TokenType.AndOp)(stream) ??
+                    LexerHelper.GetStringToken("||", TokenType.OrOp)(stream) ??
+                    LexerHelper.GetStringToken("==", TokenType.EqualOp)(stream) ??
+                    LexerHelper.GetStringToken(">=", TokenType.GreaterEqualOp)(stream) ??
+                    LexerHelper.GetStringToken("<=", TokenType.LessEqualOp)(stream) ??
+                    LexerHelper.GetStringToken("!=", TokenType.NotEqualOp)(stream) ??
                     LexerHelper.GetStringTokenTailDelimiter("fun", TokenType.Func, stream) ??
                     LexerHelper.GetStringTokenTailDelimiter("end", TokenType.End, stream) ??
                     LexerHelper.GetStringTokenTailDelimiter("let", TokenType.Let, stream) ??
@@ -33,10 +35,12 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetCharToken(stream, '(', TokenType.LeftParen) ??
                     LexerHelper.GetCharToken(stream, ')', TokenType.RightParen) ??
                     LexerHelper.GetCharToken(stream, '.', TokenType.Op) ??
-                    LexerHelper.GetCharToken(stream, '+', TokenType.Op) ??
-                    LexerHelper.GetCharToken(stream, '-', TokenType.Op) ??
-                    LexerHelper.GetCharToken(stream, '*', TokenType.Op) ??
-                    LexerHelper.GetCharToken(stream, '/', TokenType.Op) ??
+                    LexerHelper.GetCharToken(stream, '>', TokenType.GreaterOp) ??
+                    LexerHelper.GetCharToken(stream, '<', TokenType.LessOp) ??
+                    LexerHelper.GetCharToken(stream, '+', TokenType.PlusOp) ??
+                    LexerHelper.GetCharToken(stream, '-', TokenType.MinusOp) ??
+                    LexerHelper.GetCharToken(stream, '*', TokenType.MulOp) ??
+                    LexerHelper.GetCharToken(stream, '/', TokenType.DivOp) ??
                     LexerHelper.GetCharToken(stream, '%', TokenType.Op) ??
                     LexerHelper.GetCharToken(stream, '&', TokenType.Op) ??
                     LexerHelper.GetCharToken(stream, '|', TokenType.Op) ??

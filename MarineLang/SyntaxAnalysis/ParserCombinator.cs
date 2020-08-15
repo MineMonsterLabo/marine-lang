@@ -15,10 +15,10 @@ namespace MarineLang.SyntaxAnalysis
                     while (stream.IsEnd == false)
                     {
                         var parseResult = parser(stream);
-
-                        if (parseResult.IsError)
+                        if (parseResult.IsError && parseResult.Error.ErrorKind != ErrorKind.InComplete)
                             return parseResult.CastError<IEnumerable<T>>();
-
+                        if (parseResult.IsError)
+                            break;
                         list.Add(parseResult.Value);
                     }
                     return ParseResult<IEnumerable<T>>.CreateSuccess(list);

@@ -67,6 +67,76 @@ namespace MarineLang.SyntaxAnalysis
         Parser<ExprAst> ParseExpr()
         {
             return
+               ParseBinaryOp();
+        }
+
+        Parser<ExprAst> ParseBinaryOp()
+        {
+            return stream =>
+            {
+                var termResult = ParseTerm()(stream);
+                if (termResult.IsError || stream.IsEnd)
+                    return termResult;
+
+                var opResult = ParseOpToken()(stream);
+                if (opResult.IsError)
+                    return termResult;
+                return
+                    ParseBinaryOp2(termResult.Value, opResult.Value.tokenType)(stream);
+            };
+        }
+
+        Parser<ExprAst> ParseBinaryOp2(ExprAst beforeExpr, TokenType beforeTokenType)
+        {
+            return stream =>
+            {
+                var termResult = ParseTerm()(stream);
+                if (termResult.IsError || stream.IsEnd)
+                    return termResult;
+
+                var opResult = ParseOpToken()(stream);
+                if (opResult.IsError)
+                    return ParseResult<ExprAst>.CreateSuccess(
+                        BinaryOpAst.Create(beforeExpr, termResult.Value, beforeTokenType)
+                    );
+                var tokenType = opResult.Value.tokenType;
+                if (GetOpPriority(beforeTokenType) >= GetOpPriority(tokenType))
+                    return
+                        ParseBinaryOp2(BinaryOpAst.Create(beforeExpr, termResult.Value, beforeTokenType), tokenType)(stream);
+                return
+                    ParseBinaryOp2(termResult.Value, tokenType)
+                    .MapResult(expr => BinaryOpAst.Create(beforeExpr, expr, beforeTokenType))
+                    (stream);
+            };
+        }
+
+        Parser<Token> ParseOpToken()
+        {
+            return
+                ParserCombinator.TestOnce(token =>
+                    token.tokenType >= TokenType.OrOp
+                    && token.tokenType <= TokenType.DivOp
+                );
+        }
+
+        int GetOpPriority(TokenType tokenType)
+        {
+            if (tokenType == TokenType.MinusOp)
+                return (int)TokenType.PlusOp;
+            if (tokenType == TokenType.NotEqualOp)
+                return (int)TokenType.EqualOp;
+            if (
+                tokenType == TokenType.GreaterOp ||
+                tokenType == TokenType.LessOp ||
+                tokenType == TokenType.LessEqualOp
+            )
+                return (int)TokenType.GreaterEqualOp;
+            return (int)tokenType;
+        }
+
+        Parser<ExprAst> ParseTerm()
+        {
+            return
                 ParserCombinator.Or<ExprAst>(
                     ParserCombinator.Try(ParseFuncCall),
                     ParserCombinator.Try(ParseFloat),
@@ -77,6 +147,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseVariable)
                 );
         }
+
 
         IParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
         {
