@@ -176,5 +176,14 @@ fun f() let a=3 ret a end
 
             Assert.Equal(20, ret);
         }
+
+        [Theory]
+        [InlineData("fun main() ret 1+5 end", 6)]
+        [InlineData("fun main() ret \"a\"+\"b\"+\"c\" end", "abc")]
+        [InlineData("fun main() ret 3.5+1.5 end", 3.5f + 1.5f)]
+        public void PlusOperator<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
