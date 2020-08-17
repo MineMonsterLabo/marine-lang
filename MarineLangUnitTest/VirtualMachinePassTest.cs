@@ -11,7 +11,7 @@ namespace MarineLangUnitTest
     public class VirtualMachinePassTest
     {
 
-        public VirtualMachine VmCreateHelper(string str)
+        public HighLevelVirtualMachine VmCreateHelper(string str)
         {
             var lexer = new Lexer();
             var parser = new SyntaxAnalyzer();
@@ -21,7 +21,7 @@ namespace MarineLangUnitTest
             var parseResult = parser.Parse(tokenStream);
             if (parseResult.IsError)
                 return null;
-            var vm = new VirtualMachine();
+            var vm = new HighLevelVirtualMachine();
 
             vm.SetProgram(parseResult.Value);
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("ret_123"));
@@ -29,6 +29,8 @@ namespace MarineLangUnitTest
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("plus"));
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("two"));
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("not"));
+
+            vm.Compile();
 
             return vm;
         }
