@@ -141,6 +141,7 @@ fun fuga() ret 123 end
         }
 
         [Theory]
+        [InlineData("fun main() ret f(1) end fun f(a) a=4 ret a end", 4)]
         [InlineData("fun main() let abc_d=false ret abc_d end", false)]
         [InlineData("fun main() let hoge=5 hoge=3 ret hoge end", 3)]
         [InlineData("fun main() let left=5 let right=3 ret plus(left,right) end", 8)]
@@ -209,6 +210,32 @@ fun f() let a=3 ret a end
         [InlineData("fun main() ret (4+5)*(3-7) end ", (4 + 5) * (3 - 7))]
         [InlineData("fun main() ret ((plus((8),(2)))) end ", 10)]
         public void ParenExpr<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret if(1==2-1) {\"ok\"} end ", "ok")]
+        [InlineData("fun main() if(true) {ret 1 ret 2} end ", 1)]
+        [InlineData("fun main() ret if(1!=2-1) {\"ok\"} else {\"no\"}end ", "no")]
+        [InlineData(
+@"
+fun main() 
+    let result = sum(0, 100)
+    ret result
+end
+
+fun sum(min, max)  
+    ret 
+        if min == max 
+        {min} 
+        else {
+	 min + sum(min + 1, max)
+        }
+end
+"
+            , 5050)]
+        public void IfExpr<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }
