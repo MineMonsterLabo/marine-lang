@@ -43,6 +43,11 @@
         {
             return this as BinaryOpAst;
         }
+
+        public IfExprAst GetIfExprAst()
+        {
+            return this as IfExprAst;
+        }
     }
 
     public class ValueAst : ExprAst
@@ -78,6 +83,23 @@
                 leftExpr = leftExpr,
                 rightExpr = rightExpr,
                 opKind = opKind
+            };
+        }
+    }
+
+    public class IfExprAst : ExprAst
+    {
+        public ExprAst conditionExpr;
+        public StatementAst[] thenStatements;
+        public StatementAst[] elseStatements;
+
+        public static IfExprAst Create(ExprAst conditionExpr, StatementAst[] thenStatements, StatementAst[] elseStatements)
+        {
+            return new IfExprAst
+            {
+                conditionExpr = conditionExpr,
+                thenStatements = thenStatements,
+                elseStatements = elseStatements
             };
         }
     }

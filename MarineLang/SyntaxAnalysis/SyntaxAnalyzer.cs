@@ -47,13 +47,7 @@ namespace MarineLang.SyntaxAnalysis
             var statementAsts = new List<StatementAst>();
             while (stream.IsEnd == false && stream.Current.tokenType != TokenType.End)
             {
-                var parseResult =
-                    ParserCombinator.Or<StatementAst>(
-                        ParserCombinator.Try(ParseReturn),
-                        ParserCombinator.Try(ParseAssignment),
-                        ParserCombinator.Try(ParseReAssignment),
-                        ParserCombinator.Try(ParseExpr())
-                    )(stream);
+                var parseResult = ParseStatement()(stream);
 
                 if (parseResult.IsError)
                     return parseResult.CastError<StatementAst[]>();
@@ -64,10 +58,78 @@ namespace MarineLang.SyntaxAnalysis
             return ParseResult<StatementAst[]>.CreateSuccess(statementAsts.ToArray());
         }
 
-        Parser<ExprAst> ParseExpr()
+        Parser<StatementAst> ParseStatement()
         {
             return
-               ParseBinaryOp();
+                ParserCombinator.Or<StatementAst>(
+                    ParserCombinator.Try(ParseReturn),
+                    ParserCombinator.Try(ParseAssignment),
+                    ParserCombinator.Try(ParseReAssignment),
+                    ParserCombinator.Try(ParseExpr())
+                );
+        }
+
+        Parser<ExprAst> ParseExpr()
+        {
+            return stream =>
+                ParserCombinator.Or(
+                    ParseIfExpr(),
+                    ParseBinaryOp()
+                )(stream);
+        }
+
+        Parser<ExprAst> ParseIfExpr()
+        {
+            return
+                ParseToken(TokenType.If)
+                .Right(ParseExpr())
+                .Bind(condExpr =>
+                    ParseBlock()
+                    /*                    .MapResult<StatementAst[], ExprAst>(thenExpr =>
+                                            IfExprAst.Create(condExpr, thenExpr, new StatementAst[] { })
+                                        )*/
+                    .Bind<StatementAst[], IfExprAst>(thenExpr =>
+                         stream =>
+                         {
+                             var elseExprResult = ParserCombinator.Try(
+                                 ParseToken(TokenType.Else)
+                                 .Right(ParseBlock())
+                                 )(stream);
+                             if (elseExprResult.IsError)
+                                 return ParseResult<IfExprAst>.CreateSuccess(
+                                        IfExprAst.Create(condExpr, thenExpr, new StatementAst[] { })
+                                     );
+                             return ParseResult<IfExprAst>.CreateSuccess(
+                                    IfExprAst.Create(condExpr, thenExpr, elseExprResult.Value)
+                                 );
+                         }
+                    )
+               );
+        }
+
+        Parser<StatementAst[]> ParseBlock()
+        {
+            return stream =>
+            {
+                if (ParseToken(TokenType.LeftCurlyBracket)(stream).IsError || stream.IsEnd)
+                    return ParseResult<StatementAst[]>.CreateError(new Error("", ErrorKind.InComplete));
+
+                var statementAsts = new List<StatementAst>();
+                while (stream.IsEnd == false && stream.Current.tokenType != TokenType.RightCurlyBracket)
+                {
+                    var parseResult = ParseStatement()(stream);
+
+                    if (parseResult.IsError)
+                        return parseResult.CastError<StatementAst[]>();
+
+                    statementAsts.Add(parseResult.Value);
+                }
+
+                if (stream.IsEnd || ParseToken(TokenType.RightCurlyBracket)(stream).IsError)
+                    return ParseResult<StatementAst[]>.CreateError(new Error("", ErrorKind.InComplete));
+
+                return ParseResult<StatementAst[]>.CreateSuccess(statementAsts.ToArray());
+            };
         }
 
         Parser<ExprAst> ParseBinaryOp()
