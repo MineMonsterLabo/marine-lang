@@ -1,6 +1,5 @@
 ﻿using MarineLang.BuiltInTypes;
 using MarineLang.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -53,7 +52,7 @@ namespace MarineLang.VirtualMachines
             bool retFlag = false;
             VariableDict variables = Enumerable.Range(0, funcDefinitionAst.args.Length)
                 .ToDictionary(idx => funcDefinitionAst.args[idx].varName, idx => idx + 1);
-            var baseVarIdx = variables.Count + 3;
+            var baseVarIdx = variables.Count + VirtualMachineConstants.CALL_RESTORE_STACK_FRAME + 1;
             var varIdx = 0;
             foreach (var varName in GetAssignmentAsts(funcDefinitionAst).Select(x => x.varName))
             {

@@ -51,7 +51,8 @@ namespace MarineLang.VirtualMachines
             vm.Push(vm.stackBaseCount);
             vm.Push(vm.nextILIndex + 1);
             vm.nextILIndex = nextILIndex - 1;
-            vm.stackBaseCount = vm.GetStackCurrent() - argCount - 2;
+            vm.stackBaseCount =
+                vm.GetStackCurrent() - argCount - VirtualMachineConstants.CALL_RESTORE_STACK_FRAME;
             vm.callNestCount++;
         }
 
@@ -91,7 +92,8 @@ namespace MarineLang.VirtualMachines
             vm.callNestCount--;
             var retValue = vm.Pop();
             var stackBaseCount = (int)vm.Load(vm.stackBaseCount + argCount + 1);
-            vm.nextILIndex = (int)vm.Load(vm.stackBaseCount + argCount + 2) - 1;
+            vm.nextILIndex =
+                (int)vm.Load(vm.stackBaseCount + argCount + VirtualMachineConstants.CALL_RESTORE_STACK_FRAME) - 1;
             vm.SetStackCurrent(vm.stackBaseCount);
             vm.stackBaseCount = stackBaseCount;
             vm.Push(retValue);
