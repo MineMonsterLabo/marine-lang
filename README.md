@@ -14,6 +14,20 @@ Unityで簡易でパワフルなスクリプト言語を動かしたい！(特�
 - 他にも静的型チェックは用意する
 - if式あるよ
 - ブレークポイントのサポート
+## Code Example
+
+```
+fun sum(min, max)  
+    ret 
+        if min == max 
+        {
+            min
+        } 
+        else {
+	    min + sum(min + 1, max)
+        }
+end
+```
 
 ## EBNF
 
