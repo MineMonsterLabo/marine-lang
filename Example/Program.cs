@@ -6,16 +6,17 @@ using System.IO;
 using MarineLang.LexicalAnalysis;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.Streams;
+using MarineLang.VirtualMachines;
 
 namespace Example
 {
     class Program
     {
-        static VirtualMachine vm;
+        static HighLevelVirtualMachine vm;
 
         static void Main(string[] args)
         {
-            vm = new VirtualMachine();
+            vm = new HighLevelVirtualMachine();
             vm.Register(typeof(Program).GetMethod("print", BindingFlags.Static | BindingFlags.NonPublic));
             vm.Register(typeof(Program).GetMethod("plus", BindingFlags.Static | BindingFlags.NonPublic));
             vm.Register(typeof(Program).GetMethod("to_string", BindingFlags.Static | BindingFlags.NonPublic));
@@ -64,6 +65,7 @@ namespace Example
             }
 
             vm.SetProgram(parserResult.Value);
+            vm.Compile();
         }
 
         static void print(string str)

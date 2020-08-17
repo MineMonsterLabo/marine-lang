@@ -22,6 +22,8 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetStringToken(">=", TokenType.GreaterEqualOp)(stream) ??
                     LexerHelper.GetStringToken("<=", TokenType.LessEqualOp)(stream) ??
                     LexerHelper.GetStringToken("!=", TokenType.NotEqualOp)(stream) ??
+                    LexerHelper.GetStringTokenTailDelimiter("if", TokenType.If, stream) ??
+                    LexerHelper.GetStringTokenTailDelimiter("else", TokenType.Else, stream) ??
                     LexerHelper.GetStringTokenTailDelimiter("fun", TokenType.Func, stream) ??
                     LexerHelper.GetStringTokenTailDelimiter("end", TokenType.End, stream) ??
                     LexerHelper.GetStringTokenTailDelimiter("let", TokenType.Let, stream) ??
@@ -32,6 +34,8 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetIntLiteralToken()(stream) ??
                     LexerHelper.GetCharLiteralToken(stream) ??
                     LexerHelper.GetStringLiteralToken(stream) ??
+                    LexerHelper.GetCharToken(stream, '{', TokenType.LeftCurlyBracket) ??
+                    LexerHelper.GetCharToken(stream, '}', TokenType.RightCurlyBracket) ??
                     LexerHelper.GetCharToken(stream, '(', TokenType.LeftParen) ??
                     LexerHelper.GetCharToken(stream, ')', TokenType.RightParen) ??
                     LexerHelper.GetCharToken(stream, '.', TokenType.Op) ??

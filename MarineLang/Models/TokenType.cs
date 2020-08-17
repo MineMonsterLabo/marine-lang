@@ -4,8 +4,12 @@
     {
         Func,
         Id,
+        If,
+        Else,
         LeftParen,
         RightParen,
+        LeftCurlyBracket,
+        RightCurlyBracket,
         Comma,
         Let,
         Op,
