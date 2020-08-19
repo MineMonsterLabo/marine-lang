@@ -38,7 +38,7 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetCharToken(stream, '}', TokenType.RightCurlyBracket) ??
                     LexerHelper.GetCharToken(stream, '(', TokenType.LeftParen) ??
                     LexerHelper.GetCharToken(stream, ')', TokenType.RightParen) ??
-                    LexerHelper.GetCharToken(stream, '.', TokenType.Op) ??
+                    LexerHelper.GetCharToken(stream, '.', TokenType.DotOp) ??
                     LexerHelper.GetCharToken(stream, '>', TokenType.GreaterOp) ??
                     LexerHelper.GetCharToken(stream, '<', TokenType.LessOp) ??
                     LexerHelper.GetCharToken(stream, '+', TokenType.PlusOp) ??

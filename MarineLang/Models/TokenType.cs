@@ -13,6 +13,7 @@
         Comma,
         Let,
         Op,
+        DotOp,
         AssignmentOp,
         OrOp,
         AndOp,
