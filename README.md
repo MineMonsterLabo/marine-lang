@@ -46,7 +46,8 @@ re_assignment  = id , '=' , expr ;
 expr           = if_expr | binary_op_expr ;
 if_expr        = 'if' , expr , block , [ 'else' , block ] ;
 block          = '{' , {statement} , '}'
-binary_op_expr = term , [binary_op , binary_op_expr] ;
+binary_op_expr = dot_op_expr , [binary_op , binary_op_expr] ;
+dot_op_expr    = term , { '.' , instance_func_call } ;
 term           =
                  '(' , expr , ')'
                  func_call | 
@@ -56,6 +57,8 @@ term           =
                  char_literal | 
                  string_literal |
                  variable ;
+instance_func_call   
+               = id , param_list ;
 func_call      = id , param_list ;
 param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
 variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;
@@ -73,7 +76,7 @@ id             = lower_letter , {id_char} ;
 id_char        = digit | lower_letter | '_' ;
 lower_letter   = ? 省略 ?;
 digit          = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
-binary_op      = '<' | '<=' | '>' | '>=' | '&&' | '||' | '==' | '!=' | '+' | '-' | '*' | '/' | 
+binary_op      = '<' | '<=' | '>' | '>=' | '&&' | '||' | '==' | '!=' | '+' | '-' | '*' | '/' ;
 
 
 スキップ

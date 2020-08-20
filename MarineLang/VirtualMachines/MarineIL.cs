@@ -1,4 +1,5 @@
 ﻿using MarineLang.Models;
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -31,6 +32,39 @@ namespace MarineLang.VirtualMachines
         }
     }
 
+    public struct InstanceCSharpFuncCallIL : IMarineIL
+    {
+        public readonly string funcName;
+        public readonly int argCount;
+
+        public InstanceCSharpFuncCallIL(string funcName, int argCount)
+        {
+            this.funcName = funcName;
+            this.argCount = argCount;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).ToArray();
+            var instance = vm.Pop();
+            var methodInfo =
+                instance.GetType()
+                .GetMethod(
+                    funcName,
+                    BindingFlags.Public | BindingFlags.Instance,
+                    Type.DefaultBinder,
+                    args.Select(arg => arg.GetType()).ToArray(),
+                    new ParameterModifier[] { }
+                );
+            vm.Push(methodInfo.Invoke(instance, args));
+        }
+
+        public override string ToString()
+        {
+            return typeof(InstanceCSharpFuncCallIL).Name + " '" + funcName + "' " + argCount;
+        }
+    }
+
     public struct MarineFuncCallIL : IMarineIL
     {
         int nextILIndex;
@@ -60,7 +94,6 @@ namespace MarineLang.VirtualMachines
         {
             return typeof(MarineFuncCallIL).Name + " '" + funcName + "' " + argCount;
         }
-
     }
 
     public struct NoOpIL : IMarineIL

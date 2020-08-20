@@ -240,5 +240,15 @@ end
             RunReturnCheck(str, expected);
         }
 
+        [Theory]
+        [InlineData("fun main() ret 123.to_string() end", "123")]
+        [InlineData("fun main() ret 123.to_string().to_string() end", "123")]
+        [InlineData("fun main() ret \"HogeFuga\".to_lower()==\"hogefuga\" end", true)]
+        [InlineData("fun main() ret f().to_string(\"000\") end fun f() ret 4+8 end", "012")]
+        public void InstanceFuncCall<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
     }
 }
