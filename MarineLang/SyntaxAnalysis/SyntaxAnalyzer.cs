@@ -85,9 +85,6 @@ namespace MarineLang.SyntaxAnalysis
                 .Right(ParseExpr())
                 .Bind(condExpr =>
                     ParseBlock()
-                    /*                    .MapResult<StatementAst[], ExprAst>(thenExpr =>
-                                            IfExprAst.Create(condExpr, thenExpr, new StatementAst[] { })
-                                        )*/
                     .Bind<StatementAst[], IfExprAst>(thenExpr =>
                          stream =>
                          {
