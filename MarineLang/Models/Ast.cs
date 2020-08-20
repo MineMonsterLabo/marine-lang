@@ -48,6 +48,11 @@
         {
             return this as IfExprAst;
         }
+
+        public DotOpAst GetDotOpAst()
+        {
+            return this as DotOpAst;
+        }
     }
 
     public class ValueAst : ExprAst
@@ -83,6 +88,22 @@
                 leftExpr = leftExpr,
                 rightExpr = rightExpr,
                 opKind = opKind
+            };
+        }
+    }
+
+    public class DotOpAst : ExprAst
+    {
+        public TokenType opKind;
+        public ExprAst instanceExpr;
+        public FuncCallAst instancefuncCallAst;
+
+        public static DotOpAst Create(ExprAst instanceExpr, FuncCallAst instancefuncCallAst)
+        {
+            return new DotOpAst
+            {
+                instanceExpr = instanceExpr,
+                instancefuncCallAst = instancefuncCallAst
             };
         }
     }
