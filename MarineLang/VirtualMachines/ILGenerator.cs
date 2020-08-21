@@ -107,8 +107,10 @@ namespace MarineLang.VirtualMachines
                 ValueILGenerate(exprAst.GetValueAst());
             else if (exprAst.GetIfExprAst() != null)
                 IfILGenerate(exprAst.GetIfExprAst(), argCount, variables);
-            else if (exprAst.GetDotOpAst() != null)
-                DotOpILGenerate(exprAst.GetDotOpAst(), argCount, variables);
+            else if (exprAst.GetInstanceFuncCallAst() != null)
+                InstanceFuncCallILGenerate(exprAst.GetInstanceFuncCallAst(), argCount, variables);
+            else if (exprAst.GetInstanceFieldAst() != null)
+                InstanceFieldILGenerate(exprAst.GetInstanceFieldAst(), argCount, variables);
         }
 
         void FuncCallILGenerate(FuncCallAst funcCallAst, int argCount, VariableDict args)
@@ -152,10 +154,10 @@ namespace MarineLang.VirtualMachines
             marineILs[jumpInsertIndex] = new JumpIL(marineILs.Count);
         }
 
-        void DotOpILGenerate(DotOpAst dotOpAst, int argCount, VariableDict variables)
+        void InstanceFuncCallILGenerate(InstanceFuncCallAst instanceFuncCallAst, int argCount, VariableDict variables)
         {
-            ExprILGenerate(dotOpAst.instanceExpr, argCount, variables);
-            var funcCallAst = dotOpAst.instancefuncCallAst;
+            ExprILGenerate(instanceFuncCallAst.instanceExpr, argCount, variables);
+            var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
             var csharpFuncName =
                 string.Join("",
                     funcCallAst.funcName
@@ -167,6 +169,16 @@ namespace MarineLang.VirtualMachines
                 ExprILGenerate(arg, argCount, variables);
             marineILs.Add(
                 new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length)
+            );
+        }
+
+        void InstanceFieldILGenerate(InstanceFieldAst instanceFieldAst, int argCount, VariableDict variables)
+        {
+            ExprILGenerate(instanceFieldAst.instanceExpr, argCount, variables);
+
+
+            marineILs.Add(
+                new InstanceCSharpFieldIL(instanceFieldAst.fieldName)
             );
         }
 

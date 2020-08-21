@@ -153,12 +153,29 @@ namespace MarineLang.SyntaxAnalysis
                 if (termResult.IsError || stream.IsEnd)
                     return termResult;
 
-                var funcCallAstsResult = ParserCombinator.Many(ParseToken(TokenType.DotOp).Right(ParseFuncCall))(stream);
+                var funcCallAstsResult =
+                    ParserCombinator.Many(
+                        ParserCombinator.Try(
+                            ParseToken(TokenType.DotOp).Right(
+                                ParserCombinator.Or<ExprAst>(
+                                    ParserCombinator.Try(ParseFuncCall),
+                                    ParseVariable
+                                )
+                            )
+                        )
+                    )
+                    (stream);
                 return
                     funcCallAstsResult.Map(funcCallAsts =>
                         funcCallAsts.Aggregate(
                             termResult.Value,
-                            (expr, funcCall) => DotOpAst.Create(expr, funcCall)
+                            (expr, expr2) =>
+                            {
+                                if (expr2 is FuncCallAst funcCallAst)
+                                    return InstanceFuncCallAst.Create(expr, funcCallAst);
+                                else
+                                    return InstanceFieldAst.Create(expr, expr2.GetVariableAst().varName);
+                            }
                         )
                     );
             };

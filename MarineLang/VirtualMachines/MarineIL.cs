@@ -1,5 +1,6 @@
 ﻿using MarineLang.Models;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -63,6 +64,51 @@ namespace MarineLang.VirtualMachines
         {
             return typeof(InstanceCSharpFuncCallIL).Name + " '" + funcName + "' " + argCount;
         }
+    }
+
+    public struct InstanceCSharpFieldIL : IMarineIL
+    {
+        public readonly string fieldName;
+
+        public InstanceCSharpFieldIL(string fieldName)
+        {
+            this.fieldName = fieldName;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var instance = vm.Pop();
+            var instanceType = instance.GetType();
+            var fieldInfo = instanceType.GetField(GetLowerCamelName(), BindingFlags.Public | BindingFlags.Instance);
+            if (fieldInfo != null)
+                vm.Push(fieldInfo.GetValue(instance));
+            else
+                vm.Push(instanceType.GetProperty(GetUpperCamelName(), BindingFlags.Public | BindingFlags.Instance).GetValue(instance));
+        }
+
+        public override string ToString()
+        {
+            return typeof(InstanceCSharpFieldIL).Name + " '" + fieldName;
+        }
+
+        private string GetUpperCamelName()
+        {
+            return
+             string.Join("",
+                 fieldName
+                     .Split('_')
+                     .Select(CultureInfo.CurrentCulture.TextInfo.ToTitleCase)
+             );
+        }
+
+        private string GetLowerCamelName()
+        {
+            var splites = fieldName.Split('_');
+            if (splites.Length == 1)
+                return fieldName;
+            return splites[0] + string.Join("", splites.Skip(1).Select(CultureInfo.CurrentCulture.TextInfo.ToTitleCase));
+        }
+
     }
 
     public struct MarineFuncCallIL : IMarineIL
