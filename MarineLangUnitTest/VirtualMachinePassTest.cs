@@ -29,6 +29,7 @@ namespace MarineLangUnitTest
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("plus"));
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("two"));
             vm.Register(typeof(VirtualMachinePassTest).GetMethod("not"));
+            vm.Register(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
 
             vm.Compile();
 
@@ -45,6 +46,14 @@ namespace MarineLangUnitTest
 
             Assert.Equal(expected, ret);
         }
+
+        public class Hoge
+        {
+            public bool flag;
+            public string Name { get; } = "this is the pen";
+        }
+
+        public static Hoge create_hoge() { return new Hoge(); }
 
         public static void hello() { }
         public static int ret_123() { return 123; }
@@ -246,6 +255,16 @@ end
         [InlineData("fun main() ret \"HogeFuga\".to_lower()==\"hogefuga\" end", true)]
         [InlineData("fun main() ret f().to_string(\"000\") end fun f() ret 4+8 end", "012")]
         public void InstanceFuncCall<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret create_hoge().flag end", false)]
+        [InlineData("fun main() ret create_hoge().flag.to_string() end", "False")]
+        [InlineData("fun main() ret create_hoge().flag||true end", true)]
+        [InlineData("fun main() ret create_hoge().name end", "this is the pen")]
+        public void InstanceField<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }
