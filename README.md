@@ -38,11 +38,14 @@ func_definition
 func_body      = {statement} ;
 statement      =  ret_statement |
                   assignment |
+                  field_assignment |
                   re_assignment |
                   expr ;
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment ;
-re_assignment  = variable | ( term , ( '.' , id )+ ) , '=' , expr ;
+field_assignment  
+               = term , ( '.' , id )+ , '=' , expr ;
+re_assignment  =  variable , '=' , expr ;
 expr           = if_expr | binary_op_expr ;
 if_expr        = 'if' , expr , block , [ 'else' , block ] ;
 block          = '{' , {statement} , '}'
