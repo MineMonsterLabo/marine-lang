@@ -166,6 +166,11 @@
         {
             return this as ReAssignmentAst;
         }
+
+        public FieldAssignmentAst GetFieldAssignmentAst()
+        {
+            return this as FieldAssignmentAst;
+        }
     }
 
     public class FuncCallAst : ExprAst
@@ -203,6 +208,18 @@
         public static ReAssignmentAst Create(string varName, ExprAst expr)
         {
             return new ReAssignmentAst { varName = varName, expr = expr };
+        }
+    }
+
+    public class FieldAssignmentAst : StatementAst
+    {
+        public ExprAst expr;
+        public ExprAst instanceExpr;
+        public string fieldName;
+
+        public static FieldAssignmentAst Create(string fieldName, ExprAst instanceExpr, ExprAst expr)
+        {
+            return new FieldAssignmentAst { fieldName = fieldName, instanceExpr = instanceExpr, expr = expr };
         }
     }
 }

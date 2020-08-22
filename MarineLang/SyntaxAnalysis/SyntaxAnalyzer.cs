@@ -64,6 +64,7 @@ namespace MarineLang.SyntaxAnalysis
                 ParserCombinator.Or<StatementAst>(
                     ParserCombinator.Try(ParseReturn),
                     ParserCombinator.Try(ParseAssignment),
+                    ParserCombinator.Try(ParseFieldAssignment),
                     ParserCombinator.Try(ParseReAssignment),
                     ParserCombinator.Try(ParseExpr())
                 );
@@ -159,7 +160,7 @@ namespace MarineLang.SyntaxAnalysis
                             ParseToken(TokenType.DotOp).Right(
                                 ParserCombinator.Or<ExprAst>(
                                     ParserCombinator.Try(ParseFuncCall),
-                                    ParseVariable
+                                    ParseVariable()
                                 )
                             )
                         )
@@ -240,7 +241,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseBool),
                     ParserCombinator.Try(ParseChar),
                     ParserCombinator.Try(ParseString),
-                    ParserCombinator.Try(ParseVariable)
+                    ParserCombinator.Try(ParseVariable())
                 );
         }
 
@@ -306,15 +307,43 @@ namespace MarineLang.SyntaxAnalysis
         IParseResult<ReAssignmentAst> ParseReAssignment(TokenStream stream)
         {
             return
-               ParseToken(TokenType.Id)
-                .InCompleteErrorWithPositionHead("変数名を期待してます", ErrorCode.Unknown)
+                ParseVariable()
+                .InCompleteErrorWithPositionHead("", ErrorCode.Unknown)
+                .Left(ParseToken(TokenType.AssignmentOp))
+                .InCompleteErrorWithPositionHead("=を期待してます", ErrorCode.Unknown)
+                .ExpectCanMoveNext()
+                .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
+                .Bind(variable =>
+                    ParseExpr()
+                    .MapResult(expr => ReAssignmentAst.Create(variable.varName, expr))
+                    .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
+               )
+               (stream);
+        }
+
+        IParseResult<FieldAssignmentAst> ParseFieldAssignment(TokenStream stream)
+        {
+            return
+                ParserCombinator.Pair(
+                    ParseTerm(),
+                    ParserCombinator.OneMany(
+                        ParseToken(TokenType.DotOp).Right(ParseVariable())
+                    )
+                ).MapResult(pair =>
+                    pair.Item2.Skip(1).Aggregate(
+                        InstanceFieldAst.Create(pair.Item1, pair.Item2[0].varName),
+                        (expr, variable) =>
+                            InstanceFieldAst.Create(expr, variable.varName)
+                    )
+                )
+                .InCompleteErrorWithPositionHead("", ErrorCode.Unknown)
                .Left(ParseToken(TokenType.AssignmentOp))
                 .InCompleteErrorWithPositionHead("=を期待してます", ErrorCode.Unknown)
                 .ExpectCanMoveNext()
                     .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
-               .Bind(varNameToken =>
+               .Bind(fieldAst =>
                     ParseExpr()
-                    .MapResult(expr => ReAssignmentAst.Create(varNameToken.text, expr))
+                    .MapResult(expr => FieldAssignmentAst.Create(fieldAst.fieldName, fieldAst.instanceExpr, expr))
                     .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
                )
                (stream);
@@ -363,12 +392,11 @@ namespace MarineLang.SyntaxAnalysis
             (stream);
         }
 
-        IParseResult<VariableAst> ParseVariable(TokenStream stream)
+        Parser<VariableAst> ParseVariable()
         {
             return
                 ParseToken(TokenType.Id)
-                .MapResult(token => VariableAst.Create(token.text))
-                (stream);
+                .MapResult(token => VariableAst.Create(token.text));
         }
 
         IParseResult<ExprAst[]> ParseParamList(TokenStream stream)
@@ -384,7 +412,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParseToken(TokenType.LeftParen)
-                .Right(ParserCombinator.Separated(ParseVariable, ParseToken(TokenType.Comma)))
+                .Right(ParserCombinator.Separated(ParseVariable(), ParseToken(TokenType.Comma)))
                 .Left(ParseToken(TokenType.RightParen))
                 (stream);
         }

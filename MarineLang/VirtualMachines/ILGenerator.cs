@@ -86,6 +86,8 @@ namespace MarineLang.VirtualMachines
                 ReAssignmentILGenerate(statementAst.GetReAssignmentAst(), argCount, variables);
             else if (statementAst.GetAssignmentAst() != null)
                 AssignmentILGenerate(statementAst.GetAssignmentAst(), argCount, variables);
+            else if (statementAst.GetFieldAssignmentAst() != null)
+                FieldAssignmentILGenerate(statementAst.GetFieldAssignmentAst(), argCount, variables);
             return false;
         }
 
@@ -170,10 +172,8 @@ namespace MarineLang.VirtualMachines
         void InstanceFieldILGenerate(InstanceFieldAst instanceFieldAst, int argCount, VariableDict variables)
         {
             ExprILGenerate(instanceFieldAst.instanceExpr, argCount, variables);
-
-
             marineILs.Add(
-                new InstanceCSharpFieldIL(instanceFieldAst.fieldName)
+                new InstanceCSharpFieldLoadIL(instanceFieldAst.fieldName)
             );
         }
 
@@ -187,6 +187,13 @@ namespace MarineLang.VirtualMachines
         {
             ExprILGenerate(assignmentAst.expr, argCount, variables);
             marineILs.Add(new StoreIL(variables[assignmentAst.varName]));
+        }
+
+        void FieldAssignmentILGenerate(FieldAssignmentAst fieldAssignmentAst, int argCount, VariableDict variables)
+        {
+            ExprILGenerate(fieldAssignmentAst.instanceExpr, argCount, variables);
+            ExprILGenerate(fieldAssignmentAst.expr, argCount, variables);
+            marineILs.Add(new InstanceCSharpFieldStoreIL(fieldAssignmentAst.fieldName));
         }
 
         void ValueILGenerate(ValueAst valueAst)
