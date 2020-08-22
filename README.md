@@ -42,7 +42,7 @@ statement      =  ret_statement |
                   expr ;
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment ;
-re_assignment  = id , '=' , expr ;
+re_assignment  = variable | ( term , ( '.' , id )+ ) , '=' , expr ;
 expr           = if_expr | binary_op_expr ;
 if_expr        = 'if' , expr , block , [ 'else' , block ] ;
 block          = '{' , {statement} , '}'
