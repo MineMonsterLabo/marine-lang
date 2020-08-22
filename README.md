@@ -38,16 +38,19 @@ func_definition
 func_body      = {statement} ;
 statement      =  ret_statement |
                   assignment |
+                  field_assignment |
                   re_assignment |
                   expr ;
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment ;
-re_assignment  = id , '=' , expr ;
+field_assignment  
+               = term , ( '.' , id )+ , '=' , expr ;
+re_assignment  =  variable , '=' , expr ;
 expr           = if_expr | binary_op_expr ;
 if_expr        = 'if' , expr , block , [ 'else' , block ] ;
 block          = '{' , {statement} , '}'
 binary_op_expr = dot_op_expr , [binary_op , binary_op_expr] ;
-dot_op_expr    = term , { '.' , instance_func_call } ;
+dot_op_expr    = term , { '.' , id , [ param_list ] } ;
 term           =
                  '(' , expr , ')'
                  func_call | 
@@ -57,8 +60,6 @@ term           =
                  char_literal | 
                  string_literal |
                  variable ;
-instance_func_call   
-               = id , param_list ;
 func_call      = id , param_list ;
 param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
 variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;

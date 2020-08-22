@@ -49,9 +49,14 @@
             return this as IfExprAst;
         }
 
-        public DotOpAst GetDotOpAst()
+        public InstanceFuncCallAst GetInstanceFuncCallAst()
         {
-            return this as DotOpAst;
+            return this as InstanceFuncCallAst;
+        }
+
+        public InstanceFieldAst GetInstanceFieldAst()
+        {
+            return this as InstanceFieldAst;
         }
     }
 
@@ -92,20 +97,35 @@
         }
     }
 
-    public class DotOpAst : ExprAst
+    public class InstanceFuncCallAst : ExprAst
     {
-        public TokenType opKind;
         public ExprAst instanceExpr;
         public FuncCallAst instancefuncCallAst;
 
-        public static DotOpAst Create(ExprAst instanceExpr, FuncCallAst instancefuncCallAst)
+        public static InstanceFuncCallAst Create(ExprAst instanceExpr, FuncCallAst instancefuncCallAst)
         {
-            return new DotOpAst
+            return new InstanceFuncCallAst
             {
                 instanceExpr = instanceExpr,
                 instancefuncCallAst = instancefuncCallAst
             };
         }
+    }
+
+    public class InstanceFieldAst : ExprAst
+    {
+        public ExprAst instanceExpr;
+        public string fieldName;
+
+        public static InstanceFieldAst Create(ExprAst instanceExpr, string fieldName)
+        {
+            return new InstanceFieldAst
+            {
+                instanceExpr = instanceExpr,
+                fieldName = fieldName
+            };
+        }
+
     }
 
     public class IfExprAst : ExprAst
@@ -146,6 +166,11 @@
         {
             return this as ReAssignmentAst;
         }
+
+        public FieldAssignmentAst GetFieldAssignmentAst()
+        {
+            return this as FieldAssignmentAst;
+        }
     }
 
     public class FuncCallAst : ExprAst
@@ -183,6 +208,18 @@
         public static ReAssignmentAst Create(string varName, ExprAst expr)
         {
             return new ReAssignmentAst { varName = varName, expr = expr };
+        }
+    }
+
+    public class FieldAssignmentAst : StatementAst
+    {
+        public ExprAst expr;
+        public ExprAst instanceExpr;
+        public string fieldName;
+
+        public static FieldAssignmentAst Create(string fieldName, ExprAst instanceExpr, ExprAst expr)
+        {
+            return new FieldAssignmentAst { fieldName = fieldName, instanceExpr = instanceExpr, expr = expr };
         }
     }
 }

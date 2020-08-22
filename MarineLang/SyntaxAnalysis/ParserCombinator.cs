@@ -1,12 +1,13 @@
 ﻿using MarineLang.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MarineLang.SyntaxAnalysis
 {
     public static class ParserCombinator
     {
-        public static Parser<IEnumerable<T>> Many<T>(Parser<T> parser)
+        public static Parser<List<T>> Many<T>(Parser<T> parser)
         {
             return
                 stream =>
@@ -16,12 +17,41 @@ namespace MarineLang.SyntaxAnalysis
                     {
                         var parseResult = parser(stream);
                         if (parseResult.IsError && parseResult.Error.ErrorKind != ErrorKind.InComplete)
-                            return parseResult.CastError<IEnumerable<T>>();
+                            return parseResult.CastError<List<T>>();
                         if (parseResult.IsError)
                             break;
                         list.Add(parseResult.Value);
                     }
-                    return ParseResult<IEnumerable<T>>.CreateSuccess(list);
+                    return ParseResult<List<T>>.CreateSuccess(list);
+                };
+        }
+
+        public static Parser<List<T>> OneMany<T>(Parser<T> parser)
+        {
+            return
+                stream =>
+                {
+                    var result = Many(parser)(stream);
+                    if (result.IsError == false && result.Value.Count == 0)
+                        return ParseResult<List<T>>.CreateError(new Error(ErrorKind.InComplete));
+                    return result;
+                };
+        }
+
+        public static Parser<(T, TT)> Pair<T, TT>(Parser<T> parser1, Parser<TT> parser2)
+        {
+            return
+                stream =>
+                {
+                    var result1 = parser1(stream);
+                    if (result1.IsError)
+                        return result1.CastError<(T, TT)>();
+                    if (stream.IsEnd)
+                        return ParseResult<(T, TT)>.CreateError(new Error(ErrorKind.InComplete));
+                    var result2 = parser2(stream);
+                    if (result2.IsError)
+                        return result2.CastError<(T, TT)>();
+                    return ParseResult<(T, TT)>.CreateSuccess((result1.Value, result2.Value));
                 };
         }
 

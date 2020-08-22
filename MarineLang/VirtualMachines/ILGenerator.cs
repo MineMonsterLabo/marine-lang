@@ -1,7 +1,7 @@
 ﻿using MarineLang.BuiltInTypes;
 using MarineLang.Models;
+using MarineLang.Utils;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -86,6 +86,8 @@ namespace MarineLang.VirtualMachines
                 ReAssignmentILGenerate(statementAst.GetReAssignmentAst(), argCount, variables);
             else if (statementAst.GetAssignmentAst() != null)
                 AssignmentILGenerate(statementAst.GetAssignmentAst(), argCount, variables);
+            else if (statementAst.GetFieldAssignmentAst() != null)
+                FieldAssignmentILGenerate(statementAst.GetFieldAssignmentAst(), argCount, variables);
             return false;
         }
 
@@ -107,8 +109,10 @@ namespace MarineLang.VirtualMachines
                 ValueILGenerate(exprAst.GetValueAst());
             else if (exprAst.GetIfExprAst() != null)
                 IfILGenerate(exprAst.GetIfExprAst(), argCount, variables);
-            else if (exprAst.GetDotOpAst() != null)
-                DotOpILGenerate(exprAst.GetDotOpAst(), argCount, variables);
+            else if (exprAst.GetInstanceFuncCallAst() != null)
+                InstanceFuncCallILGenerate(exprAst.GetInstanceFuncCallAst(), argCount, variables);
+            else if (exprAst.GetInstanceFieldAst() != null)
+                InstanceFieldILGenerate(exprAst.GetInstanceFieldAst(), argCount, variables);
         }
 
         void FuncCallILGenerate(FuncCallAst funcCallAst, int argCount, VariableDict args)
@@ -152,21 +156,24 @@ namespace MarineLang.VirtualMachines
             marineILs[jumpInsertIndex] = new JumpIL(marineILs.Count);
         }
 
-        void DotOpILGenerate(DotOpAst dotOpAst, int argCount, VariableDict variables)
+        void InstanceFuncCallILGenerate(InstanceFuncCallAst instanceFuncCallAst, int argCount, VariableDict variables)
         {
-            ExprILGenerate(dotOpAst.instanceExpr, argCount, variables);
-            var funcCallAst = dotOpAst.instancefuncCallAst;
-            var csharpFuncName =
-                string.Join("",
-                    funcCallAst.funcName
-                        .Split('_')
-                        .Select(CultureInfo.CurrentCulture.TextInfo.ToTitleCase)
-                );
+            ExprILGenerate(instanceFuncCallAst.instanceExpr, argCount, variables);
+            var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
+            var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.funcName);
 
             foreach (var arg in funcCallAst.args)
                 ExprILGenerate(arg, argCount, variables);
             marineILs.Add(
                 new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length)
+            );
+        }
+
+        void InstanceFieldILGenerate(InstanceFieldAst instanceFieldAst, int argCount, VariableDict variables)
+        {
+            ExprILGenerate(instanceFieldAst.instanceExpr, argCount, variables);
+            marineILs.Add(
+                new InstanceCSharpFieldLoadIL(instanceFieldAst.fieldName)
             );
         }
 
@@ -180,6 +187,13 @@ namespace MarineLang.VirtualMachines
         {
             ExprILGenerate(assignmentAst.expr, argCount, variables);
             marineILs.Add(new StoreIL(variables[assignmentAst.varName]));
+        }
+
+        void FieldAssignmentILGenerate(FieldAssignmentAst fieldAssignmentAst, int argCount, VariableDict variables)
+        {
+            ExprILGenerate(fieldAssignmentAst.instanceExpr, argCount, variables);
+            ExprILGenerate(fieldAssignmentAst.expr, argCount, variables);
+            marineILs.Add(new InstanceCSharpFieldStoreIL(fieldAssignmentAst.fieldName));
         }
 
         void ValueILGenerate(ValueAst valueAst)

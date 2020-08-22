@@ -1,4 +1,5 @@
 ﻿using MarineLang.Models;
+using MarineLang.Utils;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -62,6 +63,60 @@ namespace MarineLang.VirtualMachines
         public override string ToString()
         {
             return typeof(InstanceCSharpFuncCallIL).Name + " '" + funcName + "' " + argCount;
+        }
+    }
+
+    public struct InstanceCSharpFieldLoadIL : IMarineIL
+    {
+        public readonly string fieldName;
+
+        public InstanceCSharpFieldLoadIL(string fieldName)
+        {
+            this.fieldName = fieldName;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var instance = vm.Pop();
+            var instanceType = instance.GetType();
+            var fieldInfo = instanceType.GetField(NameUtil.GetLowerCamelName(fieldName), BindingFlags.Public | BindingFlags.Instance);
+            if (fieldInfo != null)
+                vm.Push(fieldInfo.GetValue(instance));
+            else
+                vm.Push(instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName), BindingFlags.Public | BindingFlags.Instance).GetValue(instance));
+        }
+
+        public override string ToString()
+        {
+            return typeof(InstanceCSharpFieldLoadIL).Name + " '" + fieldName;
+        }
+    }
+
+    public struct InstanceCSharpFieldStoreIL : IMarineIL
+    {
+        public readonly string fieldName;
+
+        public InstanceCSharpFieldStoreIL(string fieldName)
+        {
+            this.fieldName = fieldName;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var value = vm.Pop();
+            var instance = vm.Pop();
+            var instanceType = instance.GetType();
+            var fieldInfo = instanceType.GetField(NameUtil.GetLowerCamelName(fieldName), BindingFlags.Public | BindingFlags.Instance);
+            if (fieldInfo != null)
+                fieldInfo.SetValue(instance, value);
+            else
+                instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName), BindingFlags.Public | BindingFlags.Instance)
+                    .SetValue(instance, value);
+        }
+
+        public override string ToString()
+        {
+            return typeof(InstanceCSharpFieldStoreIL).Name + " '" + fieldName;
         }
     }
 
