@@ -1,7 +1,7 @@
 ﻿using MarineLang.BuiltInTypes;
 using MarineLang.Models;
+using MarineLang.Utils;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -158,12 +158,7 @@ namespace MarineLang.VirtualMachines
         {
             ExprILGenerate(instanceFuncCallAst.instanceExpr, argCount, variables);
             var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
-            var csharpFuncName =
-                string.Join("",
-                    funcCallAst.funcName
-                        .Split('_')
-                        .Select(CultureInfo.CurrentCulture.TextInfo.ToTitleCase)
-                );
+            var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.funcName);
 
             foreach (var arg in funcCallAst.args)
                 ExprILGenerate(arg, argCount, variables);
