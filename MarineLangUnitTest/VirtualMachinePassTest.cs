@@ -50,7 +50,7 @@ namespace MarineLangUnitTest
         public class Hoge
         {
             public bool flag;
-            public string Name { get; } = "this is the pen";
+            public string Name { get; set; } = "this is the pen";
         }
 
         public static Hoge create_hoge() { return new Hoge(); }
@@ -269,5 +269,12 @@ end
             RunReturnCheck(str, expected);
         }
 
+        [Theory]
+        [InlineData("fun main() let hoge = create_hoge() hoge.flag=4!=5 ret hoge.flag end", true)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.name = 5.to_string() ret hoge.name end", "5")]
+        public void InstanceFieldAssignment<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
