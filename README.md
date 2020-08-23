@@ -36,11 +36,15 @@ program        = {func_definition} ;
 func_definition
                = 'func' , id , variable_list , func_body , 'end' ;
 func_body      = {statement} ;
-statement      =  ret_statement |
+statement      =  
+                  while_statement |
+                  ret_statement |
                   assignment |
                   field_assignment |
                   re_assignment |
                   expr ;
+while_statement
+               = 'while' , '(' , expr , ')' , block ;
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment ;
 field_assignment  

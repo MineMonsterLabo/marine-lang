@@ -62,12 +62,26 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParserCombinator.Or<StatementAst>(
+                    ParserCombinator.Try(ParseWhile()),
                     ParserCombinator.Try(ParseReturn),
                     ParserCombinator.Try(ParseAssignment),
                     ParserCombinator.Try(ParseFieldAssignment),
                     ParserCombinator.Try(ParseReAssignment),
                     ParserCombinator.Try(ParseExpr())
                 );
+        }
+
+        Parser<WhileAst> ParseWhile()
+        {
+            var conditionExprParser =
+                ParseToken(TokenType.While)
+                .Right(ParseToken(TokenType.LeftParen))
+                .Right(ParseExpr())
+                .Left(ParseToken(TokenType.RightParen));
+            var blockParser = ParseBlock();
+
+            return ParserCombinator.Pair(conditionExprParser, blockParser)
+                 .MapResult(pair => WhileAst.Create(pair.Item1, pair.Item2));
         }
 
         Parser<ExprAst> ParseExpr()
