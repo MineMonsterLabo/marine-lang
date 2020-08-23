@@ -171,6 +171,11 @@
         {
             return this as FieldAssignmentAst;
         }
+
+        public WhileAst GetWhileAst()
+        {
+            return this as WhileAst;
+        }
     }
 
     public class FuncCallAst : ExprAst
@@ -220,6 +225,17 @@
         public static FieldAssignmentAst Create(string fieldName, ExprAst instanceExpr, ExprAst expr)
         {
             return new FieldAssignmentAst { fieldName = fieldName, instanceExpr = instanceExpr, expr = expr };
+        }
+    }
+
+    public class WhileAst : StatementAst
+    {
+        public ExprAst conditionExpr;
+        public StatementAst[] statements;
+
+        public static WhileAst Create(ExprAst conditionExpr, StatementAst[] statements)
+        {
+            return new WhileAst { conditionExpr = conditionExpr, statements = statements };
         }
     }
 }

@@ -34,6 +34,7 @@
         Float,
         End,
         Return,
+        While,
         UnKnown,
     }
 }
