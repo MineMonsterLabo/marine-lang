@@ -44,7 +44,7 @@ statement      =
                   re_assignment |
                   expr ;
 while_statement
-               = 'while' , '(' , expr , ')' , block ;
+               = 'while' , expr , block ;
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment ;
 field_assignment  
