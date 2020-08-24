@@ -284,7 +284,7 @@ fun main()
     let total = 0
     let max = 100
     let now = 0
-    while( now <= max){
+    while now <= max {
         total = total + now
         now = now + 1
     }

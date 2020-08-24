@@ -75,9 +75,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             var conditionExprParser =
                 ParseToken(TokenType.While)
-                .Right(ParseToken(TokenType.LeftParen))
-                .Right(ParseExpr())
-                .Left(ParseToken(TokenType.RightParen));
+                .Right(ParseExpr());
             var blockParser = ParseBlock();
 
             return ParserCombinator.Pair(conditionExprParser, blockParser)
