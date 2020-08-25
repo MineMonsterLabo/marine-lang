@@ -38,6 +38,7 @@ func_definition
 func_body      = {statement} ;
 statement      =  
                   while_statement |
+                  for_statement |
                   ret_statement |
                   assignment |
                   field_assignment |
@@ -45,6 +46,7 @@ statement      =
                   expr ;
 while_statement
                = 'while' , expr , block ;
+for_statement  = 'for' , variable, '=', expr , expr , expr , block ;
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment ;
 field_assignment  
