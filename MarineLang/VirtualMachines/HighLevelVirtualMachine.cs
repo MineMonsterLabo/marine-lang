@@ -1,9 +1,8 @@
 ﻿using MarineLang.Models;
-using MarineLang.VirtualMachines;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace MarineLang
+namespace MarineLang.VirtualMachines
 {
     public class HighLevelVirtualMachine
     {
