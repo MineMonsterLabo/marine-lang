@@ -295,5 +295,20 @@ end
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData(@"
+fun main() 
+    let total = 0
+    for i =0 , 100 , 1 {
+        total = total + i
+    }
+    ret total
+end
+", 5050)]
+        public void ForStatement<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
