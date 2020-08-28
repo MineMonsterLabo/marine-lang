@@ -176,6 +176,11 @@
         {
             return this as WhileAst;
         }
+
+        public ForAst GetForAst()
+        {
+            return this as ForAst;
+        }
     }
 
     public class FuncCallAst : ExprAst
@@ -236,6 +241,28 @@
         public static WhileAst Create(ExprAst conditionExpr, StatementAst[] statements)
         {
             return new WhileAst { conditionExpr = conditionExpr, statements = statements };
+        }
+    }
+
+    public class ForAst : StatementAst
+    {
+        public VariableAst initVariable;
+        public ExprAst initExpr;
+        public ExprAst maxValueExpr;
+        public ExprAst addValueExpr;
+        public StatementAst[] statements;
+
+        public static ForAst Create
+        (VariableAst initVariable, ExprAst initExpr, ExprAst maxValueExpr, ExprAst addValueExpr, StatementAst[] statements)
+        {
+            return new ForAst
+            {
+                initVariable = initVariable,
+                initExpr = initExpr,
+                maxValueExpr = maxValueExpr,
+                addValueExpr = addValueExpr,
+                statements = statements
+            };
         }
     }
 }

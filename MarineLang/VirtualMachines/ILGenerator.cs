@@ -83,6 +83,8 @@ namespace MarineLang.VirtualMachines
                 FieldAssignmentILGenerate(statementAst.GetFieldAssignmentAst(), argCount, variables);
             else if (statementAst.GetWhileAst() != null)
                 WhileILGenerate(statementAst.GetWhileAst(), argCount, variables);
+            else if (statementAst.GetForAst() != null)
+                ForILGenerate(statementAst.GetForAst(), argCount, variables);
             return false;
         }
 
@@ -200,6 +202,34 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(null);
             foreach (var statementAst in whileAst.statements)
                 StatementILGenerate(statementAst, argCount, variables);
+            marineILs.Add(jumpIL);
+            marineILs[jumpFalseILInsertIndex] = new JumpFalseIL(marineILs.Count);
+        }
+
+        void ForILGenerate(ForAst forAst, int argCount, FuncScopeVariables variables)
+        {
+            variables.AddLocalVariable(forAst.initVariable.varName);
+            var countVarIdx = variables.GetLocalVariableIdx(forAst.initVariable.varName);
+            var maxVarIdx = variables.CreateUnnamedLocalVariableIdx();
+            var addVarIdx = variables.CreateUnnamedLocalVariableIdx();
+            ExprILGenerate(forAst.initExpr, argCount, variables);
+            marineILs.Add(new StoreIL(countVarIdx));
+            ExprILGenerate(forAst.maxValueExpr, argCount, variables);
+            marineILs.Add(new StoreIL(maxVarIdx));
+            ExprILGenerate(forAst.addValueExpr, argCount, variables);
+            marineILs.Add(new StoreIL(addVarIdx));
+            var jumpIL = new JumpIL(marineILs.Count);
+            marineILs.Add(new LoadIL(countVarIdx));
+            marineILs.Add(new LoadIL(maxVarIdx));
+            marineILs.Add(new BinaryOpIL(TokenType.LessEqualOp));
+            var jumpFalseILInsertIndex = marineILs.Count;
+            marineILs.Add(null);
+            foreach (var statementAst in forAst.statements)
+                StatementILGenerate(statementAst, argCount, variables);
+            marineILs.Add(new LoadIL(countVarIdx));
+            marineILs.Add(new LoadIL(addVarIdx));
+            marineILs.Add(new BinaryOpIL(TokenType.PlusOp));
+            marineILs.Add(new StoreIL(countVarIdx));
             marineILs.Add(jumpIL);
             marineILs[jumpFalseILInsertIndex] = new JumpFalseIL(marineILs.Count);
         }
