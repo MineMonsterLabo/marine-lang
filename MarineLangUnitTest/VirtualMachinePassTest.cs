@@ -310,5 +310,25 @@ end
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData(@"
+fun main() 
+    let a = 5 
+    let c = if true { 
+        let b = 3 
+        let d = a+b 
+        for i = 1 , 10 , 1{
+            let e = d + 1
+            d = e
+        }
+        d
+    }
+    ret c 
+end", 18)]
+        public void NestLet<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
