@@ -24,12 +24,13 @@ namespace MarineLangUnitTest
             var vm = new HighLevelVirtualMachine();
 
             vm.SetProgram(parseResult.Value);
-            vm.Register(typeof(VirtualMachinePassTest).GetMethod("ret_123"));
-            vm.Register(typeof(VirtualMachinePassTest).GetMethod("hello"));
-            vm.Register(typeof(VirtualMachinePassTest).GetMethod("plus"));
-            vm.Register(typeof(VirtualMachinePassTest).GetMethod("two"));
-            vm.Register(typeof(VirtualMachinePassTest).GetMethod("not"));
-            vm.Register(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("ret_123"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("hello"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("plus"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("two"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("not"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
+            vm.GlobalVariableRegister("hoge", new Hoge());
 
             vm.Compile();
 
@@ -51,6 +52,7 @@ namespace MarineLangUnitTest
         {
             public bool flag;
             public string Name { get; set; } = "this is the pen";
+            public int PlusOne(int x) => x + 1;
         }
 
         public static Hoge create_hoge() { return new Hoge(); }
@@ -327,6 +329,13 @@ fun main()
     ret c 
 end", 18)]
         public void NestLet<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+        [Theory]
+        [InlineData("fun main()  hoge.name = \"gg\"  ret hoge.name end", "gg")]
+        [InlineData("fun main() ret hoge.plus_one(5) end", 6)]
+        public void GlobalVariable<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }
