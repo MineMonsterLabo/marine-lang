@@ -16,9 +16,9 @@ namespace Example
         static void Main(string[] args)
         {
             vm = new HighLevelVirtualMachine();
-            vm.Register(typeof(Program).GetMethod("print", BindingFlags.Static | BindingFlags.NonPublic));
-            vm.Register(typeof(Program).GetMethod("plus", BindingFlags.Static | BindingFlags.NonPublic));
-            vm.Register(typeof(Program).GetMethod("to_string", BindingFlags.Static | BindingFlags.NonPublic));
+            vm.GlobalFuncRegister(typeof(Program).GetMethod("print", BindingFlags.Static | BindingFlags.NonPublic));
+            vm.GlobalFuncRegister(typeof(Program).GetMethod("plus", BindingFlags.Static | BindingFlags.NonPublic));
+            vm.GlobalFuncRegister(typeof(Program).GetMethod("to_string", BindingFlags.Static | BindingFlags.NonPublic));
 
             while (true)
             {
