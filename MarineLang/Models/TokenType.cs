@@ -35,6 +35,7 @@
         End,
         Return,
         While,
+        For,
         UnKnown,
     }
 }

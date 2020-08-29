@@ -63,6 +63,7 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParserCombinator.Or<StatementAst>(
                     ParserCombinator.Try(ParseWhile()),
+                    ParserCombinator.Try(ParseFor()),
                     ParserCombinator.Try(ParseReturn),
                     ParserCombinator.Try(ParseAssignment),
                     ParserCombinator.Try(ParseFieldAssignment),
@@ -75,13 +76,35 @@ namespace MarineLang.SyntaxAnalysis
         {
             var conditionExprParser =
                 ParseToken(TokenType.While)
-                .Right(ParseToken(TokenType.LeftParen))
-                .Right(ParseExpr())
-                .Left(ParseToken(TokenType.RightParen));
+                .Right(ParseExpr());
             var blockParser = ParseBlock();
 
-            return ParserCombinator.Pair(conditionExprParser, blockParser)
+            return ParserCombinator.Tuple(conditionExprParser, blockParser)
                  .MapResult(pair => WhileAst.Create(pair.Item1, pair.Item2));
+        }
+
+        Parser<ForAst> ParseFor()
+        {
+            var initVariableParser =
+                    ParseToken(TokenType.For)
+                    .Right(ParseVariable())
+                    .Left(ParseToken(TokenType.AssignmentOp));
+
+            var initExprParser = ParseExpr();
+
+            var maxValueParser =
+                ParseToken(TokenType.Comma)
+                .Right(ParseExpr());
+
+            var addValueParser =
+                ParseToken(TokenType.Comma)
+                .Right(ParseExpr());
+
+            var blockParser = ParseBlock();
+
+            return
+                ParserCombinator.Tuple(initVariableParser, initExprParser, maxValueParser, addValueParser, blockParser)
+                .MapResult(tuple => ForAst.Create(tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4, tuple.Item5));
         }
 
         Parser<ExprAst> ParseExpr()
@@ -338,7 +361,7 @@ namespace MarineLang.SyntaxAnalysis
         IParseResult<FieldAssignmentAst> ParseFieldAssignment(TokenStream stream)
         {
             return
-                ParserCombinator.Pair(
+                ParserCombinator.Tuple(
                     ParseTerm(),
                     ParserCombinator.OneMany(
                         ParseToken(TokenType.DotOp).Right(ParseVariable())

@@ -1,8 +1,8 @@
-﻿using MarineLang;
-using MarineLang.BuiltInTypes;
+﻿using MarineLang.BuiltInTypes;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
+using MarineLang.VirtualMachines;
 using System.Linq;
 using Xunit;
 
@@ -284,7 +284,7 @@ fun main()
     let total = 0
     let max = 100
     let now = 0
-    while( now <= max){
+    while now <= max {
         total = total + now
         now = now + 1
     }
@@ -292,6 +292,21 @@ fun main()
 end
 ", 5050)]
         public void WhileStatement<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData(@"
+fun main() 
+    let total = 0
+    for i =0 , 100 , 1 {
+        total = total + i
+    }
+    ret total
+end
+", 5050)]
+        public void ForStatement<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }
