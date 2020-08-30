@@ -182,6 +182,29 @@ namespace MarineLang.SyntaxAnalysis
                     ParseBinaryOp2(exprResult.Value, opResult.Value.tokenType)(stream);
             };
         }
+        Parser<ExprAst> ParseBinaryOp2(ExprAst beforeExpr, TokenType beforeTokenType)
+        {
+            return stream =>
+            {
+                var exprResult = ParseDotOp()(stream);
+                if (exprResult.IsError || stream.IsEnd)
+                    return exprResult;
+
+                var opResult = ParseOpToken()(stream);
+                if (opResult.IsError)
+                    return ParseResult<ExprAst>.CreateSuccess(
+                        BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType)
+                    );
+                var tokenType = opResult.Value.tokenType;
+                if (GetOpPriority(beforeTokenType) >= GetOpPriority(tokenType))
+                    return
+                        ParseBinaryOp2(BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType), tokenType)(stream);
+                return
+                    ParseBinaryOp2(exprResult.Value, tokenType)
+                    .MapResult(expr => BinaryOpAst.Create(beforeExpr, expr, beforeTokenType))
+                    (stream);
+            };
+        }
 
         Parser<ExprAst> ParseDotOp()
         {
@@ -216,30 +239,6 @@ namespace MarineLang.SyntaxAnalysis
                             }
                         )
                     );
-            };
-        }
-
-        Parser<ExprAst> ParseBinaryOp2(ExprAst beforeExpr, TokenType beforeTokenType)
-        {
-            return stream =>
-            {
-                var exprResult = ParseDotOp()(stream);
-                if (exprResult.IsError || stream.IsEnd)
-                    return exprResult;
-
-                var opResult = ParseOpToken()(stream);
-                if (opResult.IsError)
-                    return ParseResult<ExprAst>.CreateSuccess(
-                        BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType)
-                    );
-                var tokenType = opResult.Value.tokenType;
-                if (GetOpPriority(beforeTokenType) >= GetOpPriority(tokenType))
-                    return
-                        ParseBinaryOp2(BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType), tokenType)(stream);
-                return
-                    ParseBinaryOp2(exprResult.Value, tokenType)
-                    .MapResult(expr => BinaryOpAst.Create(beforeExpr, expr, beforeTokenType))
-                    (stream);
             };
         }
 
