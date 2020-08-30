@@ -8,6 +8,8 @@
         Else,
         LeftParen,
         RightParen,
+        LeftBracket,
+        RightBracket,
         LeftCurlyBracket,
         RightCurlyBracket,
         Comma,

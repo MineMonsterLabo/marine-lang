@@ -58,6 +58,11 @@
         {
             return this as InstanceFieldAst;
         }
+
+        public GetIndexerAst GetGetIndexerAst()
+        {
+            return this as GetIndexerAst;
+        }
     }
 
     public class ValueAst : ExprAst
@@ -125,7 +130,6 @@
                 fieldName = fieldName
             };
         }
-
     }
 
     public class IfExprAst : ExprAst
@@ -142,6 +146,17 @@
                 thenStatements = thenStatements,
                 elseStatements = elseStatements
             };
+        }
+    }
+
+    public class GetIndexerAst : ExprAst
+    {
+        public ExprAst instanceExpr;
+        public ExprAst indexExpr;
+
+        public static GetIndexerAst Create(ExprAst expr, ExprAst indexExpr)
+        {
+            return new GetIndexerAst { instanceExpr = expr, indexExpr = indexExpr };
         }
     }
 

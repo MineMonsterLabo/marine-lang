@@ -50,13 +50,16 @@ for_statement  = 'for' , variable, '=', expr  ',' , expr , ',' , expr , block ;
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment ;
 field_assignment  
-               = term , ( '.' , id )+ , '=' , expr ;
+               = indexer_op_expr , ( '.' , variable )+ , '=' , expr ;
 re_assignment  =  variable , '=' , expr ;
 expr           = if_expr | binary_op_expr ;
 if_expr        = 'if' , expr , block , [ 'else' , block ] ;
 block          = '{' , {statement} , '}'
 binary_op_expr = dot_op_expr , [binary_op , binary_op_expr] ;
-dot_op_expr    = term , { '.' , id , [ param_list ] } ;
+dot_op_expr    = indexer_op_expr , { '.' , field_term } ;
+indexer_op_expr
+               = term , indexers ;
+field_term     = ( func_call | variable ) , indexers ;
 term           =
                  '(' , expr , ')'
                  func_call | 
@@ -67,6 +70,7 @@ term           =
                  string_literal |
                  variable ;
 func_call      = id , param_list ;
+indexers       = { '[' , expr , ']' } ;
 param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
 variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;
 
