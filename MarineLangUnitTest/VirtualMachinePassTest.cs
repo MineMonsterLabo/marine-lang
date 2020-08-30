@@ -31,6 +31,11 @@ namespace MarineLangUnitTest
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("not"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
             vm.GlobalVariableRegister("hoge", new Hoge());
+            vm.GlobalVariableRegister("names", new string[] { "aaa", "bbb" });
+            vm.GlobalVariableRegister("namess", new string[][] {
+              new string[]{  "ccc", "ddd" },
+              new string[]{  "xxx", "yyy" },
+            });
 
             vm.Compile();
 
@@ -332,10 +337,20 @@ end", 18)]
         {
             RunReturnCheck(str, expected);
         }
+
         [Theory]
         [InlineData("fun main()  hoge.name = \"gg\"  ret hoge.name end", "gg")]
         [InlineData("fun main() ret hoge.plus_one(5) end", 6)]
         public void GlobalVariable<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret names[0] end", "aaa")]
+        [InlineData("fun main() ret names[2-1] end", "bbb")]
+        [InlineData("fun main() ret namess[1][0] end", "xxx")]
+        public void Indexer<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }
