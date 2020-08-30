@@ -29,17 +29,17 @@ namespace MarineLang.VirtualMachines
             LocalVariableCount++;
         }
 
-        public int GeVariableIdx(string name)
+        public StackIndex GeVariableIdx(string name)
         {
             if (globalVariableDict.TryGetValue(name, out int idx))
-                return idx;
-            return variableDict[name];
+                return new StackIndex(idx, true);
+            return new StackIndex(variableDict[name], false);
         }
 
-        public int CreateUnnamedLocalVariableIdx()
+        public StackIndex CreateUnnamedLocalVariableIdx()
         {
             LocalVariableCount++;
-            return baseLocalVariableIdx + LocalVariableCount - 1;
+            return new StackIndex(baseLocalVariableIdx + LocalVariableCount - 1, false);
         }
     }
 }

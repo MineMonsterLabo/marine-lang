@@ -236,11 +236,11 @@ namespace MarineLang.VirtualMachines
 
     public struct StoreValueIL : IMarineIL
     {
-        public readonly int stackIndex;
+        public readonly StackIndex stackIndex;
         public readonly object value;
         public void Run(LowLevelVirtualMachine vm)
         {
-            vm.Store(value, vm.stackBaseCount + stackIndex);
+            vm.Store(value, stackIndex.GetIndex(vm.stackBaseCount));
         }
     }
 
@@ -266,9 +266,9 @@ namespace MarineLang.VirtualMachines
 
     public struct StoreIL : IMarineIL
     {
-        public readonly int stackIndex;
+        public readonly StackIndex stackIndex;
 
-        public StoreIL(int stackIndex)
+        public StoreIL(in StackIndex stackIndex)
         {
             this.stackIndex = stackIndex;
         }
@@ -276,7 +276,7 @@ namespace MarineLang.VirtualMachines
         public void Run(LowLevelVirtualMachine vm)
         {
             var storeValue = vm.Pop();
-            vm.Store(storeValue, vm.stackBaseCount + stackIndex);
+            vm.Store(storeValue, stackIndex.GetIndex(vm.stackBaseCount));
         }
 
         public override string ToString()
@@ -287,16 +287,16 @@ namespace MarineLang.VirtualMachines
 
     public struct LoadIL : IMarineIL
     {
-        public readonly int stackIndex;
+        public readonly StackIndex stackIndex;
 
-        public LoadIL(int stackIndex)
+        public LoadIL(in StackIndex stackIndex)
         {
             this.stackIndex = stackIndex;
         }
 
         public void Run(LowLevelVirtualMachine vm)
         {
-            var loadValue = vm.Load(vm.stackBaseCount + stackIndex);
+            var loadValue = vm.Load(stackIndex.GetIndex(vm.stackBaseCount));
             vm.Push(loadValue);
         }
 
