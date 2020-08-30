@@ -112,7 +112,7 @@ namespace MarineLang.SyntaxAnalysis
             return stream =>
                 ParserCombinator.Or(
                     ParseIfExpr(),
-                    ParseBinaryOp()
+                    ParseBinaryOpExpr()
                 )(stream);
         }
 
@@ -167,11 +167,11 @@ namespace MarineLang.SyntaxAnalysis
             };
         }
 
-        Parser<ExprAst> ParseBinaryOp()
+        Parser<ExprAst> ParseBinaryOpExpr()
         {
             return stream =>
             {
-                var exprResult = ParseDotOp()(stream);
+                var exprResult = ParseDotOpExpr()(stream);
                 if (exprResult.IsError || stream.IsEnd)
                     return exprResult;
 
@@ -179,14 +179,14 @@ namespace MarineLang.SyntaxAnalysis
                 if (opResult.IsError)
                     return exprResult;
                 return
-                    ParseBinaryOp2(exprResult.Value, opResult.Value.tokenType)(stream);
+                    ParseBinaryOp2Expr(exprResult.Value, opResult.Value.tokenType)(stream);
             };
         }
-        Parser<ExprAst> ParseBinaryOp2(ExprAst beforeExpr, TokenType beforeTokenType)
+        Parser<ExprAst> ParseBinaryOp2Expr(ExprAst beforeExpr, TokenType beforeTokenType)
         {
             return stream =>
             {
-                var exprResult = ParseDotOp()(stream);
+                var exprResult = ParseDotOpExpr()(stream);
                 if (exprResult.IsError || stream.IsEnd)
                     return exprResult;
 
@@ -198,15 +198,15 @@ namespace MarineLang.SyntaxAnalysis
                 var tokenType = opResult.Value.tokenType;
                 if (GetOpPriority(beforeTokenType) >= GetOpPriority(tokenType))
                     return
-                        ParseBinaryOp2(BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType), tokenType)(stream);
+                        ParseBinaryOp2Expr(BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType), tokenType)(stream);
                 return
-                    ParseBinaryOp2(exprResult.Value, tokenType)
+                    ParseBinaryOp2Expr(exprResult.Value, tokenType)
                     .MapResult(expr => BinaryOpAst.Create(beforeExpr, expr, beforeTokenType))
                     (stream);
             };
         }
 
-        Parser<ExprAst> ParseDotOp()
+        Parser<ExprAst> ParseDotOpExpr()
         {
             return stream =>
             {
