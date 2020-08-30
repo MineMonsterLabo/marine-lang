@@ -1,6 +1,7 @@
 ﻿using MarineLang.Models;
 using MarineLang.Utils;
 using System;
+using System.Collections;
 using System.Linq;
 using System.Reflection;
 
@@ -89,6 +90,28 @@ namespace MarineLang.VirtualMachines
         public override string ToString()
         {
             return typeof(InstanceCSharpFieldLoadIL).Name + " '" + fieldName;
+        }
+    }
+
+    public struct InstanceCSharpIndexerLoadIL : IMarineIL
+    {
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var indexValue = vm.Pop();
+            var instance = vm.Pop();
+            var instanceType = instance.GetType();
+            if (instanceType.IsArray)
+                vm.Push((instance as IList)[(int)indexValue]);
+            else
+                vm.Push(
+                    instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance)
+                    .GetValue(instance, new object[] { indexValue })
+                );
+        }
+
+        public override string ToString()
+        {
+            return typeof(InstanceCSharpIndexerLoadIL).Name;
         }
     }
 

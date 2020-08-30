@@ -210,7 +210,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             return stream =>
             {
-                var termResult = ParseTerm()(stream);
+                var termResult = ParseIndexerOpExpr(stream);
                 if (termResult.IsError || stream.IsEnd)
                     return termResult;
 
@@ -240,6 +240,18 @@ namespace MarineLang.SyntaxAnalysis
                         )
                     );
             };
+        }
+
+        IParseResult<ExprAst> ParseIndexerOpExpr(TokenStream stream)
+        {
+            var termResult = ParseTerm()(stream);
+            if (termResult.IsError || stream.IsEnd)
+                return termResult;
+
+            return ParseIndexers()
+                .MapResult(indexExprs =>
+                    indexExprs.Aggregate(termResult.Value, (acc, x) => GetIndexerAst.Create(acc, x))
+                )(stream);
         }
 
         Parser<Token> ParseOpToken()
@@ -300,6 +312,15 @@ namespace MarineLang.SyntaxAnalysis
                         new FuncCallAst { funcName = funcNameToken.text, args = paramList }
                     )
                 )(stream);
+        }
+
+        Parser<IReadOnlyList<ExprAst>> ParseIndexers()
+        {
+            return ParserCombinator.Many(
+                ParseToken(TokenType.LeftBracket)
+                .Right(ParseExpr())
+                .Left(ParseToken(TokenType.RightBracket))
+            );
         }
 
         IParseResult<ReturnAst> ParseReturn(TokenStream stream)
