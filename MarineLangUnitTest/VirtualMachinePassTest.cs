@@ -56,6 +56,7 @@ namespace MarineLangUnitTest
         public class Hoge
         {
             public bool flag;
+            public string[] Names { get; } = new string[] { "rrr", "qqq" };
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
         }
@@ -350,6 +351,7 @@ end", 18)]
         [InlineData("fun main() ret names[0] end", "aaa")]
         [InlineData("fun main() ret names[2-1] end", "bbb")]
         [InlineData("fun main() ret namess[1][0] end", "xxx")]
+        [InlineData("fun main() ret hoge.names[1] end", "qqq")]
         public void Indexer<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
