@@ -214,28 +214,31 @@ namespace MarineLang.SyntaxAnalysis
                 if (termResult.IsError || stream.IsEnd)
                     return termResult;
 
-                var funcCallAstsResult =
+                var fieldResult =
                     ParserCombinator.Many(
                         ParserCombinator.Try(
-                            ParseToken(TokenType.DotOp).Right(
-                                ParserCombinator.Or<ExprAst>(
-                                    ParserCombinator.Try(ParseFuncCall),
-                                    ParseVariable()
-                                )
+                            ParserCombinator.Tuple(
+                                ParseToken(TokenType.DotOp).Right(
+                                    ParserCombinator.Or<ExprAst>(
+                                        ParserCombinator.Try(ParseFuncCall),
+                                        ParseVariable()
+                                    )
+                                ),
+                                ParseIndexers()
                             )
                         )
                     )
                     (stream);
                 return
-                    funcCallAstsResult.Map(funcCallAsts =>
+                    fieldResult.Map(funcCallAsts =>
                         funcCallAsts.Aggregate(
                             termResult.Value,
-                            (expr, expr2) =>
+                            (expr, pair) =>
                             {
-                                if (expr2 is FuncCallAst funcCallAst)
-                                    return InstanceFuncCallAst.Create(expr, funcCallAst);
-                                else
-                                    return InstanceFieldAst.Create(expr, expr2.GetVariableAst().varName);
+                                expr = (pair.Item1 is FuncCallAst funcCallAst) ?
+                                      InstanceFuncCallAst.Create(expr, funcCallAst) as ExprAst :
+                                     InstanceFieldAst.Create(expr, pair.Item1.GetVariableAst().varName);
+                                return pair.Item2.Aggregate(expr, (acc, x) => GetIndexerAst.Create(acc, x));
                             }
                         )
                     );

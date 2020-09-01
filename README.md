@@ -56,10 +56,10 @@ expr           = if_expr | binary_op_expr ;
 if_expr        = 'if' , expr , block , [ 'else' , block ] ;
 block          = '{' , {statement} , '}'
 binary_op_expr = dot_op_expr , [binary_op , binary_op_expr] ;
-dot_op_expr    = indexer_op_expr , { '.' , field_term } ;
+dot_op_expr    = indexer_op_expr , { '.' , field_term , indexers } ;
 indexer_op_expr
                = term , indexers ;
-field_term     = ( func_call | variable ) , indexers ;
+field_term     = func_call | variable ;
 term           =
                  '(' , expr , ')'
                  func_call | 
