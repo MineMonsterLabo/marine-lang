@@ -361,5 +361,13 @@ end", 18)]
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData("fun main() ret [0,1,3] end", new object[] { 0, 1, 3 })]
+        [InlineData("fun main() ret [7;3] end", new object[] { 7, null, null })]
+        public void ArrayLiteral<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
