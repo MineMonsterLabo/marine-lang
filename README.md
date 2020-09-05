@@ -72,11 +72,13 @@ term           =
                  bool_literal | 
                  char_literal | 
                  string_literal |
+                 array_literal |
                  variable ;
 func_call      = id , param_list ;
 indexers       = ( '[' , expr , ']' )+ ;
 param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
 variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;
+array_literal  = '[' [ expr , { ',' , expr } ] , [ ';' , int_literal ] , ']'
 
 
 トークン

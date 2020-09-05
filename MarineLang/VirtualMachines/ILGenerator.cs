@@ -114,6 +114,8 @@ namespace MarineLang.VirtualMachines
                 InstanceFieldILGenerate(exprAst.GetInstanceFieldAst(), argCount, variables);
             else if (exprAst.GetGetIndexerAst() != null)
                 GetGetIndexerILGenerate(exprAst.GetGetIndexerAst(), argCount, variables);
+            else if (exprAst.GetArrayLiteralAst() != null)
+                ArrayLiteralILGenerate(exprAst.GetArrayLiteralAst(), argCount, variables);
         }
 
         void FuncCallILGenerate(FuncCallAst funcCallAst, int argCount, FuncScopeVariables args)
@@ -185,6 +187,13 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(
                 new InstanceCSharpIndexerLoadIL()
             );
+        }
+
+        void ArrayLiteralILGenerate(ArrayLiteralAst arrayLiteralAst, int argCount, FuncScopeVariables variables)
+        {
+            foreach (var exprAst in arrayLiteralAst.exprAsts)
+                ExprILGenerate(exprAst, argCount, variables);
+            marineILs.Add(new CreateArrayIL(arrayLiteralAst.exprAsts.Length, arrayLiteralAst.size));
         }
 
         void ReAssignmentVariableILGenerate(ReAssignmentVariableAst reAssignmentAst, int argCount, FuncScopeVariables variables)
