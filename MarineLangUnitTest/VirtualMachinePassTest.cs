@@ -59,6 +59,7 @@ namespace MarineLangUnitTest
             public string[] Names { get; } = new string[] { "rrr", "qqq" };
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
+            public Hoge GetThis() => this;
         }
 
         public static Hoge create_hoge() { return new Hoge(); }
@@ -341,6 +342,7 @@ end", 18)]
 
         [Theory]
         [InlineData("fun main()  hoge.name = \"gg\"  ret hoge.name end", "gg")]
+        [InlineData("fun main()  hoge.get_this().name = \"gg\"  ret hoge.name end", "gg")]
         [InlineData("fun main() ret hoge.plus_one(5) end", 6)]
         public void GlobalVariable<T>(string str, T expected)
         {
@@ -352,6 +354,9 @@ end", 18)]
         [InlineData("fun main() ret names[2-1] end", "bbb")]
         [InlineData("fun main() ret namess[1][0] end", "xxx")]
         [InlineData("fun main() ret hoge.names[1] end", "qqq")]
+        [InlineData("fun main() names[1] = \"SAO\" ret names[1] end", "SAO")]
+        [InlineData("fun main() hoge.names[1] = \"AAA\" ret hoge.names[1] end", "AAA")]
+        [InlineData("fun main() hoge.get_this().get_this().names[1] = \"AAA\" ret hoge.get_this().names[1] end", "AAA")]
         public void Indexer<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
