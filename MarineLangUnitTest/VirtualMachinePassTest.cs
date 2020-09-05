@@ -355,7 +355,8 @@ end", 18)]
         [InlineData("fun main() ret namess[1][0] end", "xxx")]
         [InlineData("fun main() ret hoge.names[1] end", "qqq")]
         [InlineData("fun main() names[1] = \"SAO\" ret names[1] end", "SAO")]
-        [InlineData("fun main() namess[1][1] = \"AAA\" ret namess[1][1] end", "AAA")]
+        [InlineData("fun main() hoge.names[1] = \"AAA\" ret hoge.names[1] end", "AAA")]
+        [InlineData("fun main() hoge.get_this().get_this().names[1] = \"AAA\" ret hoge.get_this().names[1] end", "AAA")]
         public void Indexer<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
