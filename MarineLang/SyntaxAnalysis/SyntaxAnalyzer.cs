@@ -211,51 +211,57 @@ namespace MarineLang.SyntaxAnalysis
         {
             return stream =>
             {
-                var termResult = ParseIndexerOpExpr(stream);
+                var termResult = ParseIndexerOpExpr()(stream);
                 if (termResult.IsError || stream.IsEnd)
                     return termResult;
 
-                var fieldResult =
-                    ParserCombinator.Many(
-                        ParserCombinator.Try(
-                            ParserCombinator.Tuple(
-                                ParseToken(TokenType.DotOp).Right(
-                                    ParserCombinator.Or<ExprAst>(
-                                        ParserCombinator.Try(ParseFuncCall),
-                                        ParseVariable()
-                                    )
-                                ),
-                                ParseIndexers(false)
-                            )
-                        )
-                    )
-                    (stream);
-                return
-                    fieldResult.Map(funcCallAsts =>
-                        funcCallAsts.Aggregate(
-                            termResult.Value,
-                            (expr, pair) =>
-                            {
-                                expr = (pair.Item1 is FuncCallAst funcCallAst) ?
-                                      InstanceFuncCallAst.Create(expr, funcCallAst) as ExprAst :
-                                     InstanceFieldAst.Create(expr, pair.Item1.GetVariableAst().varName);
-                                return pair.Item2.Aggregate(expr, (acc, x) => GetIndexerAst.Create(acc, x));
-                            }
-                        )
-                    );
+                return ParseDotTerms(termResult.Value)(stream);
             };
         }
 
-        IParseResult<ExprAst> ParseIndexerOpExpr(TokenStream stream)
+        Parser<ExprAst> ParseIndexerOpExpr()
         {
-            var termResult = ParseTerm()(stream);
-            if (termResult.IsError || stream.IsEnd)
-                return termResult;
+            return stream =>
+            {
+                var termResult = ParseTerm()(stream);
+                if (termResult.IsError || stream.IsEnd)
+                    return termResult;
 
-            return ParseIndexers(false)
-                .MapResult(indexExprs =>
-                    indexExprs.Aggregate(termResult.Value, (acc, x) => GetIndexerAst.Create(acc, x))
-                )(stream);
+                return ParseIndexers(false)
+                    .MapResult(indexExprs =>
+                        indexExprs.Aggregate(termResult.Value, (acc, x) => GetIndexerAst.Create(acc, x))
+                    )(stream);
+            };
+        }
+
+        Parser<ExprAst> ParseDotTerms(ExprAst instance)
+        {
+            return
+                ParserCombinator.Many(
+                    ParserCombinator.Try(
+                        ParserCombinator.Tuple(
+                            ParseToken(TokenType.DotOp).Right(
+                                ParserCombinator.Or<ExprAst>(
+                                    ParserCombinator.Try(ParseFuncCall),
+                                    ParseVariable()
+                                )
+                            ),
+                            ParseIndexers(false)
+                        )
+                    )
+                )
+                .MapResult(fieldAsts =>
+                    fieldAsts.Aggregate(
+                        instance,
+                        (expr, pair) =>
+                        {
+                            expr = (pair.Item1 is FuncCallAst funcCallAst) ?
+                                InstanceFuncCallAst.Create(expr, funcCallAst) as ExprAst :
+                                InstanceFieldAst.Create(expr, pair.Item1.GetVariableAst().varName);
+                            return pair.Item2.Aggregate(expr, (acc, x) => GetIndexerAst.Create(acc, x));
+                        }
+                    )
+                );
         }
 
         Parser<Token> ParseOpToken()
@@ -405,32 +411,30 @@ namespace MarineLang.SyntaxAnalysis
                (stream);
         }
 
-        IParseResult<FieldAssignmentAst> ParseFieldAssignment(TokenStream stream)
+        IParseResult<StatementAst> ParseFieldAssignment(TokenStream stream)
         {
             return
-                ParserCombinator.Tuple(
-                    ParseTerm(),
-                    ParserCombinator.OneMany(
-                        ParseToken(TokenType.DotOp).Right(ParseVariable())
-                    )
-                ).MapResult(pair =>
-                    pair.Item2.Skip(1).Aggregate(
-                        InstanceFieldAst.Create(pair.Item1, pair.Item2[0].varName),
-                        (expr, variable) =>
-                            InstanceFieldAst.Create(expr, variable.varName)
-                    )
-                )
+                ParseIndexerOpExpr()
+                .Bind(instance => ParseDotTerms(instance))
                 .InCompleteErrorWithPositionHead("", ErrorCode.Unknown)
-               .Left(ParseToken(TokenType.AssignmentOp))
+                .Left(ParseToken(TokenType.AssignmentOp))
                 .InCompleteErrorWithPositionHead("=を期待してます", ErrorCode.Unknown)
                 .ExpectCanMoveNext()
-                    .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
-               .Bind(fieldAst =>
-                    ParseExpr()
-                    .MapResult(expr => FieldAssignmentAst.Create(fieldAst.fieldName, fieldAst.instanceExpr, expr))
-                    .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
-               )
-               (stream);
+                .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
+                .Bind<ExprAst, StatementAst>(exprAst =>
+                  {
+                      if (exprAst is InstanceFieldAst fieldAst)
+                          return
+                              ParseExpr()
+                              .MapResult(expr => FieldAssignmentAst.Create(fieldAst.fieldName, fieldAst.instanceExpr, expr));
+
+                      if (exprAst is GetIndexerAst getIndexerAst)
+                          return
+                              ParseExpr()
+                              .MapResult(expr => ReAssignmentIndexerAst.Create(getIndexerAst.instanceExpr, getIndexerAst.indexExpr, expr));
+                      return _ => ParseResult<StatementAst>.CreateError(new Error(ErrorKind.InComplete));
+                  })
+                (stream);
         }
 
         IParseResult<ValueAst> ParseInt(TokenStream stream)
