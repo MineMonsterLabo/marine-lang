@@ -172,14 +172,18 @@
             return this as ReturnAst;
         }
 
-        public AssignmentAst GetAssignmentAst()
+        public AssignmentVariableAst GetAssignmentAst()
         {
-            return this as AssignmentAst;
+            return this as AssignmentVariableAst;
         }
 
-        public ReAssignmentAst GetReAssignmentAst()
+        public ReAssignmentVariableAst GetReAssignmentVariableAst()
         {
-            return this as ReAssignmentAst;
+            return this as ReAssignmentVariableAst;
+        }
+        public ReAssignmentIndexerAst GetReAssignmentIndexerAst()
+        {
+            return this as ReAssignmentIndexerAst;
         }
 
         public FieldAssignmentAst GetFieldAssignmentAst()
@@ -214,25 +218,37 @@
         }
     }
 
-    public class AssignmentAst : StatementAst
+    public class AssignmentVariableAst : StatementAst
     {
         public ExprAst expr;
         public string varName;
 
-        public static AssignmentAst Create(string varName, ExprAst expr)
+        public static AssignmentVariableAst Create(string varName, ExprAst expr)
         {
-            return new AssignmentAst { varName = varName, expr = expr };
+            return new AssignmentVariableAst { varName = varName, expr = expr };
         }
     }
 
-    public class ReAssignmentAst : StatementAst
+    public class ReAssignmentVariableAst : StatementAst
     {
         public ExprAst expr;
         public string varName;
 
-        public static ReAssignmentAst Create(string varName, ExprAst expr)
+        public static ReAssignmentVariableAst Create(string varName, ExprAst expr)
         {
-            return new ReAssignmentAst { varName = varName, expr = expr };
+            return new ReAssignmentVariableAst { varName = varName, expr = expr };
+        }
+    }
+
+    public class ReAssignmentIndexerAst : StatementAst
+    {
+        public ExprAst instanceExpr;
+        public ExprAst indexExpr;
+        public ExprAst assignmentExpr;
+
+        public static ReAssignmentIndexerAst Create(ExprAst instanceExpr, ExprAst indexExpr, ExprAst assignmentExpr)
+        {
+            return new ReAssignmentIndexerAst { instanceExpr = instanceExpr, indexExpr = indexExpr, assignmentExpr = assignmentExpr };
         }
     }
 

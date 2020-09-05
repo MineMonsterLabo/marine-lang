@@ -115,6 +115,27 @@ namespace MarineLang.VirtualMachines
         }
     }
 
+    public struct InstanceCSharpIndexerStoreIL : IMarineIL
+    {
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var storeValue = vm.Pop();
+            var indexValue = vm.Pop();
+            var instance = vm.Pop();
+            var instanceType = instance.GetType();
+            if (instanceType.IsArray)
+                (instance as IList)[(int)indexValue] = storeValue;
+            else
+                instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance)
+                .SetValue(instance, storeValue, new object[] { indexValue });
+        }
+
+        public override string ToString()
+        {
+            return typeof(InstanceCSharpIndexerStoreIL).Name;
+        }
+    }
+
     public struct InstanceCSharpFieldStoreIL : IMarineIL
     {
         public readonly string fieldName;

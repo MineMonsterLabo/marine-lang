@@ -75,8 +75,10 @@ namespace MarineLang.VirtualMachines
             }
             else if (statementAst.GetExprAst() != null)
                 ExprILGenerate(statementAst.GetExprAst(), argCount, variables);
-            else if (statementAst.GetReAssignmentAst() != null)
-                ReAssignmentILGenerate(statementAst.GetReAssignmentAst(), argCount, variables);
+            else if (statementAst.GetReAssignmentVariableAst() != null)
+                ReAssignmentVariableILGenerate(statementAst.GetReAssignmentVariableAst(), argCount, variables);
+            else if (statementAst.GetReAssignmentIndexerAst() != null)
+                ReAssignmentIndexerILGenerate(statementAst.GetReAssignmentIndexerAst(), argCount, variables);
             else if (statementAst.GetAssignmentAst() != null)
                 AssignmentILGenerate(statementAst.GetAssignmentAst(), argCount, variables);
             else if (statementAst.GetFieldAssignmentAst() != null)
@@ -185,13 +187,21 @@ namespace MarineLang.VirtualMachines
             );
         }
 
-        void ReAssignmentILGenerate(ReAssignmentAst reAssignmentAst, int argCount, FuncScopeVariables variables)
+        void ReAssignmentVariableILGenerate(ReAssignmentVariableAst reAssignmentAst, int argCount, FuncScopeVariables variables)
         {
             ExprILGenerate(reAssignmentAst.expr, argCount, variables);
             marineILs.Add(new StoreIL(variables.GeVariableIdx(reAssignmentAst.varName)));
         }
 
-        void AssignmentILGenerate(AssignmentAst assignmentAst, int argCount, FuncScopeVariables variables)
+        void ReAssignmentIndexerILGenerate(ReAssignmentIndexerAst reAssignmentAst, int argCount, FuncScopeVariables variables)
+        {
+            ExprILGenerate(reAssignmentAst.instanceExpr, argCount, variables);
+            ExprILGenerate(reAssignmentAst.indexExpr, argCount, variables);
+            ExprILGenerate(reAssignmentAst.assignmentExpr, argCount, variables);
+            marineILs.Add(new InstanceCSharpIndexerStoreIL());
+        }
+
+        void AssignmentILGenerate(AssignmentVariableAst assignmentAst, int argCount, FuncScopeVariables variables)
         {
             ExprILGenerate(assignmentAst.expr, argCount, variables);
             variables.AddLocalVariable(assignmentAst.varName);

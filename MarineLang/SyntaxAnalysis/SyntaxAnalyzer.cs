@@ -65,9 +65,10 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseWhile()),
                     ParserCombinator.Try(ParseFor()),
                     ParserCombinator.Try(ParseReturn),
-                    ParserCombinator.Try(ParseAssignment),
+                    ParserCombinator.Try(ParseAssignmentVariable),
                     ParserCombinator.Try(ParseFieldAssignment),
-                    ParserCombinator.Try(ParseReAssignment),
+                    ParserCombinator.Try(ParseReAssignmentVariable),
+                    ParserCombinator.Try(ParseReAssignmentIndexer),
                     ParserCombinator.Try(ParseExpr())
                 );
         }
@@ -224,7 +225,7 @@ namespace MarineLang.SyntaxAnalysis
                                         ParseVariable()
                                     )
                                 ),
-                                ParseIndexers()
+                                ParseIndexers(false)
                             )
                         )
                     )
@@ -251,7 +252,7 @@ namespace MarineLang.SyntaxAnalysis
             if (termResult.IsError || stream.IsEnd)
                 return termResult;
 
-            return ParseIndexers()
+            return ParseIndexers(false)
                 .MapResult(indexExprs =>
                     indexExprs.Aggregate(termResult.Value, (acc, x) => GetIndexerAst.Create(acc, x))
                 )(stream);
@@ -317,13 +318,12 @@ namespace MarineLang.SyntaxAnalysis
                 )(stream);
         }
 
-        Parser<IReadOnlyList<ExprAst>> ParseIndexers()
+        Parser<IReadOnlyList<ExprAst>> ParseIndexers(bool once)
         {
-            return ParserCombinator.Many(
-                ParseToken(TokenType.LeftBracket)
+            var parserIndexer = ParseToken(TokenType.LeftBracket)
                 .Right(ParseExpr())
-                .Left(ParseToken(TokenType.RightBracket))
-            );
+                .Left(ParseToken(TokenType.RightBracket));
+            return once ? ParserCombinator.OneMany(parserIndexer) : ParserCombinator.Many(parserIndexer);
         }
 
         IParseResult<ReturnAst> ParseReturn(TokenStream stream)
@@ -337,7 +337,8 @@ namespace MarineLang.SyntaxAnalysis
                 (stream);
         }
 
-        IParseResult<AssignmentAst> ParseAssignment(TokenStream stream)
+        IParseResult<AssignmentVariableAst> ParseAssignmentVariable
+            (TokenStream stream)
         {
             return
                 ParseToken(TokenType.Let)
@@ -359,15 +360,15 @@ namespace MarineLang.SyntaxAnalysis
                 .Bind(varNameToken =>
                     ParseExpr()
                     .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
-                    .MapResult(expr => AssignmentAst.Create(varNameToken.text, expr))
+                    .MapResult(expr => AssignmentVariableAst.Create(varNameToken.text, expr))
                 )
                 (stream);
         }
 
-        IParseResult<ReAssignmentAst> ParseReAssignment(TokenStream stream)
+        IParseResult<ReAssignmentVariableAst> ParseReAssignmentVariable(TokenStream stream)
         {
             return
-                ParseVariable()
+                 ParseVariable()
                 .InCompleteErrorWithPositionHead("", ErrorCode.Unknown)
                 .Left(ParseToken(TokenType.AssignmentOp))
                 .InCompleteErrorWithPositionHead("=を期待してます", ErrorCode.Unknown)
@@ -375,8 +376,31 @@ namespace MarineLang.SyntaxAnalysis
                 .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
                 .Bind(variable =>
                     ParseExpr()
-                    .MapResult(expr => ReAssignmentAst.Create(variable.varName, expr))
+                    .MapResult(expr => ReAssignmentVariableAst.Create(variable.varName, expr))
                     .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
+               )
+               (stream);
+        }
+
+        IParseResult<ReAssignmentIndexerAst> ParseReAssignmentIndexer(TokenStream stream)
+        {
+            return
+                ParserCombinator.Tuple(ParseTerm(), ParseIndexers(true))
+                .InCompleteErrorWithPositionHead("", ErrorCode.Unknown)
+                .Left(ParseToken(TokenType.AssignmentOp))
+                .InCompleteErrorWithPositionHead("=を期待してます", ErrorCode.Unknown)
+                .ExpectCanMoveNext()
+                .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError)
+                .Bind(pair =>
+                {
+                    if (pair.Item2.Count > 1)
+                        pair.Item1 = pair.Item2.Take(pair.Item2.Count - 1)
+                        .Aggregate(pair.Item1, (acc, x) => GetIndexerAst.Create(acc, x));
+
+                    return ParseExpr()
+                    .MapResult(expr => ReAssignmentIndexerAst.Create(pair.Item1, pair.Item2.Last(), expr))
+                    .InCompleteErrorWithPositionHead("=の後に式がありません", ErrorCode.NonEqualExpr, ErrorKind.ForceError);
+                }
                )
                (stream);
         }
