@@ -299,6 +299,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseBool),
                     ParserCombinator.Try(ParseChar),
                     ParserCombinator.Try(ParseString),
+                    ParserCombinator.Try(ParseArrayLiteral()),
                     ParserCombinator.Try(ParseVariable())
                 );
         }
@@ -503,6 +504,32 @@ namespace MarineLang.SyntaxAnalysis
                 .Right(ParserCombinator.Separated(ParseVariable(), ParseToken(TokenType.Comma)))
                 .Left(ParseToken(TokenType.RightParen))
                 (stream);
+        }
+
+        Parser<ArrayLiteralAst> ParseArrayLiteral()
+        {
+            return
+                ParseToken(TokenType.LeftBracket)
+                .Right(
+                    ParserCombinator.Separated(ParseExpr(), ParseToken(TokenType.Comma))
+                )
+                .Bind<ExprAst[], ArrayLiteralAst>(exprs =>
+                     stream =>
+                     {
+                         var semicolonResult = ParseToken(TokenType.Semicolon)(stream);
+                         if (semicolonResult.IsError)
+                             return ParseResult<ArrayLiteralAst>.CreateSuccess(
+                                 ArrayLiteralAst.Create(exprs, exprs.Length)
+                             );
+                         var sizeResult = ParseInt(stream);
+                         if (sizeResult.IsError)
+                             return sizeResult.CastError<ArrayLiteralAst>();
+                         return ParseResult<ArrayLiteralAst>.CreateSuccess(
+                             ArrayLiteralAst.Create(exprs, (int)sizeResult.Value.value)
+                         );
+                     }
+                )
+                .Left(ParseToken(TokenType.RightBracket));
         }
 
         Parser<Token> ParseToken(TokenType tokenType)

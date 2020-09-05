@@ -36,6 +36,7 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetIntLiteralToken()(stream) ??
                     LexerHelper.GetCharLiteralToken(stream) ??
                     LexerHelper.GetStringLiteralToken(stream) ??
+                    LexerHelper.GetCharToken(stream, ';', TokenType.Semicolon) ??
                     LexerHelper.GetCharToken(stream, '{', TokenType.LeftCurlyBracket) ??
                     LexerHelper.GetCharToken(stream, '}', TokenType.RightCurlyBracket) ??
                     LexerHelper.GetCharToken(stream, '[', TokenType.LeftBracket) ??

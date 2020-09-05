@@ -63,6 +63,11 @@
         {
             return this as GetIndexerAst;
         }
+
+        public ArrayLiteralAst GetArrayLiteralAst()
+        {
+            return this as ArrayLiteralAst;
+        }
     }
 
     public class ValueAst : ExprAst
@@ -157,6 +162,17 @@
         public static GetIndexerAst Create(ExprAst expr, ExprAst indexExpr)
         {
             return new GetIndexerAst { instanceExpr = expr, indexExpr = indexExpr };
+        }
+    }
+
+    public class ArrayLiteralAst : ExprAst
+    {
+        public ExprAst[] exprAsts;
+        public int size;
+
+        public static ArrayLiteralAst Create(ExprAst[] exprAsts, int size)
+        {
+            return new ArrayLiteralAst { exprAsts = exprAsts, size = size };
         }
     }
 

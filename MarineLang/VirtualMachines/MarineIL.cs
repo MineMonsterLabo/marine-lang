@@ -350,6 +350,31 @@ namespace MarineLang.VirtualMachines
         }
     }
 
+    public struct CreateArrayIL : IMarineIL
+    {
+        public readonly int initSize;
+        public readonly int size;
+
+        public CreateArrayIL(int initSize, int size)
+        {
+            this.initSize = initSize;
+            this.size = size;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var arr = new object[size];
+            for (var i = initSize - 1; i >= 0; i--)
+                arr[i] = vm.Pop();
+            vm.Push(arr);
+        }
+
+        public override string ToString()
+        {
+            return typeof(CreateArrayIL).Name + " " + size;
+        }
+    }
+
     public struct StackAllocIL : IMarineIL
     {
         public readonly int size;

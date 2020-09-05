@@ -13,6 +13,7 @@
         LeftCurlyBracket,
         RightCurlyBracket,
         Comma,
+        Semicolon,
         Let,
         Op,
         DotOp,
