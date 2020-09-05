@@ -59,6 +59,7 @@ namespace MarineLangUnitTest
             public string[] Names { get; } = new string[] { "rrr", "qqq" };
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
+            public Hoge GetThis() => this;
         }
 
         public static Hoge create_hoge() { return new Hoge(); }
@@ -341,6 +342,7 @@ end", 18)]
 
         [Theory]
         [InlineData("fun main()  hoge.name = \"gg\"  ret hoge.name end", "gg")]
+        [InlineData("fun main()  hoge.get_this().name = \"gg\"  ret hoge.name end", "gg")]
         [InlineData("fun main() ret hoge.plus_one(5) end", 6)]
         public void GlobalVariable<T>(string str, T expected)
         {
