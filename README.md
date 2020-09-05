@@ -51,7 +51,7 @@ for_statement  = 'for' , variable, '=', expr  ',' , expr , ',' , expr , block ;
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment_variable ;
 field_assignment  
-               = indexer_op_expr , ( '.' , variable )+ , '=' , expr ;
+               = indexer_op_expr ,  dot_terms , '.' , variable , '=' , expr ;
 re_assignment_variable  =  variable , '=' , expr ;
 re_assignment_indexer  
                = term , indexers , '=' , expr ;
@@ -59,9 +59,10 @@ expr           = if_expr | binary_op_expr ;
 if_expr        = 'if' , expr , block , [ 'else' , block ] ;
 block          = '{' , {statement} , '}'
 binary_op_expr = dot_op_expr , [binary_op , binary_op_expr] ;
-dot_op_expr    = indexer_op_expr , { '.' , field_term , [indexers] } ;
+dot_op_expr    = indexer_op_expr , dot_terms ;
 indexer_op_expr
                = term , [indexers] ;
+dot_terms      = { '.' , field_term , [indexers] } ;
 field_term     = func_call | variable ;
 term           =
                  '(' , expr , ')'
