@@ -1,4 +1,5 @@
-﻿using MarineLang.BuiltInTypes;
+﻿using MarineLang.BuildInObjects;
+using MarineLang.BuiltInTypes;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
@@ -29,6 +30,7 @@ namespace MarineLangUnitTest
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("plus"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("two"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("not"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("invoke_int"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
             vm.GlobalVariableRegister("hoge", new Hoge());
             vm.GlobalVariableRegister("names", new string[] { "aaa", "bbb" });
@@ -69,6 +71,7 @@ namespace MarineLangUnitTest
         public static int plus(int a, int b) { return a + b; }
         public static int two(int a) { return a * 2; }
         public static bool not(bool a) { return !a; }
+        public static int invoke_int(ActionObject actionObject, int val) { return actionObject.Call<int>(val); }
 
         [Theory]
         [InlineData("fun main() hello() end")]
@@ -385,6 +388,23 @@ end", 18)]
         public void UnitIf(string str)
         {
             RunReturnCheck(str, new UnitType());
+        }
+
+        [Theory]
+        [InlineData(@"
+fun main()
+    let aa = 10
+    let action = action_object_generator.generate(""hoge"",[5])
+    ret invoke_int(action,8) + aa
+end
+
+fun hoge(action,x)
+    ret action.get(0) + x
+end
+")]
+        public void ActionObjectCall(string str)
+        {
+            RunReturnCheck(str, 5 + 8 + 10);
         }
     }
 }
