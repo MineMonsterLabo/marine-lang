@@ -369,5 +369,22 @@ end", 18)]
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData("fun main() for i=0,10000,1{5} end")]
+        [InlineData("fun main() for i=0,10000,1{ret_123()} end")]
+        public void NoUseExpr(string str)
+        {
+            RunReturnCheck(str, new UnitType());
+        }
+
+        [Theory]
+        [InlineData("fun main() ret if(true) {} end ")]
+        [InlineData("fun main() ret if(true) {let a=5} end ")]
+        [InlineData("fun main() ret if(false) {4}else{} end ")]
+        public void UnitIf(string str)
+        {
+            RunReturnCheck(str, new UnitType());
+        }
     }
 }
