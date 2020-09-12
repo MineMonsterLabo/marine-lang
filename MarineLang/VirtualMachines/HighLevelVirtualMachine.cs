@@ -1,4 +1,5 @@
-﻿using MarineLang.Models;
+﻿using MarineLang.BuildInObjects;
+using MarineLang.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -14,6 +15,11 @@ namespace MarineLang.VirtualMachines
         ILGenerator iLGenerator;
 
         public IReadOnlyList<IMarineIL> MarineILs => iLGeneratedData?.marineILs;
+
+        public HighLevelVirtualMachine()
+        {
+            GlobalVariableRegister("action_object_generator", new ActionObjectGenerator(this));
+        }
 
         public void GlobalFuncRegister(MethodInfo methodInfo)
         {
@@ -37,6 +43,11 @@ namespace MarineLang.VirtualMachines
 
         public RET Run<RET>(string marineFuncName, params object[] args)
         {
+            return Run<RET>(marineFuncName, args.AsEnumerable());
+        }
+
+        public RET Run<RET>(string marineFuncName, IEnumerable<object> args)
+        {
             lowLevelVirtualMachine.Init();
             lowLevelVirtualMachine.nextILIndex = iLGeneratedData.funcILIndexDict[marineFuncName];
             foreach (var val in globalVariableDict.Values)
@@ -49,6 +60,7 @@ namespace MarineLang.VirtualMachines
             lowLevelVirtualMachine.Run(iLGeneratedData);
             return (RET)lowLevelVirtualMachine.Pop();
         }
+
     }
 
 }
