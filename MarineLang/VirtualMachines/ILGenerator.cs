@@ -74,7 +74,10 @@ namespace MarineLang.VirtualMachines
                 return true;
             }
             else if (statementAst.GetExprAst() != null)
+            {
                 ExprILGenerate(statementAst.GetExprAst(), argCount, variables);
+                marineILs.Add(new PopIL());
+            }
             else if (statementAst.GetReAssignmentVariableAst() != null)
                 ReAssignmentVariableILGenerate(statementAst.GetReAssignmentVariableAst(), argCount, variables);
             else if (statementAst.GetReAssignmentIndexerAst() != null)
@@ -146,17 +149,34 @@ namespace MarineLang.VirtualMachines
             ExprILGenerate(ifExprAst.conditionExpr, argCount, variables);
             var jumpFalseInsertIndex = marineILs.Count;
             marineILs.Add(null);
-            foreach (var statementAst in ifExprAst.thenStatements)
-                StatementILGenerate(statementAst, argCount, variables);
+            BlockExprGenerate(ifExprAst.thenStatements, argCount, variables);
             var jumpInsertIndex = marineILs.Count;
             marineILs.Add(null);
             marineILs[jumpFalseInsertIndex] = new JumpFalseIL(marineILs.Count);
             if (ifExprAst.elseStatements.Length == 0)
                 marineILs.Add(new PushValueIL(new UnitType()));
             else
-                foreach (var statementAst in ifExprAst.elseStatements)
-                    StatementILGenerate(statementAst, argCount, variables);
+                BlockExprGenerate(ifExprAst.elseStatements, argCount, variables);
             marineILs[jumpInsertIndex] = new JumpIL(marineILs.Count);
+        }
+
+        void BlockExprGenerate(StatementAst[] statementAsts, int argCount, FuncScopeVariables variables)
+        {
+            for (var i = 0; i < statementAsts.Length - 1; i++)
+                StatementILGenerate(statementAsts[i], argCount, variables);
+
+            if (statementAsts.Length > 0)
+            {
+                var lastStatementAst = statementAsts.Last();
+                if (lastStatementAst.GetExprAst() != null)
+                {
+                    ExprILGenerate(lastStatementAst.GetExprAst(), argCount, variables);
+                    return;
+                }
+                StatementILGenerate(lastStatementAst, argCount, variables);
+            }
+
+            marineILs.Add(new PushValueIL(new UnitType()));
         }
 
         void InstanceFuncCallILGenerate(InstanceFuncCallAst instanceFuncCallAst, int argCount, FuncScopeVariables variables)

@@ -350,6 +350,20 @@ namespace MarineLang.VirtualMachines
         }
     }
 
+    public struct PopIL : IMarineIL
+    {
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            vm.Pop();
+        }
+
+        public override string ToString()
+        {
+            return typeof(PopIL).Name;
+        }
+    }
+
     public struct CreateArrayIL : IMarineIL
     {
         public readonly int initSize;
