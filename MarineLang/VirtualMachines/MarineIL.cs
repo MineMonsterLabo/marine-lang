@@ -25,7 +25,7 @@ namespace MarineLang.VirtualMachines
 
         public void Run(LowLevelVirtualMachine vm)
         {
-            var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).ToArray();
+            var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
             vm.Push(methodInfo.Invoke(null, args));
         }
         public override string ToString()
@@ -47,7 +47,7 @@ namespace MarineLang.VirtualMachines
 
         public void Run(LowLevelVirtualMachine vm)
         {
-            var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).ToArray();
+            var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
             var instance = vm.Pop();
             var methodInfo =
                 instance.GetType()

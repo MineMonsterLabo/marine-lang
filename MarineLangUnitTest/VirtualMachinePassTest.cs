@@ -1,4 +1,5 @@
-﻿using MarineLang.BuiltInTypes;
+﻿using MarineLang.BuildInObjects;
+using MarineLang.BuiltInTypes;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
@@ -29,6 +30,7 @@ namespace MarineLangUnitTest
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("plus"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("two"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("not"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("invoke_int"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
             vm.GlobalVariableRegister("hoge", new Hoge());
             vm.GlobalVariableRegister("names", new string[] { "aaa", "bbb" });
@@ -69,6 +71,7 @@ namespace MarineLangUnitTest
         public static int plus(int a, int b) { return a + b; }
         public static int two(int a) { return a * 2; }
         public static bool not(bool a) { return !a; }
+        public static int invoke_int(ActionObject actionObject, int val) { return actionObject.InvokeGeneric<int>(val); }
 
         [Theory]
         [InlineData("fun main() hello() end")]
@@ -385,6 +388,76 @@ end", 18)]
         public void UnitIf(string str)
         {
             RunReturnCheck(str, new UnitType());
+        }
+
+        [Theory]
+        [InlineData(@"
+fun main()
+    let aa = 10
+    let bb = 5
+    let action = action_object_generator.generate(""hoge"",[bb,aa])
+    ret invoke_int(action,8) + aa
+end
+
+fun hoge(action,x)
+    ret action.get(0) + x-action.get(1)
+end
+")]
+        public void ActionObjectCall(string str)
+        {
+            RunReturnCheck(str, 5 + 8);
+        }
+
+        [Theory]
+        [InlineData(@"
+fun main()
+    let aa = 10
+    let bb = 5
+    let action = {|x| 
+        bb=bb+1 
+        ret bb + x - aa+invoke_int({ |y| ret x*y }, 2)
+    }
+    ret invoke_int(action,8)+aa
+end
+")]
+        [InlineData(@"
+fun main()
+    let aa = 10
+    let bb = 5
+    let action = {|x| 
+        bb=bb+1 
+        ret bb + x - aa+{ |y| ret x*y }.invoke([2])
+    }
+    ret action.invoke([8])+aa
+end
+")]
+        public void ActionObjectCall2(string str)
+        {
+            RunReturnCheck(str, 6 + 8 + 8 * 2);
+        }
+
+        [Theory]
+        [InlineData(@"
+fun main()
+    ret {|f| 
+        ret 
+            { |x| ret f.invoke( [{ |y| ret x.invoke([x]).invoke([y]) }] ) }
+            .invoke( [{|x| ret f.invoke( [{ |y| ret x.invoke([x]).invoke([y]) }] ) }] )   
+    }.invoke([
+        { |f| 
+            ret { |n| 
+                ret if n==0 {1} else {n * f.invoke([n - 1]) } 
+            }
+        } 
+    ]).invoke([5])
+end
+")]
+        [InlineData(@"
+fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invoke([{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}])}.invoke([{|f|ret{|n|ret if n==0{1}else{n*f.invoke([n-1])}}}]).invoke([5])end
+")]
+        public void ActionObjectCall3(string str)
+        {
+            RunReturnCheck(str, 120);
         }
     }
 }
