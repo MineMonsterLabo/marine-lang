@@ -65,7 +65,7 @@ indexer_op_expr
 dot_terms      = { '.' , field_term , [indexers] } ;
 field_term     = func_call | variable ;
 term           =
-                 '(' , expr , ')'
+                 '(' , expr , ')' |
                  func_call | 
                  float_literal | 
                  int_literal | 
@@ -73,11 +73,14 @@ term           =
                  char_literal | 
                  string_literal |
                  array_literal |
+                 action_literal |
                  variable ;
+action_literal = '{' , action_variable_list , func_body , '}' ;
 func_call      = id , param_list ;
 indexers       = ( '[' , expr , ']' )+ ;
 param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
 variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;
+action_variable_list  = '|' , [ variable , { ',' , variable } ] , '|' ;
 array_literal  = '[' [ expr , { ',' , expr } ] , [ ';' , int_literal ] , ']'
 
 
