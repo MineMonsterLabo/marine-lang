@@ -11,7 +11,6 @@ namespace MarineLang.VirtualMachines
         Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
         SortedDictionary<string, object> globalVariableDict = new SortedDictionary<string, object>();
         ILGeneratedData iLGeneratedData;
-        LowLevelVirtualMachine lowLevelVirtualMachine = new LowLevelVirtualMachine();
         ILGenerator iLGenerator;
 
         public IReadOnlyList<IMarineIL> MarineILs => iLGeneratedData?.marineILs;
@@ -48,6 +47,7 @@ namespace MarineLang.VirtualMachines
 
         public RET Run<RET>(string marineFuncName, IEnumerable<object> args)
         {
+            var lowLevelVirtualMachine = new LowLevelVirtualMachine();
             lowLevelVirtualMachine.Init();
             lowLevelVirtualMachine.nextILIndex = iLGeneratedData.funcILIndexDict[marineFuncName];
             foreach (var val in globalVariableDict.Values)

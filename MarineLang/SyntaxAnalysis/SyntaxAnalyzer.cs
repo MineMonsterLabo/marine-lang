@@ -33,7 +33,7 @@ namespace MarineLang.SyntaxAnalysis
                      ParserCombinator.Try(ParseVariableList)
                      .InCompleteError("関数定義には()が必要です", ErrorCode.NonFuncParen, funcNameToken.PositionEnd)
                      .Bind(varList =>
-                        ParserCombinator.Try(ParseFuncBody)
+                        ParserCombinator.Try(ParseFuncBody(TokenType.End))
                         .MapResult(statementAsts => FuncDefinitionAst.Create(funcNameToken.text, varList, statementAsts))
                      )
                  )
@@ -42,26 +42,29 @@ namespace MarineLang.SyntaxAnalysis
                 (stream);
         }
 
-        IParseResult<StatementAst[]> ParseFuncBody(TokenStream stream)
+        Parser<StatementAst[]> ParseFuncBody(TokenType endToken)
         {
-            var statementAsts = new List<StatementAst>();
-            while (stream.IsEnd == false && stream.Current.tokenType != TokenType.End)
+            return stream =>
             {
-                var parseResult = ParseStatement()(stream);
+                var statementAsts = new List<StatementAst>();
+                while (stream.IsEnd == false && stream.Current.tokenType != endToken)
+                {
+                    var parseResult = ParseStatement()(stream);
 
-                if (parseResult.IsError)
-                    return parseResult.CastError<StatementAst[]>();
+                    if (parseResult.IsError)
+                        return parseResult.CastError<StatementAst[]>();
 
-                statementAsts.Add(parseResult.Value);
-            }
+                    statementAsts.Add(parseResult.Value);
+                }
 
-            return ParseResult<StatementAst[]>.CreateSuccess(statementAsts.ToArray());
+                return ParseResult<StatementAst[]>.CreateSuccess(statementAsts.ToArray());
+            };
         }
 
         Parser<StatementAst> ParseStatement()
         {
             return
-                ParserCombinator.Or<StatementAst>(
+                ParserCombinator.Or(
                     ParserCombinator.Try(ParseWhile()),
                     ParserCombinator.Try(ParseFor()),
                     ParserCombinator.Try(ParseReturn),
@@ -300,6 +303,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseChar),
                     ParserCombinator.Try(ParseString),
                     ParserCombinator.Try(ParseArrayLiteral()),
+                    ParserCombinator.Try(ParseActionLiteral()),
                     ParserCombinator.Try(ParseVariable())
                 );
         }
@@ -506,6 +510,15 @@ namespace MarineLang.SyntaxAnalysis
                 (stream);
         }
 
+        IParseResult<VariableAst[]> ParseActionVariableList(TokenStream stream)
+        {
+            return
+                ParseToken(TokenType.PipeOp)
+                .Right(ParserCombinator.Separated(ParseVariable(), ParseToken(TokenType.Comma)))
+                .Left(ParseToken(TokenType.PipeOp))
+                (stream);
+        }
+
         Parser<ArrayLiteralAst> ParseArrayLiteral()
         {
             return
@@ -530,6 +543,20 @@ namespace MarineLang.SyntaxAnalysis
                      }
                 )
                 .Left(ParseToken(TokenType.RightBracket));
+        }
+
+        Parser<ActionAst> ParseActionLiteral()
+        {
+            return
+                ParserCombinator.Tuple(
+                    ParseToken(TokenType.LeftCurlyBracket)
+                    .Right(ParseActionVariableList),
+                    ParseFuncBody(TokenType.RightCurlyBracket)
+                    .Left(ParseToken(TokenType.RightCurlyBracket))
+                )
+                .MapResult(pair =>
+                    ActionAst.Create(pair.Item1, pair.Item2)
+                );
         }
 
         Parser<Token> ParseToken(TokenType tokenType)

@@ -15,6 +15,7 @@
         Comma,
         Semicolon,
         Let,
+        PipeOp,
         Op,
         DotOp,
         AssignmentOp,

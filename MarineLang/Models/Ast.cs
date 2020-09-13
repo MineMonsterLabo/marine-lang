@@ -1,6 +1,15 @@
-﻿namespace MarineLang.Models
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace MarineLang.Models
 {
-    public class ProgramAst
+
+    public interface IAst
+    {
+        IEnumerable<T> LookUp<T>();
+    }
+
+    public class ProgramAst : IAst
     {
         public FuncDefinitionAst[] funcDefinitionAsts;
 
@@ -8,9 +17,14 @@
         {
             return new ProgramAst { funcDefinitionAsts = funcDefinitionAsts };
         }
+
+        public IEnumerable<T> LookUp<T>()
+        {
+            return funcDefinitionAsts.SelectMany(x => x.LookUp<T>());
+        }
     }
 
-    public class FuncDefinitionAst
+    public class FuncDefinitionAst : IAst
     {
         public string funcName;
         public VariableAst[] args;
@@ -20,9 +34,16 @@
         {
             return new FuncDefinitionAst { funcName = funcName, args = args, statementAsts = statementAsts };
         }
+
+        public IEnumerable<T> LookUp<T>()
+        {
+            return
+                args.SelectMany(x => x.LookUp<T>())
+                .Concat(statementAsts.SelectMany(x => x.LookUp<T>()));
+        }
     }
 
-    public class ExprAst : StatementAst
+    public abstract class ExprAst : StatementAst
     {
         public FuncCallAst GetFuncCallAst()
         {
@@ -68,6 +89,11 @@
         {
             return this as ArrayLiteralAst;
         }
+
+        public ActionAst GetActionAst()
+        {
+            return this as ActionAst;
+        }
     }
 
     public class ValueAst : ExprAst
@@ -78,6 +104,12 @@
         {
             return new ValueAst { value = value };
         }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            if (this is T t)
+                yield return t;
+        }
     }
 
     public class VariableAst : ExprAst
@@ -87,6 +119,25 @@
         public static VariableAst Create(string varName)
         {
             return new VariableAst { varName = varName };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            if (this is T t)
+                yield return t;
+        }
+
+        public class Comparer : IEqualityComparer<VariableAst>
+        {
+            public bool Equals(VariableAst x, VariableAst y)
+            {
+                return x.varName == y.varName;
+            }
+
+            public int GetHashCode(VariableAst obj)
+            {
+                return obj.varName.GetHashCode();
+            }
         }
     }
 
@@ -105,6 +156,11 @@
                 opKind = opKind
             };
         }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return leftExpr.LookUp<T>().Concat(rightExpr.LookUp<T>());
+        }
     }
 
     public class InstanceFuncCallAst : ExprAst
@@ -120,6 +176,11 @@
                 instancefuncCallAst = instancefuncCallAst
             };
         }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return instanceExpr.LookUp<T>().Concat(instancefuncCallAst.LookUp<T>());
+        }
     }
 
     public class InstanceFieldAst : ExprAst
@@ -134,6 +195,11 @@
                 instanceExpr = instanceExpr,
                 fieldName = fieldName
             };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return instanceExpr.LookUp<T>();
         }
     }
 
@@ -152,6 +218,14 @@
                 elseStatements = elseStatements
             };
         }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return
+                conditionExpr.LookUp<T>()
+                .Concat(thenStatements.SelectMany(x => x.LookUp<T>()))
+                .Concat(elseStatements.SelectMany(x => x.LookUp<T>()));
+        }
     }
 
     public class GetIndexerAst : ExprAst
@@ -162,6 +236,11 @@
         public static GetIndexerAst Create(ExprAst expr, ExprAst indexExpr)
         {
             return new GetIndexerAst { instanceExpr = expr, indexExpr = indexExpr };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return instanceExpr.LookUp<T>().Concat(indexExpr.LookUp<T>());
         }
     }
 
@@ -174,9 +253,32 @@
         {
             return new ArrayLiteralAst { exprAsts = exprAsts, size = size };
         }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return exprAsts.SelectMany(x => x.LookUp<T>());
+        }
     }
 
-    public abstract class StatementAst
+    public class ActionAst : ExprAst
+    {
+        public VariableAst[] args;
+        public StatementAst[] statementAsts;
+
+        public static ActionAst Create(VariableAst[] args, StatementAst[] statementAsts)
+        {
+            return new ActionAst { args = args, statementAsts = statementAsts };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return
+                args.SelectMany(x => x.LookUp<T>())
+                .Concat(statementAsts.SelectMany(x => x.LookUp<T>()));
+        }
+    }
+
+    public abstract class StatementAst : IAst
     {
         public ExprAst GetExprAst()
         {
@@ -216,12 +318,24 @@
         {
             return this as ForAst;
         }
+
+        public abstract IEnumerable<T> LookUp<T>();
     }
 
     public class FuncCallAst : ExprAst
     {
         public string funcName;
         public ExprAst[] args;
+
+        public static FuncCallAst Create(string funcName, ExprAst[] args)
+        {
+            return new FuncCallAst { funcName = funcName, args = args };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return args.SelectMany(x => x.LookUp<T>());
+        }
     }
 
     public class ReturnAst : StatementAst
@@ -231,6 +345,11 @@
         public static ReturnAst Create(ExprAst expr)
         {
             return new ReturnAst { expr = expr };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return expr.LookUp<T>();
         }
     }
 
@@ -243,6 +362,11 @@
         {
             return new AssignmentVariableAst { varName = varName, expr = expr };
         }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return expr.LookUp<T>();
+        }
     }
 
     public class ReAssignmentVariableAst : StatementAst
@@ -253,6 +377,11 @@
         public static ReAssignmentVariableAst Create(string varName, ExprAst expr)
         {
             return new ReAssignmentVariableAst { varName = varName, expr = expr };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return expr.LookUp<T>();
         }
     }
 
@@ -266,6 +395,14 @@
         {
             return new ReAssignmentIndexerAst { instanceExpr = instanceExpr, indexExpr = indexExpr, assignmentExpr = assignmentExpr };
         }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return
+                instanceExpr.LookUp<T>()
+                .Concat(indexExpr.LookUp<T>())
+                .Concat(assignmentExpr.LookUp<T>());
+        }
     }
 
     public class FieldAssignmentAst : StatementAst
@@ -278,6 +415,13 @@
         {
             return new FieldAssignmentAst { fieldName = fieldName, instanceExpr = instanceExpr, expr = expr };
         }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return
+                expr.LookUp<T>()
+                .Concat(instanceExpr.LookUp<T>());
+        }
     }
 
     public class WhileAst : StatementAst
@@ -288,6 +432,13 @@
         public static WhileAst Create(ExprAst conditionExpr, StatementAst[] statements)
         {
             return new WhileAst { conditionExpr = conditionExpr, statements = statements };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return
+                conditionExpr.LookUp<T>()
+                .Concat(statements.SelectMany(x_ => x_.LookUp<T>()));
         }
     }
 
@@ -310,6 +461,16 @@
                 addValueExpr = addValueExpr,
                 statements = statements
             };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return
+                initVariable.LookUp<T>()
+                .Concat(initExpr.LookUp<T>())
+                .Concat(maxValueExpr.LookUp<T>())
+                .Concat(addValueExpr.LookUp<T>())
+                .Concat(statements.SelectMany(x => x.LookUp<T>()));
         }
     }
 }
