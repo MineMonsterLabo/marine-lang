@@ -11,6 +11,7 @@ namespace MarineLang.VirtualMachines
         public int callNestCount;
         public int stackBaseCount;
         public bool endFlag;
+        public bool yieldFlag;
 
         public object Pop() => iLStack.Pop();
         public void Push(object v) => iLStack.Push(v);
@@ -23,7 +24,17 @@ namespace MarineLang.VirtualMachines
         public void Run(ILGeneratedData iLGeneratedData)
         {
             this.iLGeneratedData = iLGeneratedData;
-            while (endFlag == false)
+            while (endFlag == false && yieldFlag == false)
+            {
+                iLGeneratedData.marineILs[nextILIndex].Run(this);
+                nextILIndex++;
+            }
+        }
+
+        public void Resume()
+        {
+            yieldFlag = false;
+            while (endFlag == false && yieldFlag == false)
             {
                 iLGeneratedData.marineILs[nextILIndex].Run(this);
                 nextILIndex++;

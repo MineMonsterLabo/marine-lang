@@ -408,6 +408,21 @@ namespace MarineLang.VirtualMachines
             return typeof(StackAllocIL).Name + " " + size;
         }
     }
+
+    public struct YieldIL : IMarineIL
+    {
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            vm.yieldFlag = true;
+        }
+
+        public override string ToString()
+        {
+            return typeof(YieldIL).Name;
+        }
+    }
+
     public struct BinaryOpIL : IMarineIL
     {
         public readonly TokenType opKind;

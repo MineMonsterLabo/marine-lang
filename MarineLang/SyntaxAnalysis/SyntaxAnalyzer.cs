@@ -65,6 +65,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParserCombinator.Or(
+                    ParserCombinator.Try(ParseYield()),
                     ParserCombinator.Try(ParseWhile()),
                     ParserCombinator.Try(ParseFor()),
                     ParserCombinator.Try(ParseReturn),
@@ -74,6 +75,11 @@ namespace MarineLang.SyntaxAnalysis
                     ParserCombinator.Try(ParseReAssignmentIndexer),
                     ParserCombinator.Try(ParseExpr())
                 );
+        }
+
+        Parser<YieldAst> ParseYield()
+        {
+            return ParseToken(TokenType.Yield).MapResult(_ => new YieldAst());
         }
 
         Parser<WhileAst> ParseWhile()

@@ -117,6 +117,8 @@ namespace MarineLang.VirtualMachines
                 WhileILGenerate(statementAst.GetWhileAst(), argCount, variables);
             else if (statementAst.GetForAst() != null)
                 ForILGenerate(statementAst.GetForAst(), argCount, variables);
+            else if (statementAst.GetYieldAst() != null)
+                marineILs.Add(new YieldIL());
             return false;
         }
 
