@@ -58,7 +58,21 @@ namespace MarineLang.VirtualMachines
             lowLevelVirtualMachine.Push(lowLevelVirtualMachine.stackBaseCount);
             lowLevelVirtualMachine.Push(lowLevelVirtualMachine.nextILIndex + 1);
             lowLevelVirtualMachine.Run(iLGeneratedData);
+            if (lowLevelVirtualMachine.yieldFlag)
+                return (RET)YieldRun(lowLevelVirtualMachine);
             return (RET)lowLevelVirtualMachine.Pop();
+        }
+
+        private IEnumerable<object> YieldRun(LowLevelVirtualMachine lowLevelVirtualMachine)
+        {
+            while (true)
+            {
+                lowLevelVirtualMachine.Resume();
+                if (lowLevelVirtualMachine.yieldFlag == false)
+                    break;
+                yield return null;
+            }
+            yield return lowLevelVirtualMachine.Pop();
         }
 
     }

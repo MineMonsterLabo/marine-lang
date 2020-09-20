@@ -319,6 +319,11 @@ namespace MarineLang.Models
             return this as ForAst;
         }
 
+        public YieldAst GetYieldAst()
+        {
+            return this as YieldAst;
+        }
+
         public abstract IEnumerable<T> LookUp<T>();
     }
 
@@ -471,6 +476,15 @@ namespace MarineLang.Models
                 .Concat(maxValueExpr.LookUp<T>())
                 .Concat(addValueExpr.LookUp<T>())
                 .Concat(statements.SelectMany(x => x.LookUp<T>()));
+        }
+    }
+
+    public class YieldAst : StatementAst
+    {
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return Enumerable.Empty<T>();
         }
     }
 }

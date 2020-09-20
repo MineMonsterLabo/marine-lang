@@ -4,6 +4,7 @@ using MarineLang.LexicalAnalysis;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -458,6 +459,22 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         public void ActionObjectCall3(string str)
         {
             RunReturnCheck(str, 120);
+        }
+
+        [Theory]
+        [InlineData("fun main() yield ret 4 end ", 4)]
+        [InlineData("fun main() yield ret hoge() + 1 end fun hoge() yield ret 5 end ", 6)]
+        public void YieldTest<T>(string str, T expected)
+        {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<IEnumerable<object>>("main");
+
+            var value = ret.ToArray().Last();
+
+            Assert.Equal(expected, value);
         }
     }
 }

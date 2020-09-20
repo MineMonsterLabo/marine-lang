@@ -4,6 +4,7 @@
     {
         Func,
         Id,
+        Yield,
         If,
         Else,
         LeftParen,
