@@ -37,6 +37,7 @@ func_definition
                = 'func' , id , variable_list , func_body , 'end' ;
 func_body      = {statement} ;
 statement      =  
+                  yield_statement |
                   while_statement |
                   for_statement |
                   ret_statement |
@@ -55,6 +56,8 @@ field_assignment
 re_assignment_variable  =  variable , '=' , expr ;
 re_assignment_indexer  
                = term , indexers , '=' , expr ;
+yield_statement
+               = 'yield' ; 
 expr           = if_expr | binary_op_expr ;
 if_expr        = 'if' , expr , block , [ 'else' , block ] ;
 block          = '{' , {statement} , '}'
