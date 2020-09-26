@@ -245,32 +245,35 @@ namespace MarineLang.SyntaxAnalysis
 
         Parser<ExprAst> ParseDotTerms(ExprAst instance)
         {
-            return
-                ParserCombinator.Many(
-                    ParserCombinator.Try(
-                        ParserCombinator.Tuple(
-                            ParseToken(TokenType.DotOp).Right(
-                                ParserCombinator.Or<ExprAst>(
-                                    ParserCombinator.Try(ParseFuncCall),
-                                    ParseVariable()
-                                )
-                            ),
-                            ParseIndexers(false)
-                        )
-                    )
-                )
-                .MapResult(fieldAsts =>
-                    fieldAsts.Aggregate(
-                        instance,
-                        (expr, pair) =>
-                        {
-                            expr = (pair.Item1 is FuncCallAst funcCallAst) ?
-                                InstanceFuncCallAst.Create(expr, funcCallAst) as ExprAst :
-                                InstanceFieldAst.Create(expr, pair.Item1.GetVariableAst().varName);
-                            return pair.Item2.Aggregate(expr, (acc, x) => GetIndexerAst.Create(acc, x));
-                        }
-                    )
-                );
+            var dotTermParser = ParseToken(TokenType.DotOp)
+                      .Right(
+                          ParserCombinator.Or<ExprAst>(
+                              ParseToken(TokenType.Await).MapResult(_ => AwaitAst.Create(instance)),
+                                  ParserCombinator.Try(ParseFuncCall)
+                                      .MapResult(funcCallAst => InstanceFuncCallAst.Create(instance, funcCallAst)),
+                                  ParseVariable()
+                                      .MapResult(variableAst => InstanceFieldAst.Create(instance, variableAst.varName))
+                          )
+                      );
+            return stream =>
+            {
+                while (stream.IsEnd == false)
+                {
+                    var result = dotTermParser(stream);
+                    if (result.IsError)
+                        if (result.Error.ErrorKind != ErrorKind.InComplete)
+                            return result;
+                        else break;
+                    instance = result.Value;
+                    if (stream.IsEnd)
+                        break;
+                    var result2 = ParseIndexers(false)(stream);
+                    if (result2.IsError)
+                        return result2.CastError<ExprAst>();
+                    instance = result2.Value.Aggregate(instance, (acc, x) => GetIndexerAst.Create(acc, x));
+                }
+                return ParseResult<ExprAst>.CreateSuccess(instance);
+            };
         }
 
         Parser<Token> ParseOpToken()

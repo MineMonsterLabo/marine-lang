@@ -94,6 +94,11 @@ namespace MarineLang.Models
         {
             return this as ActionAst;
         }
+
+        public AwaitAst GetAwaitAst()
+        {
+            return this as AwaitAst;
+        }
     }
 
     public class ValueAst : ExprAst
@@ -194,6 +199,24 @@ namespace MarineLang.Models
             {
                 instanceExpr = instanceExpr,
                 fieldName = fieldName
+            };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return instanceExpr.LookUp<T>();
+        }
+    }
+
+    public class AwaitAst : ExprAst
+    {
+        public ExprAst instanceExpr;
+
+        public static AwaitAst Create(ExprAst instanceExpr)
+        {
+            return new AwaitAst
+            {
+                instanceExpr = instanceExpr,
             };
         }
 

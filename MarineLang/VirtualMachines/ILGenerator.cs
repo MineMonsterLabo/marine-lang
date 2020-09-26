@@ -150,6 +150,8 @@ namespace MarineLang.VirtualMachines
                 ArrayLiteralILGenerate(exprAst.GetArrayLiteralAst(), argCount, variables);
             else if (exprAst.GetActionAst() != null)
                 ActionILGenerate(exprAst.GetActionAst(), argCount, variables);
+            else if (exprAst.GetAwaitAst() != null)
+                AwaitILGenerate(exprAst.GetAwaitAst(), argCount, variables);
         }
 
         void FuncCallILGenerate(FuncCallAst funcCallAst, int argCount, FuncScopeVariables args)
@@ -282,6 +284,24 @@ namespace MarineLang.VirtualMachines
                     )
                 );
             ExprILGenerate(ast, argCount, variables);
+        }
+
+        void AwaitILGenerate(AwaitAst awaitAst, int argCount, FuncScopeVariables variables)
+        {
+            ExprILGenerate(awaitAst.instanceExpr, argCount, variables);
+            var iterVariable = variables.CreateUnnamedLocalVariableIdx();
+            var resultVariable = variables.CreateUnnamedLocalVariableIdx();
+            marineILs.Add(new StoreIL(iterVariable));
+            var jumpIndex = marineILs.Count;
+            marineILs.Add(new LoadIL(iterVariable));
+            marineILs.Add(new MoveNextIL());
+            marineILs.Add(new JumpFalseIL(jumpIndex + 8));
+            marineILs.Add(new LoadIL(iterVariable));
+            marineILs.Add(new GetIterCurrentL());
+            marineILs.Add(new StoreIL(resultVariable));
+            marineILs.Add(new YieldIL());
+            marineILs.Add(new JumpIL(jumpIndex));
+            marineILs.Add(new LoadIL(resultVariable));
         }
 
         void ReAssignmentVariableILGenerate(ReAssignmentVariableAst reAssignmentAst, int argCount, FuncScopeVariables variables)
