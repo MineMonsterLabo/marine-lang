@@ -33,6 +33,8 @@ namespace MarineLangUnitTest
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("not"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("invoke_int"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("wait5"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("waitwait5"));
             vm.GlobalVariableRegister("hoge", new Hoge());
             vm.GlobalVariableRegister("names", new string[] { "aaa", "bbb" });
             vm.GlobalVariableRegister("namess", new string[][] {
@@ -73,6 +75,17 @@ namespace MarineLangUnitTest
         public static int two(int a) { return a * 2; }
         public static bool not(bool a) { return !a; }
         public static int invoke_int(ActionObject actionObject, int val) { return actionObject.InvokeGeneric<int>(val); }
+
+        public static IEnumerator<int> wait5()
+        {
+            return Enumerable.Range(1, 5).GetEnumerator();
+        }
+
+        public static IEnumerator<IEnumerator<int>> waitwait5()
+        {
+            yield return wait5();
+        }
+
 
         [Theory]
         [InlineData("fun main() hello() end")]
@@ -466,6 +479,28 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         [InlineData("fun main() yield ret hoge() + 1 end fun hoge() yield ret 5 end ", 6)]
         public void YieldTest<T>(string str, T expected)
         {
+            var vm = VmCreateHelper(str);
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run<IEnumerable<object>>("main");
+
+            var value = ret.ToArray().Last();
+
+            Assert.Equal(expected, value);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret wait5().await end ", 5)]
+        [InlineData("fun main() ret waitwait5().await.await end ", 5)]
+        [InlineData("fun main() ret waitwait5().await.await+1 end ", 6)]
+        [InlineData("fun main() ret hoge() end fun hoge() ret wait5().await end ", 5)]
+        public void AwaitTest<T>(string str, T expected)
+        {
+
+            var hh = typeof(VirtualMachinePassTest).GetMethod("waitwait5")
+                .Invoke(null, null);
+
             var vm = VmCreateHelper(str);
 
             Assert.NotNull(vm);

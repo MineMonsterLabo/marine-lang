@@ -2,6 +2,7 @@
 using MarineLang.Utils;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -192,6 +193,34 @@ namespace MarineLang.VirtualMachines
         public override string ToString()
         {
             return typeof(MarineFuncCallIL).Name + " '" + funcName + "' " + argCount;
+        }
+    }
+
+    public struct MoveNextIL : IMarineIL
+    {
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var instance = vm.Pop();
+            vm.Push((instance as IEnumerator).MoveNext());
+        }
+
+        public override string ToString()
+        {
+            return typeof(MoveNextIL).Name;
+        }
+    }
+
+    public struct GetIterCurrentL : IMarineIL
+    {
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var instance = vm.Pop();
+            vm.Push((instance as IEnumerator).Current);
+        }
+
+        public override string ToString()
+        {
+            return typeof(GetIterCurrentL).Name;
         }
     }
 

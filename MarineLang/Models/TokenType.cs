@@ -4,6 +4,7 @@
     {
         Func,
         Id,
+        Await,
         Yield,
         If,
         Else,
