@@ -66,7 +66,7 @@ dot_op_expr    = indexer_op_expr , dot_terms ;
 indexer_op_expr
                = term , [indexers] ;
 dot_terms      = { '.' , field_term , [indexers] } ;
-field_term     = func_call | variable ;
+field_term     = 'await' | func_call | variable ;
 term           =
                  '(' , expr , ')' |
                  func_call | 
