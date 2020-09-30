@@ -2,6 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>elipmoc</Authors>
+    <Company>MineMonsterLabo</Company>
+    <Version>0.1.0-alpha</Version>
+    <Description>Unityで簡易でパワフルなスクリプト言語
+(Simple and powerful scripting language in Unity)</Description>
+    <Copyright>elipmoc</Copyright>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/MineMonsterLabo/marine-lang</PackageProjectUrl>
+    <Title>MarineLang</Title>
+    <PackageLicenseUrl>https://github.com/MineMonsterLabo/marine-lang/blob/develop/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/MineMonsterLabo/marine-lang</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>script scripting</PackageTags>
   </PropertyGroup>
 
 </Project>
