@@ -33,6 +33,7 @@
         MinusOp,
         MulOp,
         DivOp,
+        ModOp,
         Int,
         Bool,
         Char,
