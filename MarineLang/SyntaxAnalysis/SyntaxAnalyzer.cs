@@ -281,7 +281,7 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParserCombinator.TestOnce(token =>
                     token.tokenType >= TokenType.OrOp
-                    && token.tokenType <= TokenType.DivOp
+                    && token.tokenType <= TokenType.ModOp
                 );
         }
 
@@ -297,6 +297,8 @@ namespace MarineLang.SyntaxAnalysis
                 tokenType == TokenType.LessEqualOp
             )
                 return (int)TokenType.GreaterEqualOp;
+            if (tokenType == TokenType.DivOp || tokenType == TokenType.ModOp)
+                return (int)TokenType.MulOp;
             return (int)tokenType;
         }
 

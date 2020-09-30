@@ -507,6 +507,12 @@ namespace MarineLang.VirtualMachines
                         case float v: return v / (float)rightValue;
                     }
                     break;
+                case TokenType.ModOp:
+                    switch (leftValue)
+                    {
+                        case int v: return v % (int)rightValue;
+                    }
+                    break;
                 case TokenType.EqualOp:
                     return leftValue.Equals(rightValue);
                 case TokenType.NotEqualOp:

@@ -235,6 +235,10 @@ fun f() let a=3 ret a end
         [InlineData("fun main() ret 10 >= 10 end", true)]
         [InlineData("fun main() ret 10 <= 10 end", true)]
         [InlineData("fun main() ret 10 <= 9 end", false)]
+        [InlineData("fun main() ret 10*6/5 end", 12)]
+        [InlineData("fun main() ret 5%2 end", 1)]
+        [InlineData("fun main() ret 5%2*2 end", 2)]
+        [InlineData("fun main() ret 6%2 end", 0)]
         public void Operator<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
