@@ -23,6 +23,3 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
-    - name: Publish
-      if: ${{ github.event_name == 'push' && github.event.pull_request.action == 'closed' && github.event.pull_request.merged && github.ref == 'refs/heads/develop' }}
-      run: build/publish.sh
