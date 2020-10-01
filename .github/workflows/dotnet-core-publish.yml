@@ -18,7 +18,7 @@ jobs:
       with:
         dotnet-version: 3.1.301
     - name: Fetch Tags
-      run: git fetch --tags
+      run: git fetch --prune --unshallow --tags
     - name: Install dependencies
       run: dotnet restore
     - name: Publish
