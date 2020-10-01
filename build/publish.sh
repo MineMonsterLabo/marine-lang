@@ -2,7 +2,7 @@
 
 echo "start publish."
 
-TAG_VERSION=`git describe --abbrev=0 --tags`
+TAG_VERSION=`git describe --exact-match`
 
 if [ ${?} = "128" ]; then
   echo "tag not found."
