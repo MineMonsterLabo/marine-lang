@@ -185,7 +185,7 @@ namespace MarineLang.SyntaxAnalysis
                 if (exprResult.IsError || stream.IsEnd)
                     return exprResult;
 
-                var opResult = ParseOpToken()(stream);
+                var opResult = ParseBinaryOpToken()(stream);
                 if (opResult.IsError)
                     return exprResult;
                 return
@@ -200,13 +200,13 @@ namespace MarineLang.SyntaxAnalysis
                 if (exprResult.IsError || stream.IsEnd)
                     return exprResult;
 
-                var opResult = ParseOpToken()(stream);
+                var opResult = ParseBinaryOpToken()(stream);
                 if (opResult.IsError)
                     return ParseResult<ExprAst>.CreateSuccess(
                         BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType)
                     );
                 var tokenType = opResult.Value.tokenType;
-                if (GetOpPriority(beforeTokenType) >= GetOpPriority(tokenType))
+                if (GetBinaryOpPriority(beforeTokenType) >= GetBinaryOpPriority(tokenType))
                     return
                         ParseBinaryOp2Expr(BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType), tokenType)(stream);
                 return
@@ -276,7 +276,7 @@ namespace MarineLang.SyntaxAnalysis
             };
         }
 
-        Parser<Token> ParseOpToken()
+        Parser<Token> ParseBinaryOpToken()
         {
             return
                 ParserCombinator.TestOnce(token =>
@@ -285,7 +285,7 @@ namespace MarineLang.SyntaxAnalysis
                 );
         }
 
-        int GetOpPriority(TokenType tokenType)
+        int GetBinaryOpPriority(TokenType tokenType)
         {
             if (tokenType == TokenType.MinusOp)
                 return (int)TokenType.PlusOp;
