@@ -21,4 +21,4 @@ jobs:
       run: dotnet restore
     - name: Publish
       if: github.event.pull_request.merged == true
-      run: build/publish.sh
+      run: chmod 744 build/publish.sh && ./build/publish.sh
