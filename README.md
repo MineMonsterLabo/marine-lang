@@ -1,5 +1,6 @@
 # marine-lang
 ![Tests](https://github.com/MineMonsterLabo/marine-lang/workflows/.NET%20Core/badge.svg)
+
 このプロジェクトは宝鐘マリンを応援します
 
 [Youtubeチャンネル](https://www.youtube.com/channel/UCCzUftO8KOVkV4wQG1vkUvg)
