@@ -19,6 +19,6 @@ dotnet pack MarineLang/MarineLang.csproj --include-source --include-symbols -o b
 
 echo "package created"
 
-dotnet nuget push "build/artifacts/MarineLang.${TAG_VERSION}.nupkg" --source "https://api.nuget.org/v3/index.json" --apikey "${API_KEY}"
+dotnet nuget push "build/artifacts/MarineLang.${TAG_VERSION}.nupkg" --api-key "${API_KEY}" --source "https://api.nuget.org/v3/index.json"
 
 echo "pushed"
