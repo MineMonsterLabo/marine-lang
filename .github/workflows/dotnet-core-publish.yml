@@ -22,5 +22,7 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Publish
+      env:
+        API_KEY: ${{ secrets.API_KEY }}
       if: github.event.pull_request.merged == true
       run: chmod 744 build/publish.sh && ./build/publish.sh
