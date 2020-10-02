@@ -2,12 +2,13 @@
 
 echo "start publish."
 
-TAG_VERSION=`git describe --exact-match`
+# TAG_VERSION=`git describe --exact-match`
+TAG_VERSION="0.1.0-alpha"
 
-if [ ${?} = "128" ]; then
-  echo "tag not found."
-  exit 0
-fi
+# if [ ${?} = "128" ]; then
+#   echo "tag not found."
+#   exit 0
+# fi
 
 echo "release version ${TAG_VERSION}"
 
