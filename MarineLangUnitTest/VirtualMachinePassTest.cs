@@ -245,6 +245,18 @@ fun f() let a=3 ret a end
         }
 
         [Theory]
+        [InlineData("fun main() ret !false end", true)]
+        [InlineData("fun main() ret !!false end", false)]
+        [InlineData("fun main() ret -5 end", -5)]
+        [InlineData("fun main() ret -5.3 end", -5.3f)]
+        [InlineData("fun main() ret 10.0-5.3 end", 10.0f - 5.3f)]
+        [InlineData("fun main() ret !(((-8)+(-2))==-10) end", false)]
+        public void UnaryOperator<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
         [InlineData("fun main() ret (4+5)*2 end ", (4 + 5) * 2)]
         [InlineData("fun main() ret (4+5)*(3-7) end ", (4 + 5) * (3 - 7))]
         [InlineData("fun main() ret ((plus((8),(2)))) end ", 10)]
