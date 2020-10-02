@@ -99,6 +99,11 @@ namespace MarineLang.Models
         {
             return this as AwaitAst;
         }
+
+        public UnaryOpAst GetUnaryOpAst()
+        {
+            return this as UnaryOpAst;
+        }
     }
 
     public class ValueAst : ExprAst
@@ -165,6 +170,26 @@ namespace MarineLang.Models
         public override IEnumerable<T> LookUp<T>()
         {
             return leftExpr.LookUp<T>().Concat(rightExpr.LookUp<T>());
+        }
+    }
+
+    public class UnaryOpAst : ExprAst
+    {
+        public TokenType opKind;
+        public ExprAst expr;
+
+        public static UnaryOpAst Create(ExprAst expr, TokenType opKind)
+        {
+            return new UnaryOpAst
+            {
+                expr = expr,
+                opKind = opKind
+            };
+        }
+
+        public override IEnumerable<T> LookUp<T>()
+        {
+            return expr.LookUp<T>();
         }
     }
 

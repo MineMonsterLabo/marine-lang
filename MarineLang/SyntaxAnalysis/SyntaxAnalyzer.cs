@@ -181,11 +181,11 @@ namespace MarineLang.SyntaxAnalysis
         {
             return stream =>
             {
-                var exprResult = ParseDotOpExpr()(stream);
+                var exprResult = ParseUnaryOpExpr()(stream);
                 if (exprResult.IsError || stream.IsEnd)
                     return exprResult;
 
-                var opResult = ParseOpToken()(stream);
+                var opResult = ParseBinaryOpToken()(stream);
                 if (opResult.IsError)
                     return exprResult;
                 return
@@ -196,17 +196,17 @@ namespace MarineLang.SyntaxAnalysis
         {
             return stream =>
             {
-                var exprResult = ParseDotOpExpr()(stream);
+                var exprResult = ParseUnaryOpExpr()(stream);
                 if (exprResult.IsError || stream.IsEnd)
                     return exprResult;
 
-                var opResult = ParseOpToken()(stream);
+                var opResult = ParseBinaryOpToken()(stream);
                 if (opResult.IsError)
                     return ParseResult<ExprAst>.CreateSuccess(
                         BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType)
                     );
                 var tokenType = opResult.Value.tokenType;
-                if (GetOpPriority(beforeTokenType) >= GetOpPriority(tokenType))
+                if (GetBinaryOpPriority(beforeTokenType) >= GetBinaryOpPriority(tokenType))
                     return
                         ParseBinaryOp2Expr(BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType), tokenType)(stream);
                 return
@@ -214,6 +214,28 @@ namespace MarineLang.SyntaxAnalysis
                     .MapResult(expr => BinaryOpAst.Create(beforeExpr, expr, beforeTokenType))
                     (stream);
             };
+        }
+
+        Parser<ExprAst> ParseUnaryOpExpr()
+        {
+            return
+                ParserCombinator.Tuple(
+                    ParserCombinator.Many(ParseUnaryOpToken()),
+                    ParseDotOpExpr()
+                )
+                .MapResult(pair =>
+                {
+                    pair.Item1.Reverse();
+                    return pair.Item1.Aggregate(
+                        pair.Item2,
+                        (expr, unaryOpToken) => UnaryOpAst.Create(expr, unaryOpToken.tokenType)
+                    );
+                });
+        }
+
+        Parser<Token> ParseUnaryOpToken()
+        {
+            return ParserCombinator.Or(ParseToken(TokenType.MinusOp), ParseToken(TokenType.NotOp));
         }
 
         Parser<ExprAst> ParseDotOpExpr()
@@ -276,7 +298,7 @@ namespace MarineLang.SyntaxAnalysis
             };
         }
 
-        Parser<Token> ParseOpToken()
+        Parser<Token> ParseBinaryOpToken()
         {
             return
                 ParserCombinator.TestOnce(token =>
@@ -285,7 +307,7 @@ namespace MarineLang.SyntaxAnalysis
                 );
         }
 
-        int GetOpPriority(TokenType tokenType)
+        int GetBinaryOpPriority(TokenType tokenType)
         {
             if (tokenType == TokenType.MinusOp)
                 return (int)TokenType.PlusOp;

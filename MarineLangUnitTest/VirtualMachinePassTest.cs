@@ -239,7 +239,19 @@ fun f() let a=3 ret a end
         [InlineData("fun main() ret 5%2 end", 1)]
         [InlineData("fun main() ret 5%2*2 end", 2)]
         [InlineData("fun main() ret 6%2 end", 0)]
-        public void Operator<T>(string str, T expected)
+        public void BinaryOperator<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret !false end", true)]
+        [InlineData("fun main() ret !!false end", false)]
+        [InlineData("fun main() ret -5 end", -5)]
+        [InlineData("fun main() ret -5.3 end", -5.3f)]
+        [InlineData("fun main() ret 10.0-5.3 end", 10.0f - 5.3f)]
+        [InlineData("fun main() ret !(((-8)+(-2))==-10) end", false)]
+        public void UnaryOperator<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }

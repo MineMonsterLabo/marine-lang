@@ -152,6 +152,8 @@ namespace MarineLang.VirtualMachines
                 ActionILGenerate(exprAst.GetActionAst(), argCount, variables);
             else if (exprAst.GetAwaitAst() != null)
                 AwaitILGenerate(exprAst.GetAwaitAst(), argCount, variables);
+            else if (exprAst.GetUnaryOpAst() != null)
+                UnaryOpILGenerate(exprAst.GetUnaryOpAst(), argCount, variables);
         }
 
         void FuncCallILGenerate(FuncCallAst funcCallAst, int argCount, FuncScopeVariables args)
@@ -302,6 +304,12 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(new YieldIL());
             marineILs.Add(new JumpIL(jumpIndex));
             marineILs.Add(new LoadIL(resultVariable));
+        }
+
+        void UnaryOpILGenerate(UnaryOpAst unaryOpAst, int argCount, FuncScopeVariables variables)
+        {
+            ExprILGenerate(unaryOpAst.expr, argCount, variables);
+            marineILs.Add(new UnaryOpIL(unaryOpAst.opKind));
         }
 
         void ReAssignmentVariableILGenerate(ReAssignmentVariableAst reAssignmentAst, int argCount, FuncScopeVariables variables)

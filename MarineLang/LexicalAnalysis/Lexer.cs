@@ -56,6 +56,7 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetCharToken(stream, '|', TokenType.PipeOp) ??
                     LexerHelper.GetCharToken(stream, '=', TokenType.AssignmentOp) ??
                     LexerHelper.GetCharToken(stream, ',', TokenType.Comma) ??
+                    LexerHelper.GetCharToken(stream, '!', TokenType.NotOp) ??
                     LexerHelper.GetIdToken()(stream) ??
                     LexerHelper.GetUnknownToken(stream);
 

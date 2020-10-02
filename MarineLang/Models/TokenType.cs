@@ -34,6 +34,7 @@
         MulOp,
         DivOp,
         ModOp,
+        NotOp,
         Int,
         Bool,
         Char,
