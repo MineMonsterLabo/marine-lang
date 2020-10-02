@@ -49,7 +49,7 @@ namespace MarineLang.SyntaxAnalysis
                         var result = parsers[i](stream);
                         if (result.IsError)
                             return result.CastError<object[]>();
-                        if (stream.IsEnd)
+                        if (stream.IsEnd && i + 1 != parsers.Length)
                             return ParseResult<object[]>.CreateError(new Error(ErrorKind.InComplete));
                         values[i] = result.Value;
                     }
