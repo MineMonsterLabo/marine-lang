@@ -555,4 +555,43 @@ namespace MarineLang.VirtualMachines
             return null;
         }
     }
+
+    public struct UnaryOpIL : IMarineIL
+    {
+        public readonly TokenType opKind;
+
+        public UnaryOpIL(TokenType opKind)
+        {
+            this.opKind = opKind;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            vm.Push(GetResult(vm));
+        }
+
+        public override string ToString()
+        {
+            return typeof(UnaryOpIL).Name + " " + opKind;
+        }
+
+
+        private object GetResult(LowLevelVirtualMachine vm)
+        {
+            var value = vm.Pop();
+            switch (opKind)
+            {
+                case TokenType.MinusOp:
+                    switch (value)
+                    {
+                        case int v: return -v;
+                        case float v: return -v;
+                    }
+                    break;
+                case TokenType.NotOp:
+                    return !((bool)value);
+            }
+            return null;
+        }
+    }
 }
