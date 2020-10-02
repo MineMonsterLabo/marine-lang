@@ -181,7 +181,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             return stream =>
             {
-                var exprResult = ParseDotOpExpr()(stream);
+                var exprResult = ParseUnaryOpExpr()(stream);
                 if (exprResult.IsError || stream.IsEnd)
                     return exprResult;
 
@@ -196,7 +196,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             return stream =>
             {
-                var exprResult = ParseDotOpExpr()(stream);
+                var exprResult = ParseUnaryOpExpr()(stream);
                 if (exprResult.IsError || stream.IsEnd)
                     return exprResult;
 
@@ -214,6 +214,28 @@ namespace MarineLang.SyntaxAnalysis
                     .MapResult(expr => BinaryOpAst.Create(beforeExpr, expr, beforeTokenType))
                     (stream);
             };
+        }
+
+        Parser<ExprAst> ParseUnaryOpExpr()
+        {
+            return
+                ParserCombinator.Tuple(
+                    ParserCombinator.Many(ParseUnaryOpToken()),
+                    ParseDotOpExpr()
+                )
+                .MapResult(pair =>
+                {
+                    pair.Item1.Reverse();
+                    return pair.Item1.Aggregate(
+                        pair.Item2,
+                        (expr, unaryOpToken) => UnaryOpAst.Create(expr, unaryOpToken.tokenType)
+                    );
+                });
+        }
+
+        Parser<Token> ParseUnaryOpToken()
+        {
+            return ParserCombinator.Or(ParseToken(TokenType.MinusOp), ParseToken(TokenType.NotOp));
         }
 
         Parser<ExprAst> ParseDotOpExpr()
