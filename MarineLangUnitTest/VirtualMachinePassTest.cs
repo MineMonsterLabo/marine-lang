@@ -69,6 +69,7 @@ namespace MarineLangUnitTest
 
         public static Hoge CreateHoge() { return new Hoge(); }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "xUnit1013:Public method should be marked as test", Justification = "<保留中>")]
         public static void Hello() { }
         public static int Ret123() { return 123; }
         public static int Plus(int a, int b) { return a + b; }
