@@ -76,7 +76,6 @@ namespace MarineLangUnitTest
             return new Hoge();
         }
 
-        [DefaultMemberAllPublic]
         public class Fuga
         {
             public int member1 = 12;
