@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MarineLang.VirtualMachines
+﻿namespace MarineLang.VirtualMachines
 {
     public class LowLevelVirtualMachine
     {
