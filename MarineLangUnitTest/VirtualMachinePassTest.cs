@@ -513,10 +513,6 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         [InlineData("fun main() ret hoge() end fun hoge() ret wait5().await end ", 5)]
         public void AwaitTest<T>(string str, T expected)
         {
-
-            var hh = typeof(VirtualMachinePassTest).GetMethod("waitwait5")
-                .Invoke(null, null);
-
             var vm = VmCreateHelper(str);
 
             Assert.NotNull(vm);
