@@ -1,18 +1,19 @@
-﻿using MarineLang.BuildInObjects;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using MarineLang.BuildInObjects;
 using MarineLang.BuiltInTypes;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
-using System.Collections.Generic;
-using System.Linq;
+using MarineLang.VirtualMachines.Attributes;
 using Xunit;
 
 namespace MarineLangUnitTest
 {
     public class VirtualMachinePassTest
     {
-
         public HighLevelVirtualMachine VmCreateHelper(string str)
         {
             var lexer = new Lexer();
@@ -33,13 +34,16 @@ namespace MarineLangUnitTest
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("not"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("invoke_int"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_fuga"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_piyo"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("wait5"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("waitwait5"));
             vm.GlobalVariableRegister("hoge", new Hoge());
-            vm.GlobalVariableRegister("names", new string[] { "aaa", "bbb" });
-            vm.GlobalVariableRegister("namess", new string[][] {
-              new string[]{  "ccc", "ddd" },
-              new string[]{  "xxx", "yyy" },
+            vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
+            vm.GlobalVariableRegister("namess", new string[][]
+            {
+                new string[] {"ccc", "ddd"},
+                new string[] {"xxx", "yyy"},
             });
 
             vm.Compile();
@@ -61,20 +65,80 @@ namespace MarineLangUnitTest
         public class Hoge
         {
             public bool flag;
-            public string[] Names { get; } = new string[] { "rrr", "qqq" };
+            public string[] Names { get; } = new string[] {"rrr", "qqq"};
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
             public Hoge GetThis() => this;
         }
 
-        public static Hoge create_hoge() { return new Hoge(); }
+        public static Hoge create_hoge()
+        {
+            return new Hoge();
+        }
 
-        public static void hello() { }
-        public static int ret_123() { return 123; }
-        public static int plus(int a, int b) { return a + b; }
-        public static int two(int a) { return a * 2; }
-        public static bool not(bool a) { return !a; }
-        public static int invoke_int(ActionObject actionObject, int val) { return actionObject.InvokeGeneric<int>(val); }
+        [DefaultMemberAllPublic]
+        public class Fuga
+        {
+            public int member1 = 12;
+            [MemberPrivate] public string Member2 { get; } = "hello";
+
+            [MemberPrivate]
+            public int Plus(int a, int b)
+            {
+                return a + b;
+            }
+
+            public int PublicPlus(int a, int b)
+            {
+                return a + b;
+            }
+        }
+
+        public static Fuga create_fuga()
+        {
+            return new Fuga();
+        }
+
+        [DefaultMemberAllPrivate]
+        public class Piyo
+        {
+            [MemberPublic] public int member1 = 256;
+            public string Member2 { get; } = "hello";
+        }
+
+        public static Piyo create_piyo()
+        {
+            return new Piyo();
+        }
+
+        public static void hello()
+        {
+        }
+
+        public static int ret_123()
+        {
+            return 123;
+        }
+
+        public static int plus(int a, int b)
+        {
+            return a + b;
+        }
+
+        public static int two(int a)
+        {
+            return a * 2;
+        }
+
+        public static bool not(bool a)
+        {
+            return !a;
+        }
+
+        public static int invoke_int(ActionObject actionObject, int val)
+        {
+            return actionObject.InvokeGeneric<int>(val);
+        }
 
         public static IEnumerator<int> wait5()
         {
@@ -146,7 +210,6 @@ fun fuga() ret 123 end
         public void CallMarineLangFuncRetString(string str, string expected)
         {
             RunReturnCheck(str, expected);
-
         }
 
         [Theory]
@@ -270,7 +333,7 @@ fun f() let a=3 ret a end
         [InlineData("fun main() if(true) {ret 1 ret 2} end ", 1)]
         [InlineData("fun main() ret if(1!=2-1) {\"ok\"} else {\"no\"}end ", "no")]
         [InlineData(
-@"
+            @"
 fun main() 
     let result = sum(0, 100)
     ret result
@@ -396,8 +459,8 @@ end", 18)]
         }
 
         [Theory]
-        [InlineData("fun main() ret [0,1,3] end", new object[] { 0, 1, 3 })]
-        [InlineData("fun main() ret [7;3] end", new object[] { 7, null, null })]
+        [InlineData("fun main() ret [0,1,3] end", new object[] {0, 1, 3})]
+        [InlineData("fun main() ret [7;3] end", new object[] {7, null, null})]
         public void ArrayLiteral<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -513,7 +576,6 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         [InlineData("fun main() ret hoge() end fun hoge() ret wait5().await end ", 5)]
         public void AwaitTest<T>(string str, T expected)
         {
-
             var hh = typeof(VirtualMachinePassTest).GetMethod("waitwait5")
                 .Invoke(null, null);
 
@@ -526,6 +588,23 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
             var value = ret.ToArray().Last();
 
             Assert.Equal(expected, value);
+        }
+
+        [Theory]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member1 end ", 12)]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.public_plus(2, 5) end ", 7)]
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.member1 end ", 256)]
+        public void AccessibilityTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.member2 end ", "hello")]
+        public void AccessibilityThrowTest<T>(string str, T expected)
+        {
+            Assert.Throws<MemberAccessException>(() => RunReturnCheck(str, expected));
         }
     }
 }
