@@ -597,13 +597,5 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         {
             RunReturnCheck(str, expected);
         }
-
-        [Theory]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
-        [InlineData("fun main() let piyo = create_piyo() ret piyo.member2 end ", "hello")]
-        public void AccessibilityThrowTest<T>(string str, T expected)
-        {
-            Assert.Throws<MemberAccessException>(() => RunReturnCheck(str, expected));
-        }
     }
 }
