@@ -6,16 +6,8 @@ namespace MarineLang.VirtualMachines.Attributes
     {
         public static bool CheckMember(MemberInfo memberInfo)
         {
-            DefaultMemberAllPublicAttribute defaultMemberAllPublic =
-                memberInfo.DeclaringType?.GetCustomAttribute<DefaultMemberAllPublicAttribute>();
             DefaultMemberAllPrivateAttribute defaultMemberAllPrivate =
                 memberInfo.DeclaringType?.GetCustomAttribute<DefaultMemberAllPrivateAttribute>();
-
-            if (defaultMemberAllPublic != null)
-            {
-                MemberPrivateAttribute privateAttribute = memberInfo.GetCustomAttribute<MemberPrivateAttribute>();
-                return privateAttribute == null;
-            }
 
             if (defaultMemberAllPrivate != null)
             {
@@ -23,7 +15,8 @@ namespace MarineLang.VirtualMachines.Attributes
                 return publicAttribute != null;
             }
 
-            return false;
+            MemberPrivateAttribute privateAttribute = memberInfo.GetCustomAttribute<MemberPrivateAttribute>();
+            return privateAttribute == null;
         }
     }
 }
