@@ -1,6 +1,6 @@
 using MarineLang;
 using MarineLang.LexicalAnalysis;
-using MarineLang.Models;
+using MarineLang.Models.Asts;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using System.Linq;
