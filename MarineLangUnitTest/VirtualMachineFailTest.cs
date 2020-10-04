@@ -26,18 +26,17 @@ namespace MarineLangUnitTest
             var vm = new HighLevelVirtualMachine();
 
             vm.SetProgram(parseResult.Value);
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("ret_123"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("hello"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("plus"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("two"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("not"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("invoke_int"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_fuga"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_piyo"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("wait5"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("waitwait5"));
-            vm.GlobalVariableRegister("hoge", new VirtualMachinePassTest.Hoge());
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("ret_123"));
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("hello"));
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("plus"));
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("two"));
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("not"));
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("invoke_int"));
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("create_hoge"));
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("create_fuga"));
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("wait5"));
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("waitwait5"));
+            vm.GlobalVariableRegister("hoge", new Hoge());
             vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
             vm.GlobalVariableRegister("namess", new string[][]
             {
@@ -77,16 +76,12 @@ namespace MarineLangUnitTest
 
         public class Fuga
         {
-            public int member1 = 12;
-            [MemberPrivate] public string Member2 { get; } = "hello";
+            [MemberPrivate] public int member1 = 12;
+            [MemberPrivate] public string Member2 { get; set; } = "hello";
+            [MemberPrivate] public string[] Member3 { get; set; } = {"hello", "hello2"};
 
             [MemberPrivate]
             public int Plus(int a, int b)
-            {
-                return a + b;
-            }
-
-            public int PublicPlus(int a, int b)
             {
                 return a + b;
             }
@@ -95,18 +90,6 @@ namespace MarineLangUnitTest
         public static Fuga create_fuga()
         {
             return new Fuga();
-        }
-
-        [DefaultMemberAllPrivate]
-        public class Piyo
-        {
-            [MemberPublic] public int member1 = 256;
-            public string Member2 { get; } = "hello";
-        }
-
-        public static Piyo create_piyo()
-        {
-            return new Piyo();
         }
 
         public static void hello()
@@ -149,8 +132,14 @@ namespace MarineLangUnitTest
         }
 
         [Theory]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member1 end ", 12)]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member1 = 20 ret fuga.member1 end ", 20)]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member2 end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member2 = \"hello2\" ret fuga.member2 end ", "hello2")]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member3[0] end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member3[0] = \"hello2\" ret fuga.member3[0] end ",
+            "hello2")]
         [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
-        [InlineData("fun main() let piyo = create_piyo() ret piyo.member2 end ", "hello")]
         public void AccessibilityThrowTest<T>(string str, T expected)
         {
             Assert.Throws<MemberAccessException>(() => RunReturnCheck(str, expected));

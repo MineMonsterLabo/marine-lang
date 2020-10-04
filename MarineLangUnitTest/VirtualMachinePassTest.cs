@@ -35,7 +35,6 @@ namespace MarineLangUnitTest
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("invoke_int"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_fuga"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_piyo"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("wait5"));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("waitwait5"));
             vm.GlobalVariableRegister("hoge", new Hoge());
@@ -76,18 +75,15 @@ namespace MarineLangUnitTest
             return new Hoge();
         }
 
+        [DefaultMemberAllPrivate]
         public class Fuga
         {
-            public int member1 = 12;
-            [MemberPrivate] public string Member2 { get; } = "hello";
+            [MemberPublic] public int member1 = 12;
+            [MemberPublic] public string Member2 { get; set; } = "hello";
+            [MemberPublic] public string[] Member3 { get; set; } = {"hello", "hello2"};
 
-            [MemberPrivate]
+            [MemberPublic]
             public int Plus(int a, int b)
-            {
-                return a + b;
-            }
-
-            public int PublicPlus(int a, int b)
             {
                 return a + b;
             }
@@ -96,18 +92,6 @@ namespace MarineLangUnitTest
         public static Fuga create_fuga()
         {
             return new Fuga();
-        }
-
-        [DefaultMemberAllPrivate]
-        public class Piyo
-        {
-            [MemberPublic] public int member1 = 256;
-            public string Member2 { get; } = "hello";
-        }
-
-        public static Piyo create_piyo()
-        {
-            return new Piyo();
         }
 
         public static void hello()
@@ -591,8 +575,13 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
 
         [Theory]
         [InlineData("fun main() let fuga = create_fuga() ret fuga.member1 end ", 12)]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.public_plus(2, 5) end ", 7)]
-        [InlineData("fun main() let piyo = create_piyo() ret piyo.member1 end ", 256)]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member1 = 20 ret fuga.member1 end ", 20)]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member2 end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member2 = \"hello2\" ret fuga.member2 end ", "hello2")]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member3[0] end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member3[0] = \"hello2\" ret fuga.member3[0] end ",
+            "hello2")]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
         public void AccessibilityTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
