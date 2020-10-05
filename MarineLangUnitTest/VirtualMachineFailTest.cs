@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using MarineLang.BuildInObjects;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
@@ -26,23 +24,7 @@ namespace MarineLangUnitTest
             var vm = new HighLevelVirtualMachine();
 
             vm.SetProgram(parseResult.Value);
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("ret_123"));
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("hello"));
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("plus"));
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("two"));
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("not"));
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("invoke_int"));
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("create_hoge"));
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("create_fuga"));
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("wait5"));
-            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod("waitwait5"));
-            vm.GlobalVariableRegister("hoge", new Hoge());
-            vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
-            vm.GlobalVariableRegister("namess", new string[][]
-            {
-                new string[] {"ccc", "ddd"},
-                new string[] {"xxx", "yyy"},
-            });
+            vm.GlobalFuncRegister(typeof(VirtualMachineFailTest).GetMethod(nameof(CreateFuga)));
 
             vm.Compile();
 
@@ -60,25 +42,11 @@ namespace MarineLangUnitTest
             Assert.Equal(expected, ret);
         }
 
-        public class Hoge
-        {
-            public bool flag;
-            public string[] Names { get; } = new string[] {"rrr", "qqq"};
-            public string Name { get; set; } = "this is the pen";
-            public int PlusOne(int x) => x + 1;
-            public Hoge GetThis() => this;
-        }
-
-        public static Hoge create_hoge()
-        {
-            return new Hoge();
-        }
-
         public class Fuga
         {
             [MemberPrivate] public int member1 = 12;
             [MemberPrivate] public string Member2 { get; set; } = "hello";
-            [MemberPrivate] public string[] Member3 { get; set; } = {"hello", "hello2"};
+            [MemberPrivate] public string[] Member3 { get; set; } = { "hello", "hello2" };
 
             [MemberPrivate]
             public int Plus(int a, int b)
@@ -87,48 +55,9 @@ namespace MarineLangUnitTest
             }
         }
 
-        public static Fuga create_fuga()
+        public static Fuga CreateFuga()
         {
             return new Fuga();
-        }
-
-        public static void hello()
-        {
-        }
-
-        public static int ret_123()
-        {
-            return 123;
-        }
-
-        public static int plus(int a, int b)
-        {
-            return a + b;
-        }
-
-        public static int two(int a)
-        {
-            return a * 2;
-        }
-
-        public static bool not(bool a)
-        {
-            return !a;
-        }
-
-        public static int invoke_int(ActionObject actionObject, int val)
-        {
-            return actionObject.InvokeGeneric<int>(val);
-        }
-
-        public static IEnumerator<int> wait5()
-        {
-            return Enumerable.Range(1, 5).GetEnumerator();
-        }
-
-        public static IEnumerator<IEnumerator<int>> waitwait5()
-        {
-            yield return wait5();
         }
 
         [Theory]
