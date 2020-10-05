@@ -14,11 +14,13 @@ echo "release version ${TAG_VERSION}"
 
 COMMIT_HASH=`git rev-parse --short HEAD`
 
-# dotnet pack MarineLang/MarineLang.csproj -c Release --include-source --include-symbols -o build/artifacts -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:PackageVersion="${TAG_VERSION}+${COMMIT_HASH}"
-dotnet pack MarineLang/MarineLang.csproj --include-source --include-symbols -o build/artifacts -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:PackageVersion="${TAG_VERSION}+${COMMIT_HASH}"
+echo "release version hash ${COMMIT_HASH}"
+
+# dotnet pack MarineLang/MarineLang.csproj -c Release -o build/artifacts -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:PackageVersion="${TAG_VERSION}.${COMMIT_HASH}"
+dotnet pack MarineLang/MarineLang.csproj --include-source --include-symbols -o build/artifacts -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:PackageVersion="${TAG_VERSION}.${COMMIT_HASH}"
 
 echo "package created"
 
-dotnet nuget push "build/artifacts/MarineLang.${TAG_VERSION}.nupkg" --api-key "${API_KEY}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+dotnet nuget push "build/artifacts/MarineLang.${TAG_VERSION}.${COMMIT_HASH}.nupkg" --api-key "${API_KEY}" --source "https://api.nuget.org/v3/index.json"
 
 echo "pushed"

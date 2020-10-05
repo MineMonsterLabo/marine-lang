@@ -1,5 +1,6 @@
 ﻿using MarineLang.BuiltInTypes;
 using MarineLang.Models;
+using MarineLang.Models.Asts;
 using MarineLang.Utils;
 using System.Collections.Generic;
 using System.Linq;
@@ -164,7 +165,7 @@ namespace MarineLang.VirtualMachines
             if (funcILIndexDict.ContainsKey(funcCallAst.funcName))
                 marineILs.Add(new MarineFuncCallIL(funcCallAst.funcName, funcCallAst.args.Length));
             else
-                marineILs.Add(new CSharpFuncCallIL(csharpFuncDict[funcCallAst.funcName], funcCallAst.args.Length));
+                marineILs.Add(new CSharpFuncCallIL(csharpFuncDict[NameUtil.GetUpperCamelName(funcCallAst.funcName)], funcCallAst.args.Length));
         }
 
         void BinaryOpILGenerate(BinaryOpAst binaryOpAst, int argCount, FuncScopeVariables args)

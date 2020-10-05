@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MarineLang.BuildInObjects;
@@ -27,16 +27,16 @@ namespace MarineLangUnitTest
             var vm = new HighLevelVirtualMachine();
 
             vm.SetProgram(parseResult.Value);
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("ret_123"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("hello"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("plus"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("two"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("not"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("invoke_int"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_hoge"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("create_fuga"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("wait5"));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod("waitwait5"));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Ret123)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Hello)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Plus)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Two)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Not)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(InvokeInt)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(CreateHoge)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(CreateFuga)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Wait5)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(WaitWait5)));
             vm.GlobalVariableRegister("hoge", new Hoge());
             vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
             vm.GlobalVariableRegister("namess", new string[][]
@@ -70,7 +70,7 @@ namespace MarineLangUnitTest
             public Hoge GetThis() => this;
         }
 
-        public static Hoge create_hoge()
+        public static Hoge CreateHoge()
         {
             return new Hoge();
         }
@@ -89,48 +89,49 @@ namespace MarineLangUnitTest
             }
         }
 
-        public static Fuga create_fuga()
+        public static Fuga CreateFuga()
         {
             return new Fuga();
         }
 
-        public static void hello()
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "xUnit1013:Public method should be marked as test", Justification = "<保留中>")]
+        public static void Hello()
         {
         }
 
-        public static int ret_123()
+        public static int Ret123()
         {
             return 123;
         }
 
-        public static int plus(int a, int b)
+        public static int Plus(int a, int b)
         {
             return a + b;
         }
 
-        public static int two(int a)
+        public static int Two(int a)
         {
             return a * 2;
         }
 
-        public static bool not(bool a)
+        public static bool Not(bool a)
         {
             return !a;
         }
 
-        public static int invoke_int(ActionObject actionObject, int val)
+        public static int InvokeInt(ActionObject actionObject, int val)
         {
             return actionObject.InvokeGeneric<int>(val);
         }
 
-        public static IEnumerator<int> wait5()
+        public static IEnumerator<int> Wait5()
         {
             return Enumerable.Range(1, 5).GetEnumerator();
         }
 
-        public static IEnumerator<IEnumerator<int>> waitwait5()
+        public static IEnumerator<IEnumerator<int>> WaitWait5()
         {
-            yield return wait5();
+            yield return Wait5();
         }
 
 
@@ -554,14 +555,11 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
 
         [Theory]
         [InlineData("fun main() ret wait5().await end ", 5)]
-        [InlineData("fun main() ret waitwait5().await.await end ", 5)]
-        [InlineData("fun main() ret waitwait5().await.await+1 end ", 6)]
+        [InlineData("fun main() ret wait_wait5().await.await end ", 5)]
+        [InlineData("fun main() ret wait_wait5().await.await+1 end ", 6)]
         [InlineData("fun main() ret hoge() end fun hoge() ret wait5().await end ", 5)]
         public void AwaitTest<T>(string str, T expected)
         {
-            var hh = typeof(VirtualMachinePassTest).GetMethod("waitwait5")
-                .Invoke(null, null);
-
             var vm = VmCreateHelper(str);
 
             Assert.NotNull(vm);
