@@ -1,10 +1,10 @@
-﻿using MarineLang.Models;
-using MarineLang.Utils;
-using System;
+﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MarineLang.Models;
+using MarineLang.Utils;
+using MarineLang.VirtualMachines.Attributes;
 
 namespace MarineLang.VirtualMachines
 {
@@ -52,14 +52,18 @@ namespace MarineLang.VirtualMachines
             var instance = vm.Pop();
             var methodInfo =
                 instance.GetType()
-                .GetMethod(
-                    funcName,
-                    BindingFlags.Public | BindingFlags.Instance,
-                    Type.DefaultBinder,
-                    args.Select(arg => arg.GetType()).ToArray(),
-                    new ParameterModifier[] { }
-                );
-            vm.Push(methodInfo.Invoke(instance, args));
+                    .GetMethod(
+                        funcName,
+                        BindingFlags.Public | BindingFlags.Instance,
+                        Type.DefaultBinder,
+                        args.Select(arg => arg.GetType()).ToArray(),
+                        new ParameterModifier[] { }
+                    );
+
+            if (ClassAccessibilityChecker.CheckMember(methodInfo))
+                vm.Push(methodInfo.Invoke(instance, args));
+            else
+                throw new MemberAccessException($"Accessed a private member. ({funcName})");
         }
 
         public override string ToString()
@@ -81,11 +85,25 @@ namespace MarineLang.VirtualMachines
         {
             var instance = vm.Pop();
             var instanceType = instance.GetType();
-            var fieldInfo = instanceType.GetField(NameUtil.GetLowerCamelName(fieldName), BindingFlags.Public | BindingFlags.Instance);
+            var fieldInfo = instanceType.GetField(NameUtil.GetLowerCamelName(fieldName),
+                BindingFlags.Public | BindingFlags.Instance);
+
             if (fieldInfo != null)
-                vm.Push(fieldInfo.GetValue(instance));
+            {
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
+                    vm.Push(fieldInfo.GetValue(instance));
+                else
+                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+            }
             else
-                vm.Push(instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName), BindingFlags.Public | BindingFlags.Instance).GetValue(instance));
+            {
+                PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                    BindingFlags.Public | BindingFlags.Instance);
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
+                    vm.Push(propertyInfo.GetValue(instance));
+                else
+                    throw new MemberAccessException($"Accessed a private member. ({fieldName})");
+            }
         }
 
         public override string ToString()
@@ -101,13 +119,18 @@ namespace MarineLang.VirtualMachines
             var indexValue = vm.Pop();
             var instance = vm.Pop();
             var instanceType = instance.GetType();
+
             if (instanceType.IsArray)
-                vm.Push((instance as IList)[(int)indexValue]);
+                vm.Push((instance as IList)[(int) indexValue]);
             else
-                vm.Push(
-                    instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance)
-                    .GetValue(instance, new object[] { indexValue })
-                );
+            {
+                PropertyInfo propertyInfo =
+                    instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance);
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
+                    vm.Push(propertyInfo.GetValue(instance, new object[] {indexValue}));
+                else
+                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+            }
         }
 
         public override string ToString()
@@ -124,11 +147,18 @@ namespace MarineLang.VirtualMachines
             var indexValue = vm.Pop();
             var instance = vm.Pop();
             var instanceType = instance.GetType();
+
             if (instanceType.IsArray)
-                (instance as IList)[(int)indexValue] = storeValue;
+                (instance as IList)[(int) indexValue] = storeValue;
             else
-                instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance)
-                .SetValue(instance, storeValue, new object[] { indexValue });
+            {
+                PropertyInfo propertyInfo =
+                    instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance);
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
+                    propertyInfo.SetValue(instance, storeValue, new object[] {indexValue});
+                else
+                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+            }
         }
 
         public override string ToString()
@@ -151,12 +181,25 @@ namespace MarineLang.VirtualMachines
             var value = vm.Pop();
             var instance = vm.Pop();
             var instanceType = instance.GetType();
-            var fieldInfo = instanceType.GetField(NameUtil.GetLowerCamelName(fieldName), BindingFlags.Public | BindingFlags.Instance);
+            var fieldInfo = instanceType.GetField(NameUtil.GetLowerCamelName(fieldName),
+                BindingFlags.Public | BindingFlags.Instance);
+
             if (fieldInfo != null)
-                fieldInfo.SetValue(instance, value);
+            {
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
+                    fieldInfo.SetValue(instance, value);
+                else
+                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+            }
             else
-                instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName), BindingFlags.Public | BindingFlags.Instance)
-                    .SetValue(instance, value);
+            {
+                PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                    BindingFlags.Public | BindingFlags.Instance);
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
+                    propertyInfo.SetValue(instance, value);
+                else
+                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+            }
         }
 
         public override string ToString()

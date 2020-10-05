@@ -1,18 +1,19 @@
-﻿using MarineLang.BuildInObjects;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using MarineLang.BuildInObjects;
 using MarineLang.BuiltInTypes;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
-using System.Collections.Generic;
-using System.Linq;
+using MarineLang.VirtualMachines.Attributes;
 using Xunit;
 
 namespace MarineLangUnitTest
 {
     public class VirtualMachinePassTest
     {
-
         public HighLevelVirtualMachine VmCreateHelper(string str)
         {
             var lexer = new Lexer();
@@ -33,13 +34,15 @@ namespace MarineLangUnitTest
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Not)));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(InvokeInt)));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(CreateHoge)));
+            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(CreateFuga)));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Wait5)));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(WaitWait5)));
             vm.GlobalVariableRegister("hoge", new Hoge());
-            vm.GlobalVariableRegister("names", new string[] { "aaa", "bbb" });
-            vm.GlobalVariableRegister("namess", new string[][] {
-              new string[]{  "ccc", "ddd" },
-              new string[]{  "xxx", "yyy" },
+            vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
+            vm.GlobalVariableRegister("namess", new string[][]
+            {
+                new string[] {"ccc", "ddd"},
+                new string[] {"xxx", "yyy"},
             });
 
             vm.Compile();
@@ -61,21 +64,65 @@ namespace MarineLangUnitTest
         public class Hoge
         {
             public bool flag;
-            public string[] Names { get; } = new string[] { "rrr", "qqq" };
+            public string[] Names { get; } = new string[] {"rrr", "qqq"};
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
             public Hoge GetThis() => this;
         }
 
-        public static Hoge CreateHoge() { return new Hoge(); }
+        public static Hoge CreateHoge()
+        {
+            return new Hoge();
+        }
+
+        [DefaultMemberAllPrivate]
+        public class Fuga
+        {
+            [MemberPublic] public int member1 = 12;
+            [MemberPublic] public string Member2 { get; set; } = "hello";
+            [MemberPublic] public string[] Member3 { get; set; } = {"hello", "hello2"};
+
+            [MemberPublic]
+            public int Plus(int a, int b)
+            {
+                return a + b;
+            }
+        }
+
+        public static Fuga CreateFuga()
+        {
+            return new Fuga();
+        }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "xUnit1013:Public method should be marked as test", Justification = "<保留中>")]
-        public static void Hello() { }
-        public static int Ret123() { return 123; }
-        public static int Plus(int a, int b) { return a + b; }
-        public static int Two(int a) { return a * 2; }
-        public static bool Not(bool a) { return !a; }
-        public static int InvokeInt(ActionObject actionObject, int val) { return actionObject.InvokeGeneric<int>(val); }
+        public static void Hello()
+        {
+        }
+
+        public static int Ret123()
+        {
+            return 123;
+        }
+
+        public static int Plus(int a, int b)
+        {
+            return a + b;
+        }
+
+        public static int Two(int a)
+        {
+            return a * 2;
+        }
+
+        public static bool Not(bool a)
+        {
+            return !a;
+        }
+
+        public static int InvokeInt(ActionObject actionObject, int val)
+        {
+            return actionObject.InvokeGeneric<int>(val);
+        }
 
         public static IEnumerator<int> Wait5()
         {
@@ -147,7 +194,6 @@ fun fuga() ret 123 end
         public void CallMarineLangFuncRetString(string str, string expected)
         {
             RunReturnCheck(str, expected);
-
         }
 
         [Theory]
@@ -271,7 +317,7 @@ fun f() let a=3 ret a end
         [InlineData("fun main() if(true) {ret 1 ret 2} end ", 1)]
         [InlineData("fun main() ret if(1!=2-1) {\"ok\"} else {\"no\"}end ", "no")]
         [InlineData(
-@"
+            @"
 fun main() 
     let result = sum(0, 100)
     ret result
@@ -397,8 +443,8 @@ end", 18)]
         }
 
         [Theory]
-        [InlineData("fun main() ret [0,1,3] end", new object[] { 0, 1, 3 })]
-        [InlineData("fun main() ret [7;3] end", new object[] { 7, null, null })]
+        [InlineData("fun main() ret [0,1,3] end", new object[] {0, 1, 3})]
+        [InlineData("fun main() ret [7;3] end", new object[] {7, null, null})]
         public void ArrayLiteral<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -523,6 +569,20 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
             var value = ret.ToArray().Last();
 
             Assert.Equal(expected, value);
+        }
+
+        [Theory]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member1 end ", 12)]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member1 = 20 ret fuga.member1 end ", 20)]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member2 end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member2 = \"hello2\" ret fuga.member2 end ", "hello2")]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member3[0] end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member3[0] = \"hello2\" ret fuga.member3[0] end ",
+            "hello2")]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
+        public void AccessibilityTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
         }
     }
 }
