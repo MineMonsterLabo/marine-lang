@@ -9,19 +9,6 @@ namespace MarineLang.SyntaxAnalysis
         None,
     }
 
-    public enum ErrorCode
-    {
-        NonEndWord,
-        NonFuncWord,
-        NonFuncName,
-        NonFuncParen,
-        NonRetExpr,
-        NonLetVarName,
-        NonLetEqual,
-        NonEqualExpr,
-        Unknown
-    }
-
     public class Error
     {
         public string ErrorMessage { get; }
