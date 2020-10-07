@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using MarineLang.BuildInObjects;
 using MarineLang.BuiltInTypes;
@@ -94,7 +96,8 @@ namespace MarineLangUnitTest
             return new Fuga();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "xUnit1013:Public method should be marked as test", Justification = "<保留中>")]
+        [SuppressMessage("Usage", "xUnit1013:Public method should be marked as test",
+            Justification = "<保留中>")]
         public static void Hello()
         {
         }
@@ -583,6 +586,13 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         public void AccessibilityTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
+        }
+
+        [Fact]
+        public void CreateDumpTest()
+        {
+            VmCreateHelper("").CreateDump();
+            File.Exists($"{Environment.CurrentDirectory}/marine_dump.json");
         }
     }
 }
