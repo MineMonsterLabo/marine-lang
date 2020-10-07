@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MarineLang.Models.Errors;
+using System;
 
 namespace MarineLang.SyntaxAnalysis
 {

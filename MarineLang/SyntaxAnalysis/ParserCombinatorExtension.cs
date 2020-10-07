@@ -1,4 +1,5 @@
 ﻿using MarineLang.Models;
+using MarineLang.Models.Errors;
 using MarineLang.Streams;
 using System;
 

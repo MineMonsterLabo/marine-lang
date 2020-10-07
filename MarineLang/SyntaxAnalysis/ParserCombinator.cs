@@ -1,4 +1,5 @@
 ﻿using MarineLang.Models;
+using MarineLang.Models.Errors;
 using System;
 using System.Collections.Generic;
 

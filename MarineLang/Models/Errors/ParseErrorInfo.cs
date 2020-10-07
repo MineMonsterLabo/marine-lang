@@ -1,6 +1,4 @@
-﻿using MarineLang.Models;
-
-namespace MarineLang.SyntaxAnalysis
+﻿namespace MarineLang.Models.Errors
 {
     public enum ErrorKind
     {
