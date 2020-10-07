@@ -93,6 +93,10 @@ namespace MarineLang.VirtualMachines.Dumps
                         break;
 
                     case MethodInfo methodInfo:
+                        // get_Name など、特殊な名前の余計なメソッドを飛ばす
+                        if (methodInfo.IsSpecialName)
+                            continue;
+
                         JObject method = new JObject();
                         method["kind"] = "method";
                         method["name"] = methodInfo.Name;
