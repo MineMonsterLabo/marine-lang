@@ -9,7 +9,7 @@ namespace MarineLang.SyntaxAnalysis
         None,
     }
 
-    public class Error
+    public class ParseErrorInfo
     {
         public string ErrorMessage { get; }
         public Position ErrorPosition { get; }
@@ -19,7 +19,7 @@ namespace MarineLang.SyntaxAnalysis
 
         public string FullErrorMessage => $"{ErrorMessage} \n {ErrorPosition} \nerror code: {(int)ErrorCode}";
 
-        public Error(string errorMessage, ErrorCode errorCode = ErrorCode.Unknown, ErrorKind errorKind = default, Position errorPosition = default)
+        public ParseErrorInfo(string errorMessage, ErrorCode errorCode = ErrorCode.Unknown, ErrorKind errorKind = default, Position errorPosition = default)
         {
             ErrorMessage = errorMessage;
             ErrorKind = errorKind;
@@ -27,7 +27,7 @@ namespace MarineLang.SyntaxAnalysis
             ErrorCode = errorCode;
         }
 
-        public Error(string errorMessage, ErrorKind errorKind = default, Position errorPosition = default)
+        public ParseErrorInfo(string errorMessage, ErrorKind errorKind = default, Position errorPosition = default)
         {
             ErrorMessage = errorMessage;
             ErrorKind = errorKind;
@@ -35,7 +35,7 @@ namespace MarineLang.SyntaxAnalysis
             ErrorCode = ErrorCode.Unknown;
         }
 
-        public Error(string errorMessage, ErrorCode errorCode, Position errorPosition)
+        public ParseErrorInfo(string errorMessage, ErrorCode errorCode, Position errorPosition)
         {
             ErrorMessage = errorMessage;
             ErrorKind = ErrorKind.None;
@@ -43,7 +43,7 @@ namespace MarineLang.SyntaxAnalysis
             ErrorCode = errorCode;
         }
 
-        public Error(ErrorKind errorKind, ErrorCode errorCode = ErrorCode.Unknown)
+        public ParseErrorInfo(ErrorKind errorKind, ErrorCode errorCode = ErrorCode.Unknown)
         {
             ErrorMessage = "";
             ErrorKind = errorKind;
@@ -51,7 +51,7 @@ namespace MarineLang.SyntaxAnalysis
             ErrorCode = errorCode;
         }
 
-        public Error()
+        public ParseErrorInfo()
         {
             ErrorMessage = "";
             ErrorKind = ErrorKind.None;

@@ -158,7 +158,7 @@ namespace MarineLang.SyntaxAnalysis
             return stream =>
             {
                 if (ParseToken(TokenType.LeftCurlyBracket)(stream).IsError || stream.IsEnd)
-                    return ParseResult<StatementAst[]>.CreateError(new Error("", ErrorKind.InComplete));
+                    return ParseResult<StatementAst[]>.CreateError(new ParseErrorInfo("", ErrorKind.InComplete));
 
                 var statementAsts = new List<StatementAst>();
                 while (stream.IsEnd == false && stream.Current.tokenType != TokenType.RightCurlyBracket)
@@ -172,7 +172,7 @@ namespace MarineLang.SyntaxAnalysis
                 }
 
                 if (stream.IsEnd || ParseToken(TokenType.RightCurlyBracket)(stream).IsError)
-                    return ParseResult<StatementAst[]>.CreateError(new Error("", ErrorKind.InComplete));
+                    return ParseResult<StatementAst[]>.CreateError(new ParseErrorInfo("", ErrorKind.InComplete));
 
                 return ParseResult<StatementAst[]>.CreateSuccess(statementAsts.ToArray());
             };
@@ -471,7 +471,7 @@ namespace MarineLang.SyntaxAnalysis
                           return
                               ParseExpr()
                               .MapResult(expr => ReAssignmentIndexerAst.Create(getIndexerAst.instanceExpr, getIndexerAst.indexExpr, expr));
-                      return _ => ParseResult<StatementAst>.CreateError(new Error(ErrorKind.InComplete));
+                      return _ => ParseResult<StatementAst>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                   })
                 (stream);
         }
@@ -482,7 +482,7 @@ namespace MarineLang.SyntaxAnalysis
                 .BindResult(token =>
                  (int.TryParse(token.text, out int value)) ?
                      ParseResult<ValueAst>.CreateSuccess(ValueAst.Create(value)) :
-                     ParseResult<ValueAst>.CreateError(new Error())
+                     ParseResult<ValueAst>.CreateError(new ParseErrorInfo())
              )(stream);
         }
 
@@ -492,7 +492,7 @@ namespace MarineLang.SyntaxAnalysis
                .BindResult(token =>
                     (float.TryParse(token.text, out float value)) ?
                         ParseResult<ValueAst>.CreateSuccess(ValueAst.Create(value)) :
-                        ParseResult<ValueAst>.CreateError(new Error())
+                        ParseResult<ValueAst>.CreateError(new ParseErrorInfo())
                 )(stream);
         }
 

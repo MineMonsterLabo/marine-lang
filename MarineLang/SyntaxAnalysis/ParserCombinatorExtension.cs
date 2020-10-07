@@ -8,7 +8,7 @@ namespace MarineLang.SyntaxAnalysis
 
     public static class ParserCombinatorExtension
     {
-        public static Parser<T> InCompleteError<T>(this Parser<T> parser, Func<TokenStream, Error> func)
+        public static Parser<T> InCompleteError<T>(this Parser<T> parser, Func<TokenStream, ParseErrorInfo> func)
         {
             return stream =>
             {
@@ -23,7 +23,7 @@ namespace MarineLang.SyntaxAnalysis
             (this Parser<T> parser, string errorMessage, ErrorCode errorCode, Position position, ErrorKind errorKind = ErrorKind.None)
         {
             return parser.InCompleteError(stream =>
-               new Error(errorMessage, errorCode, errorKind, position)
+               new ParseErrorInfo(errorMessage, errorCode, errorKind, position)
            );
         }
 
@@ -31,7 +31,7 @@ namespace MarineLang.SyntaxAnalysis
             (this Parser<T> parser, string errorMessage, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None)
         {
             return parser.InCompleteError(stream =>
-                new Error(errorMessage, errorCode, errorKind, stream.LastCurrent.PositionEnd)
+                new ParseErrorInfo(errorMessage, errorCode, errorKind, stream.LastCurrent.PositionEnd)
             );
         }
 
@@ -39,7 +39,7 @@ namespace MarineLang.SyntaxAnalysis
             (this Parser<T> parser, string errorMessage, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None)
         {
             return parser.InCompleteError(stream =>
-                new Error(errorMessage, errorCode, errorKind, stream.LastCurrent.position)
+                new ParseErrorInfo(errorMessage, errorCode, errorKind, stream.LastCurrent.position)
             );
         }
 
@@ -51,7 +51,7 @@ namespace MarineLang.SyntaxAnalysis
                 if (result.IsError)
                     return result.CastError<TT>();
                 if (stream.IsEnd)
-                    return ParseResult<TT>.CreateError(new Error(ErrorKind.InComplete));
+                    return ParseResult<TT>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                 return parser2(stream);
             };
         }
@@ -64,7 +64,7 @@ namespace MarineLang.SyntaxAnalysis
                 if (result.IsError == false)
                 {
                     if (stream.IsEnd)
-                        return ParseResult<T>.CreateError(new Error(ErrorKind.InComplete));
+                        return ParseResult<T>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                     var result2 = parser2(stream);
                     if (result2.IsError)
                         return result2.CastError<T>();
@@ -79,7 +79,7 @@ namespace MarineLang.SyntaxAnalysis
             {
                 var result = parser(stream);
                 if (result.IsError == false && stream.IsEnd)
-                    return ParseResult<T>.CreateError(new Error(ErrorKind.InComplete));
+                    return ParseResult<T>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                 return result;
             };
         }
@@ -92,7 +92,7 @@ namespace MarineLang.SyntaxAnalysis
                 if (result.IsError)
                     return result.CastError<TT>();
                 if (stream.IsEnd)
-                    return ParseResult<TT>.CreateError(new Error(ErrorKind.InComplete));
+                    return ParseResult<TT>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                 return func(result.Value)(stream);
             };
         }
