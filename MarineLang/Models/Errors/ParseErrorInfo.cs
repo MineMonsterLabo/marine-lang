@@ -9,7 +9,9 @@
 
     public class ParseErrorInfo
     {
-        public string ErrorMessage { get; }
+        string prefixErrorMessage = "";
+
+        public string ErrorMessage => prefixErrorMessage + ErrorCode.ToErrorMessage();
         public Position ErrorPosition { get; }
         public ErrorKind ErrorKind { get; }
         public ErrorCode ErrorCode { get; }
@@ -17,25 +19,25 @@
 
         public string FullErrorMessage => $"{ErrorMessage} \n {ErrorPosition} \nerror code: {(int)ErrorCode}";
 
-        public ParseErrorInfo(string errorMessage, ErrorCode errorCode = ErrorCode.Unknown, ErrorKind errorKind = default, Position errorPosition = default)
+        public ParseErrorInfo(string prefixErrorMessage, ErrorCode errorCode = ErrorCode.Unknown, ErrorKind errorKind = default, Position errorPosition = default)
         {
-            ErrorMessage = errorMessage;
+            this.prefixErrorMessage = prefixErrorMessage;
             ErrorKind = errorKind;
             ErrorPosition = errorPosition;
             ErrorCode = errorCode;
         }
 
-        public ParseErrorInfo(string errorMessage, ErrorKind errorKind = default, Position errorPosition = default)
+        public ParseErrorInfo(string prefixErrorMessage, ErrorKind errorKind = default, Position errorPosition = default)
         {
-            ErrorMessage = errorMessage;
+            this.prefixErrorMessage = prefixErrorMessage;
             ErrorKind = errorKind;
             ErrorPosition = errorPosition;
             ErrorCode = ErrorCode.Unknown;
         }
 
-        public ParseErrorInfo(string errorMessage, ErrorCode errorCode, Position errorPosition)
+        public ParseErrorInfo(string prefixErrorMessage, ErrorCode errorCode, Position errorPosition)
         {
-            ErrorMessage = errorMessage;
+            this.prefixErrorMessage = prefixErrorMessage;
             ErrorKind = ErrorKind.None;
             ErrorPosition = errorPosition;
             ErrorCode = errorCode;
@@ -43,7 +45,6 @@
 
         public ParseErrorInfo(ErrorKind errorKind, ErrorCode errorCode = ErrorCode.Unknown)
         {
-            ErrorMessage = "";
             ErrorKind = errorKind;
             ErrorPosition = default;
             ErrorCode = errorCode;
@@ -51,7 +52,6 @@
 
         public ParseErrorInfo()
         {
-            ErrorMessage = "";
             ErrorKind = ErrorKind.None;
             ErrorPosition = default;
             ErrorCode = ErrorCode.Unknown;
