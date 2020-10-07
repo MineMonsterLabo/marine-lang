@@ -21,26 +21,26 @@ namespace MarineLang.SyntaxAnalysis
         }
 
         public static Parser<T> InCompleteError<T>
-            (this Parser<T> parser, string errorMessage, ErrorCode errorCode, Position position, ErrorKind errorKind = ErrorKind.None)
+            (this Parser<T> parser, ErrorCode errorCode, Position position, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(stream =>
-               new ParseErrorInfo(errorMessage, errorCode, errorKind, position)
+               new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, position)
            );
         }
 
         public static Parser<T> InCompleteErrorWithPositionEnd<T>
-            (this Parser<T> parser, string errorMessage, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None)
+            (this Parser<T> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(stream =>
-                new ParseErrorInfo(errorMessage, errorCode, errorKind, stream.LastCurrent.PositionEnd)
+                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, stream.LastCurrent.PositionEnd)
             );
         }
 
         public static Parser<T> InCompleteErrorWithPositionHead<T>
-            (this Parser<T> parser, string errorMessage, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None)
+            (this Parser<T> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(stream =>
-                new ParseErrorInfo(errorMessage, errorCode, errorKind, stream.LastCurrent.position)
+                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, stream.LastCurrent.position)
             );
         }
 
