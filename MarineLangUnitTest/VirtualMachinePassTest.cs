@@ -1,60 +1,19 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using MarineLang.BuildInObjects;
 using MarineLang.BuiltInTypes;
-using MarineLang.LexicalAnalysis;
-using MarineLang.Streams;
-using MarineLang.SyntaxAnalysis;
-using MarineLang.VirtualMachines;
 using MarineLang.VirtualMachines.Attributes;
+using MarineLangUnitTest.Helper;
 using Xunit;
 
 namespace MarineLangUnitTest
 {
     public class VirtualMachinePassTest
     {
-        public HighLevelVirtualMachine VmCreateHelper(string str)
-        {
-            var lexer = new Lexer();
-            var parser = new SyntaxAnalyzer();
-
-            var tokens = lexer.GetTokens(str).ToArray();
-            var tokenStream = TokenStream.Create(tokens);
-            var parseResult = parser.Parse(tokenStream);
-            if (parseResult.IsError)
-                return null;
-            var vm = new HighLevelVirtualMachine();
-
-            vm.SetProgram(parseResult.Value);
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Ret123)));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Hello)));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Plus)));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Two)));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Not)));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(InvokeInt)));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(CreateHoge)));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(CreateFuga)));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Wait5)));
-            vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(WaitWait5)));
-            vm.GlobalVariableRegister("hoge", new Hoge());
-            vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
-            vm.GlobalVariableRegister("namess", new string[][]
-            {
-                new string[] {"ccc", "ddd"},
-                new string[] {"xxx", "yyy"},
-            });
-
-            vm.Compile();
-
-            return vm;
-        }
-
         internal void RunReturnCheck<RET>(string str, RET expected)
         {
-            var vm = VmCreateHelper(str);
+            var vm = VmCreateHelper.Create(str);
 
             Assert.NotNull(vm);
 
@@ -62,81 +21,6 @@ namespace MarineLangUnitTest
 
             Assert.Equal(expected, ret);
         }
-
-        public class Hoge
-        {
-            public bool flag;
-            public string[] Names { get; } = new string[] {"rrr", "qqq"};
-            public string Name { get; set; } = "this is the pen";
-            public int PlusOne(int x) => x + 1;
-            public Hoge GetThis() => this;
-        }
-
-        public static Hoge CreateHoge()
-        {
-            return new Hoge();
-        }
-
-        [DefaultMemberAllPrivate]
-        public class Fuga
-        {
-            [MemberPublic] public int member1 = 12;
-            [MemberPublic] public string Member2 { get; set; } = "hello";
-            [MemberPublic] public string[] Member3 { get; set; } = {"hello", "hello2"};
-
-            [MemberPublic]
-            public int Plus(int a, int b)
-            {
-                return a + b;
-            }
-        }
-
-        public static Fuga CreateFuga()
-        {
-            return new Fuga();
-        }
-
-        [SuppressMessage("Usage", "xUnit1013:Public method should be marked as test",
-            Justification = "<保留中>")]
-        public static void Hello()
-        {
-        }
-
-        public static int Ret123()
-        {
-            return 123;
-        }
-
-        public static int Plus(int a, int b)
-        {
-            return a + b;
-        }
-
-        public static int Two(int a)
-        {
-            return a * 2;
-        }
-
-        public static bool Not(bool a)
-        {
-            return !a;
-        }
-
-        public static int InvokeInt(ActionObject actionObject, int val)
-        {
-            return actionObject.InvokeGeneric<int>(val);
-        }
-
-        public static IEnumerator<int> Wait5()
-        {
-            return Enumerable.Range(1, 5).GetEnumerator();
-        }
-
-        public static IEnumerator<IEnumerator<int>> WaitWait5()
-        {
-            yield return Wait5();
-        }
-
 
         [Theory]
         [InlineData("fun main() hello() end")]
@@ -256,7 +140,7 @@ fun f() let a=3 ret a end
         [InlineData("fun main(a,b) ret plus(a,b) end ")]
         public void CallMarineFuncWithArgs2(string str)
         {
-            var vm = VmCreateHelper(str);
+            var vm = VmCreateHelper.Create(str);
 
             Assert.NotNull(vm);
 
@@ -545,7 +429,7 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         [InlineData("fun main() yield ret hoge() + 1 end fun hoge() yield ret 5 end ", 6)]
         public void YieldTest<T>(string str, T expected)
         {
-            var vm = VmCreateHelper(str);
+            var vm = VmCreateHelper.Create(str);
 
             Assert.NotNull(vm);
 
@@ -563,7 +447,7 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         [InlineData("fun main() ret hoge() end fun hoge() ret wait5().await end ", 5)]
         public void AwaitTest<T>(string str, T expected)
         {
-            var vm = VmCreateHelper(str);
+            var vm = VmCreateHelper.Create(str);
 
             Assert.NotNull(vm);
 
@@ -586,13 +470,6 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         public void AccessibilityTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
-        }
-
-        [Fact]
-        public void CreateDumpTest()
-        {
-            VmCreateHelper("").CreateDump();
-            File.Exists($"{Environment.CurrentDirectory}/marine_dump.json");
         }
     }
 }
