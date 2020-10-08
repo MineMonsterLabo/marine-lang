@@ -37,6 +37,8 @@ namespace MarineLangUnitTest.Helper
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Wait5)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(WaitWait5)));
             vm.GlobalVariableRegister("hoge", new Hoge());
+            vm.GlobalVariableRegister("fuga", new Fuga());
+            vm.GlobalVariableRegister("piyo", new Piyo());
             vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
             vm.GlobalVariableRegister("namess", new string[][]
             {
@@ -74,6 +76,12 @@ namespace MarineLangUnitTest.Helper
             public int Plus(int a, int b)
             {
                 return a + b;
+            }
+
+            [MemberPublic]
+            public int DefaultAndRef(ref int a, int b = 1234)
+            {
+                return a += b;
             }
         }
 
