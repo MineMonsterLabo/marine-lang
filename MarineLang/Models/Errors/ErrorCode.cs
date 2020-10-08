@@ -4,14 +4,14 @@ namespace MarineLang.Models.Errors
 {
     public enum ErrorCode
     {
-        NonEndWord,
-        NonFuncWord,
-        NonFuncName,
-        NonFuncParen,
-        NonRetExpr,
-        NonLetVarName,
-        NonLetEqual,
-        NonEqualExpr,
+        SyntaxNonEndWord,
+        SyntaxNonFuncWord,
+        SyntaxNonFuncName,
+        SyntaxNonFuncParen,
+        SyntaxNonRetExpr,
+        SyntaxNonLetVarName,
+        SyntaxNonLetEqual,
+        SyntaxNonEqualExpr,
         RuntimeMemberAccessPrivate,
         Unknown
     }
@@ -22,21 +22,21 @@ namespace MarineLang.Models.Errors
         {
             switch (errorCode)
             {
-                case ErrorCode.NonEndWord:
+                case ErrorCode.SyntaxNonEndWord:
                     return "関数の終わりにendがありません";
-                case ErrorCode.NonFuncWord:
+                case ErrorCode.SyntaxNonFuncWord:
                     return "関数定義が間違っています";
-                case ErrorCode.NonFuncName:
+                case ErrorCode.SyntaxNonFuncName:
                     return "関数定義に関数名がありません";
-                case ErrorCode.NonFuncParen:
+                case ErrorCode.SyntaxNonFuncParen:
                     return "関数定義には()が必要です";
-                case ErrorCode.NonRetExpr:
+                case ErrorCode.SyntaxNonRetExpr:
                     return "retの後には式が必要です";
-                case ErrorCode.NonLetVarName:
+                case ErrorCode.SyntaxNonLetVarName:
                     return "letの後には変数名が必要です";
-                case ErrorCode.NonLetEqual:
+                case ErrorCode.SyntaxNonLetEqual:
                     return "letに=がありません";
-                case ErrorCode.NonEqualExpr:
+                case ErrorCode.SyntaxNonEqualExpr:
                     return "=の後に式がありません";
                 case ErrorCode.RuntimeMemberAccessPrivate:
                     return "privateなメンバーにアクセスしようとしました";
