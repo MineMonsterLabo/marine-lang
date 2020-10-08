@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 using MarineLang.Models;
+using MarineLang.Models.Errors;
 using MarineLang.Utils;
 using MarineLang.VirtualMachines.Attributes;
 
@@ -63,7 +64,12 @@ namespace MarineLang.VirtualMachines
             if (ClassAccessibilityChecker.CheckMember(methodInfo))
                 vm.Push(methodInfo.Invoke(instance, args));
             else
-                throw new MemberAccessException($"Accessed a private member. ({funcName})");
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"({funcName})",
+                        ErrorCode.RuntimeMemberAccessPrivate
+                    )
+                );
         }
 
         public override string ToString()
@@ -93,7 +99,12 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo))
                     vm.Push(fieldInfo.GetValue(instance));
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberAccessPrivate
+                        )
+                    );
             }
             else
             {
@@ -102,7 +113,12 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     vm.Push(propertyInfo.GetValue(instance));
                 else
-                    throw new MemberAccessException($"Accessed a private member. ({fieldName})");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate
+                        )
+                    );
             }
         }
 
@@ -129,7 +145,12 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     vm.Push(propertyInfo.GetValue(instance, new object[] {indexValue}));
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            "(Indexer)",
+                            ErrorCode.RuntimeMemberAccessPrivate
+                        )
+                    );
             }
         }
 
@@ -157,7 +178,12 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     propertyInfo.SetValue(instance, storeValue, new object[] {indexValue});
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            "(Indexer)",
+                            ErrorCode.RuntimeMemberAccessPrivate
+                        )
+                    );
             }
         }
 
@@ -189,7 +215,12 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo))
                     fieldInfo.SetValue(instance, value);
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate
+                        )
+                    );
             }
             else
             {
@@ -198,7 +229,12 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     propertyInfo.SetValue(instance, value);
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate
+                        )
+                    );
             }
         }
 

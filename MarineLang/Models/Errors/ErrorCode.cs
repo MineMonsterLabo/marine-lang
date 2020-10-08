@@ -12,6 +12,7 @@ namespace MarineLang.Models.Errors
         NonLetVarName,
         NonLetEqual,
         NonEqualExpr,
+        RuntimeMemberAccessPrivate,
         Unknown
     }
 
@@ -37,6 +38,8 @@ namespace MarineLang.Models.Errors
                     return "letに=がありません";
                 case ErrorCode.NonEqualExpr:
                     return "=の後に式がありません";
+                case ErrorCode.RuntimeMemberAccessPrivate:
+                    return "privateなメンバーにアクセスしようとしました";
                 case ErrorCode.Unknown:
                     return "";
             }
