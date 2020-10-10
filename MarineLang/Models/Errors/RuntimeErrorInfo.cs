@@ -3,6 +3,7 @@ using System.Runtime.Serialization;
 
 namespace MarineLang.Models.Errors
 {
+    [Serializable()]
     public class RuntimeErrorInfo
     {
         string prefixErrorMessage = "";
