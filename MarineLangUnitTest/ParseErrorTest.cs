@@ -1,6 +1,7 @@
 ﻿using MarineLang.LexicalAnalysis;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
+using MarineLang.Models.Errors;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using System.Linq;
@@ -37,7 +38,7 @@ namespace MarineLangUnitTest
 func", 2, 1)]
         public void ErrorNonFuncWord(string str, int line, int column)
         {
-            ErrorCheckHelper(str, line, column, ErrorCode.NonFuncWord);
+            ErrorCheckHelper(str, line, column, ErrorCode.SyntaxNonFuncWord);
         }
 
         [Theory]
@@ -50,7 +51,7 @@ func", 2, 1)]
 ret 4 end", 1, 4)]
         public void ErrorNonFuncName(string str, int line, int column)
         {
-            ErrorCheckHelper(str, line, column, ErrorCode.NonFuncName);
+            ErrorCheckHelper(str, line, column, ErrorCode.SyntaxNonFuncName);
         }
 
         [Theory]
@@ -64,7 +65,7 @@ ret 4 end", 1, 4)]
 hoge(111) end", 2, 5)]
         public void ErrorNonFuncParen(string str, int line, int column)
         {
-            ErrorCheckHelper(str, line, column, ErrorCode.NonFuncParen);
+            ErrorCheckHelper(str, line, column, ErrorCode.SyntaxNonFuncParen);
         }
 
         [Theory]
@@ -73,7 +74,7 @@ hoge(111) end", 2, 5)]
         [InlineData("fun hoge() let a=3", 1, 19)]
         public void ErrorNonEndWord(string str, int line, int column)
         {
-            ErrorCheckHelper(str, line, column, ErrorCode.NonEndWord);
+            ErrorCheckHelper(str, line, column, ErrorCode.SyntaxNonEndWord);
         }
 
         [Theory]
@@ -83,7 +84,7 @@ hoge(111) end", 2, 5)]
         [InlineData("fun hoge() ret", 1, 15)]
         public void ErrorNonRetExpr(string str, int line, int column)
         {
-            ErrorCheckHelper(str, line, column, ErrorCode.NonRetExpr);
+            ErrorCheckHelper(str, line, column, ErrorCode.SyntaxNonRetExpr);
         }
 
         [Theory]
@@ -93,7 +94,7 @@ hoge(111) end", 2, 5)]
         [InlineData("fun hoge() let a= end", 1, 19)]
         public void ErrorNonEqualExpr(string str, int line, int column)
         {
-            ErrorCheckHelper(str, line, column, ErrorCode.NonEqualExpr);
+            ErrorCheckHelper(str, line, column, ErrorCode.SyntaxNonEqualExpr);
         }
 
         [Theory]
@@ -104,7 +105,7 @@ hoge(111) end", 2, 5)]
         [InlineData("fun hoge() let end", 1, 16)]
         public void ErrorNonLetVarName(string str, int line, int column)
         {
-            ErrorCheckHelper(str, line, column, ErrorCode.NonLetVarName);
+            ErrorCheckHelper(str, line, column, ErrorCode.SyntaxNonLetVarName);
         }
 
         [Theory]
@@ -114,7 +115,7 @@ hoge(111) end", 2, 5)]
         [InlineData("fun hoge() let cd end", 1, 19)]
         public void ErrorNonLetEqual(string str, int line, int column)
         {
-            ErrorCheckHelper(str, line, column, ErrorCode.NonLetEqual);
+            ErrorCheckHelper(str, line, column, ErrorCode.SyntaxNonLetEqual);
         }
 
     }

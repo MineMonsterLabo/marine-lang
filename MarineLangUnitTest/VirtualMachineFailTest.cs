@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using MarineLang.LexicalAnalysis;
+using MarineLang.Models.Errors;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
@@ -71,7 +72,8 @@ namespace MarineLangUnitTest
         [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
         public void AccessibilityThrowTest<T>(string str, T expected)
         {
-            Assert.Throws<MemberAccessException>(() => RunReturnCheck(str, expected));
+            var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, expected));
+            Assert.Equal(ErrorCode.RuntimeMemberAccessPrivate, exception.RuntimeErrorInfo.ErrorCode);
         }
     }
 }

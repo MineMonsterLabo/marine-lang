@@ -1,6 +1,4 @@
-﻿using MarineLang.Models;
-
-namespace MarineLang.SyntaxAnalysis
+﻿namespace MarineLang.Models.Errors
 {
     public enum ErrorKind
     {
@@ -9,22 +7,11 @@ namespace MarineLang.SyntaxAnalysis
         None,
     }
 
-    public enum ErrorCode
+    public class ParseErrorInfo
     {
-        NonEndWord,
-        NonFuncWord,
-        NonFuncName,
-        NonFuncParen,
-        NonRetExpr,
-        NonLetVarName,
-        NonLetEqual,
-        NonEqualExpr,
-        Unknown
-    }
+        string prefixErrorMessage = "";
 
-    public class Error
-    {
-        public string ErrorMessage { get; }
+        public string ErrorMessage => prefixErrorMessage + ErrorCode.ToErrorMessage();
         public Position ErrorPosition { get; }
         public ErrorKind ErrorKind { get; }
         public ErrorCode ErrorCode { get; }
@@ -32,41 +19,39 @@ namespace MarineLang.SyntaxAnalysis
 
         public string FullErrorMessage => $"{ErrorMessage} \n {ErrorPosition} \nerror code: {(int)ErrorCode}";
 
-        public Error(string errorMessage, ErrorCode errorCode = ErrorCode.Unknown, ErrorKind errorKind = default, Position errorPosition = default)
+        public ParseErrorInfo(string prefixErrorMessage, ErrorCode errorCode = ErrorCode.Unknown, ErrorKind errorKind = default, Position errorPosition = default)
         {
-            ErrorMessage = errorMessage;
+            this.prefixErrorMessage = prefixErrorMessage;
             ErrorKind = errorKind;
             ErrorPosition = errorPosition;
             ErrorCode = errorCode;
         }
 
-        public Error(string errorMessage, ErrorKind errorKind = default, Position errorPosition = default)
+        public ParseErrorInfo(string prefixErrorMessage, ErrorKind errorKind = default, Position errorPosition = default)
         {
-            ErrorMessage = errorMessage;
+            this.prefixErrorMessage = prefixErrorMessage;
             ErrorKind = errorKind;
             ErrorPosition = errorPosition;
             ErrorCode = ErrorCode.Unknown;
         }
 
-        public Error(string errorMessage, ErrorCode errorCode, Position errorPosition)
+        public ParseErrorInfo(string prefixErrorMessage, ErrorCode errorCode, Position errorPosition)
         {
-            ErrorMessage = errorMessage;
+            this.prefixErrorMessage = prefixErrorMessage;
             ErrorKind = ErrorKind.None;
             ErrorPosition = errorPosition;
             ErrorCode = errorCode;
         }
 
-        public Error(ErrorKind errorKind, ErrorCode errorCode = ErrorCode.Unknown)
+        public ParseErrorInfo(ErrorKind errorKind, ErrorCode errorCode = ErrorCode.Unknown)
         {
-            ErrorMessage = "";
             ErrorKind = errorKind;
             ErrorPosition = default;
             ErrorCode = errorCode;
         }
 
-        public Error()
+        public ParseErrorInfo()
         {
-            ErrorMessage = "";
             ErrorKind = ErrorKind.None;
             ErrorPosition = default;
             ErrorCode = ErrorCode.Unknown;
