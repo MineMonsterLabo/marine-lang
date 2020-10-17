@@ -123,11 +123,11 @@ namespace MarineLang.Models.Asts
     {
         public ExprAst expr;
         public ExprAst instanceExpr;
-        public string fieldName;
+        public VariableAst variableAst;
 
-        public static FieldAssignmentAst Create(string fieldName, ExprAst instanceExpr, ExprAst expr)
+        public static FieldAssignmentAst Create(VariableAst variableAst, ExprAst instanceExpr, ExprAst expr)
         {
-            return new FieldAssignmentAst { fieldName = fieldName, instanceExpr = instanceExpr, expr = expr };
+            return new FieldAssignmentAst { variableAst = variableAst, instanceExpr = instanceExpr, expr = expr };
         }
 
         public override IEnumerable<T> LookUp<T>()

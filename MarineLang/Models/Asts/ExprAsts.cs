@@ -85,10 +85,11 @@ namespace MarineLang.Models.Asts
     public class VariableAst : ExprAst
     {
         public string varName;
+        public Position position;
 
-        public static VariableAst Create(string varName)
+        public static VariableAst Create(string varName, Position position)
         {
-            return new VariableAst { varName = varName };
+            return new VariableAst { varName = varName, position = position };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -176,14 +177,14 @@ namespace MarineLang.Models.Asts
     public class InstanceFieldAst : ExprAst
     {
         public ExprAst instanceExpr;
-        public string fieldName;
+        public VariableAst variableAst;
 
-        public static InstanceFieldAst Create(ExprAst instanceExpr, string fieldName)
+        public static InstanceFieldAst Create(ExprAst instanceExpr, VariableAst variableAst)
         {
             return new InstanceFieldAst
             {
                 instanceExpr = instanceExpr,
-                fieldName = fieldName
+                variableAst = variableAst
             };
         }
 
@@ -292,10 +293,11 @@ namespace MarineLang.Models.Asts
     {
         public string funcName;
         public ExprAst[] args;
+        public Position position;
 
-        public static FuncCallAst Create(string funcName, ExprAst[] args)
+        public static FuncCallAst Create(string funcName, ExprAst[] args, Position position)
         {
-            return new FuncCallAst { funcName = funcName, args = args };
+            return new FuncCallAst { funcName = funcName, args = args, position = position };
         }
 
         public override IEnumerable<T> LookUp<T>()

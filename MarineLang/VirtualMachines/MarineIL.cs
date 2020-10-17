@@ -50,11 +50,13 @@ namespace MarineLang.VirtualMachines
     {
         public readonly string funcName;
         public readonly int argCount;
+        public readonly ILDebugInfo iLDebugInfo;
 
-        public InstanceCSharpFuncCallIL(string funcName, int argCount)
+        public InstanceCSharpFuncCallIL(string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
         {
             this.funcName = funcName;
             this.argCount = argCount;
+            this.iLDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -77,7 +79,8 @@ namespace MarineLang.VirtualMachines
                 throw new MarineRuntimeException(
                     new RuntimeErrorInfo(
                         $"({funcName})",
-                        ErrorCode.RuntimeMemberAccessPrivate
+                        ErrorCode.RuntimeMemberAccessPrivate,
+                        iLDebugInfo.position
                     )
                 );
         }
@@ -91,10 +94,13 @@ namespace MarineLang.VirtualMachines
     public struct InstanceCSharpFieldLoadIL : IMarineIL
     {
         public readonly string fieldName;
+        public readonly ILDebugInfo iLDebugInfo;
 
-        public InstanceCSharpFieldLoadIL(string fieldName)
+
+        public InstanceCSharpFieldLoadIL(string fieldName, ILDebugInfo iLDebugInfo = null)
         {
             this.fieldName = fieldName;
+            this.iLDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -112,7 +118,8 @@ namespace MarineLang.VirtualMachines
                     throw new MarineRuntimeException(
                         new RuntimeErrorInfo(
                             $"{fieldName}",
-                            ErrorCode.RuntimeMemberAccessPrivate
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
                         )
                     );
             }
@@ -126,7 +133,8 @@ namespace MarineLang.VirtualMachines
                     throw new MarineRuntimeException(
                         new RuntimeErrorInfo(
                             $"({fieldName})",
-                            ErrorCode.RuntimeMemberAccessPrivate
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
                         )
                     );
             }
@@ -206,10 +214,12 @@ namespace MarineLang.VirtualMachines
     public struct InstanceCSharpFieldStoreIL : IMarineIL
     {
         public readonly string fieldName;
+        public readonly ILDebugInfo iLDebugInfo;
 
-        public InstanceCSharpFieldStoreIL(string fieldName)
+        public InstanceCSharpFieldStoreIL(string fieldName, ILDebugInfo iLDebugInfo = null)
         {
             this.fieldName = fieldName;
+            this.iLDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -228,7 +238,8 @@ namespace MarineLang.VirtualMachines
                     throw new MarineRuntimeException(
                         new RuntimeErrorInfo(
                             $"({fieldName})",
-                            ErrorCode.RuntimeMemberAccessPrivate
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
                         )
                     );
             }
@@ -242,7 +253,8 @@ namespace MarineLang.VirtualMachines
                     throw new MarineRuntimeException(
                         new RuntimeErrorInfo(
                             $"({fieldName})",
-                            ErrorCode.RuntimeMemberAccessPrivate
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
                         )
                     );
             }
