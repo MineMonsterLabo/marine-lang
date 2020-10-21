@@ -276,7 +276,7 @@ namespace MarineLang.SyntaxAnalysis
                                   ParserCombinator.Try(ParseFuncCall)
                                       .MapResult(funcCallAst => InstanceFuncCallAst.Create(instance, funcCallAst)),
                                   ParseVariable()
-                                      .MapResult(variableAst => InstanceFieldAst.Create(instance, variableAst.varName))
+                                      .MapResult(variableAst => InstanceFieldAst.Create(instance, variableAst))
                           )
                       );
             return stream =>
@@ -359,7 +359,7 @@ namespace MarineLang.SyntaxAnalysis
                 .Bind(funcNameToken =>
                     ParserCombinator.Try(ParseParamList)
                     .MapResult(paramList =>
-                        new FuncCallAst { funcName = funcNameToken.text, args = paramList }
+                        new FuncCallAst { funcName = funcNameToken.text, args = paramList, position = funcNameToken.position }
                     )
                 )(stream);
         }
@@ -466,7 +466,9 @@ namespace MarineLang.SyntaxAnalysis
                       if (exprAst is InstanceFieldAst fieldAst)
                           return
                               ParseExpr()
-                              .MapResult(expr => FieldAssignmentAst.Create(fieldAst.fieldName, fieldAst.instanceExpr, expr));
+                              .MapResult(expr =>
+                                FieldAssignmentAst.Create(fieldAst.variableAst, fieldAst.instanceExpr, expr)
+                              );
 
                       if (exprAst is GetIndexerAst getIndexerAst)
                           return
@@ -524,7 +526,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParseToken(TokenType.Id)
-                .MapResult(token => VariableAst.Create(token.text));
+                .MapResult(token => VariableAst.Create(token.text, token.position));
         }
 
         IParseResult<ExprAst[]> ParseParamList(TokenStream stream)

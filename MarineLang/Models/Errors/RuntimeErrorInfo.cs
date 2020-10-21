@@ -6,14 +6,17 @@ namespace MarineLang.Models.Errors
     [Serializable()]
     public class RuntimeErrorInfo
     {
-        string prefixErrorMessage = "";
+        readonly string prefixErrorMessage = "";
 
-        public string ErrorMessage => prefixErrorMessage + ErrorCode.ToErrorMessage();
+        public readonly Position? errorPosition;
+
+        public string ErrorMessage => prefixErrorMessage + ErrorCode.ToErrorMessage() + $" \n {errorPosition} \nerror code: {(int)ErrorCode}";
         public ErrorCode ErrorCode { get; }
 
-        public RuntimeErrorInfo(string prefixErrorMessage, ErrorCode errorCode = ErrorCode.Unknown)
+        public RuntimeErrorInfo(string prefixErrorMessage, ErrorCode errorCode = ErrorCode.Unknown, Position? errorPosition = null)
         {
             this.prefixErrorMessage = prefixErrorMessage;
+            this.errorPosition = errorPosition;
             ErrorCode = errorCode;
         }
     }

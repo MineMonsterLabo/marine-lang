@@ -1,6 +1,6 @@
-using System;
 using System.Linq;
 using MarineLang.LexicalAnalysis;
+using MarineLang.Models;
 using MarineLang.Models.Errors;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
@@ -62,18 +62,19 @@ namespace MarineLangUnitTest
         }
 
         [Theory]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member1 end ", 12)]
-        [InlineData("fun main() let fuga = create_fuga() fuga.member1 = 20 ret fuga.member1 end ", 20)]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member2 end ", "hello")]
-        [InlineData("fun main() let fuga = create_fuga() fuga.member2 = \"hello2\" ret fuga.member2 end ", "hello2")]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member3[0] end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member1 end ", 12, 1, 46)]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member1 = 20 ret fuga.member1 end ", 20, 1, 42)]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member2 end ", "hello", 1, 46)]
+        [InlineData("fun main() let fuga = create_fuga() fuga.member2 = \"hello2\" ret fuga.member2 end ", "hello2", 1, 42)]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.member3[0] end ", "hello", 1, 46)]
         [InlineData("fun main() let fuga = create_fuga() fuga.member3[0] = \"hello2\" ret fuga.member3[0] end ",
-            "hello2")]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
-        public void AccessibilityThrowTest<T>(string str, T expected)
+            "hello2", 1, 42)]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7, 1, 46)]
+        public void AccessibilityThrowTest<T>(string str, T expected, int line = 0, int column = 0)
         {
             var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, expected));
             Assert.Equal(ErrorCode.RuntimeMemberAccessPrivate, exception.RuntimeErrorInfo.ErrorCode);
+            Assert.Equal(new Position(line, column), exception.RuntimeErrorInfo.errorPosition);
         }
     }
 }

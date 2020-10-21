@@ -84,7 +84,7 @@ namespace MarineLang.VirtualMachines
 
         void ActionFuncILGenerate(ActionFuncData actionFuncData, string[] globalVariableNames)
         {
-            var args = new[] { VariableAst.Create("_action") }.Concat(actionFuncData.actionAst.args).ToArray();
+            var args = new[] { VariableAst.Create("_action", default) }.Concat(actionFuncData.actionAst.args).ToArray();
             var variables = new FuncScopeVariables(args, globalVariableNames, actionFuncData.captureVarNames);
             var funcDefinitionAst = FuncDefinitionAst.Create(
                 actionFuncData.funcName,
@@ -182,8 +182,8 @@ namespace MarineLang.VirtualMachines
             {
                 var ast =
                     InstanceFuncCallAst.Create(
-                        VariableAst.Create("_action"),
-                        FuncCallAst.Create("get", new[] { ValueAst.Create(captureIdx.Value) })
+                        VariableAst.Create("_action", default),
+                        FuncCallAst.Create("get", new[] { ValueAst.Create(captureIdx.Value) }, default)
                     );
                 ExprILGenerate(ast, argCount, variables);
             }
@@ -235,7 +235,7 @@ namespace MarineLang.VirtualMachines
             foreach (var arg in funcCallAst.args)
                 ExprILGenerate(arg, argCount, variables);
             marineILs.Add(
-                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length)
+                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length, new ILDebugInfo(funcCallAst.position))
             );
         }
 
@@ -243,7 +243,10 @@ namespace MarineLang.VirtualMachines
         {
             ExprILGenerate(instanceFieldAst.instanceExpr, argCount, variables);
             marineILs.Add(
-                new InstanceCSharpFieldLoadIL(instanceFieldAst.fieldName)
+                new InstanceCSharpFieldLoadIL(
+                    instanceFieldAst.variableAst.varName,
+                    new ILDebugInfo(instanceFieldAst.variableAst.position)
+                )
             );
         }
 
@@ -277,13 +280,14 @@ namespace MarineLang.VirtualMachines
 
             var ast =
                 InstanceFuncCallAst.Create(
-                    VariableAst.Create("action_object_generator"),
+                    VariableAst.Create("action_object_generator", default),
                     FuncCallAst.Create(
                         "generate",
                         new ExprAst[] {
                             ValueAst.Create(actionFuncName),
                             ArrayLiteralAst.Create(captures, captures.Length)
-                        }
+                        },
+                        default
                     )
                 );
             ExprILGenerate(ast, argCount, variables);
@@ -320,8 +324,8 @@ namespace MarineLang.VirtualMachines
             {
                 var ast =
                    InstanceFuncCallAst.Create(
-                       VariableAst.Create("_action"),
-                       FuncCallAst.Create("set", new[] { ValueAst.Create(captureIdx.Value), reAssignmentAst.expr })
+                       VariableAst.Create("_action", default),
+                       FuncCallAst.Create("set", new[] { ValueAst.Create(captureIdx.Value), reAssignmentAst.expr }, default)
                    );
                 ExprILGenerate(ast, argCount, variables);
             }
@@ -351,7 +355,12 @@ namespace MarineLang.VirtualMachines
         {
             ExprILGenerate(fieldAssignmentAst.instanceExpr, argCount, variables);
             ExprILGenerate(fieldAssignmentAst.expr, argCount, variables);
-            marineILs.Add(new InstanceCSharpFieldStoreIL(fieldAssignmentAst.fieldName));
+            marineILs.Add(
+                new InstanceCSharpFieldStoreIL(
+                    fieldAssignmentAst.variableAst.varName,
+                    new ILDebugInfo(fieldAssignmentAst.variableAst.position)
+                )
+            );
         }
 
         void WhileILGenerate(WhileAst whileAst, int argCount, FuncScopeVariables variables)
