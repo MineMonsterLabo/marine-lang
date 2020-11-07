@@ -583,5 +583,21 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData("fun main() ret 5 end // s65g4sgsdggggjoiregああ  ", 5)]
+        [InlineData(@"
+fun main() 
+    ret 5 //+1
+//end
+end
+", 5)]
+        [InlineData("fun main() ret 5/*+1*/+2 end", 7)]
+        [InlineData("fun main() ret 5/*/*+1*/+2 end", 7)]
+
+        public void CommentOutTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
