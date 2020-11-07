@@ -16,6 +16,11 @@ namespace MarineLang.LexicalAnalysis
         }
         static public bool Skip(IndexedCharStream stream)
         {
+            if (CommentOut(stream))
+            {
+                return true;
+            }
+
             if (
                 stream.Current.c == ' ' ||
                 stream.Current.c == '\n' ||
@@ -26,6 +31,31 @@ namespace MarineLang.LexicalAnalysis
                 stream.MoveNext();
                 return true;
             }
+            return false;
+        }
+
+        static public bool CommentOut(IndexedCharStream stream)
+        {
+            var backUpIndex = stream.Index;
+            if (stream.Current.c == '/' && stream.MoveNext())
+            {
+                if (stream.Current.c == '/')
+                {
+                    while (stream.MoveNext() && stream.Current.c != '\n') ;
+                    stream.MoveNext();
+                    return true;
+                }
+                else if (stream.Current.c == '*')
+                {
+                    while (stream.MoveNext())
+                        if (stream.Current.c == '*' && stream.MoveNext() && stream.Current.c == '/')
+                            break;
+                    stream.MoveNext();
+                    return true;
+                }
+            }
+
+            stream.SetIndex(backUpIndex);
             return false;
         }
 

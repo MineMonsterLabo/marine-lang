@@ -14,8 +14,8 @@ namespace MarineLang.Streams
     {
         public static IndexedCharStream Create(string str)
         {
-                = str.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             var linesStr
+                = str.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Select(line => line + Environment.NewLine).ToArray();
 
             var indexedChars =
                 Enumerable.Range(0, linesStr.Length)
