@@ -14,18 +14,18 @@ namespace MarineLang.Streams
     {
         public static IndexedCharStream Create(string str)
         {
-            var linsStr
-                = str.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var linesStr
+                = str.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Select(line => line + Environment.NewLine).ToArray();
 
             var indexedChars =
-                Enumerable.Range(0, linsStr.Length)
+                Enumerable.Range(0, linesStr.Length)
                 .SelectMany(line =>
-                    Enumerable.Range(0, linsStr[line].Length)
+                    Enumerable.Range(0, linesStr[line].Length)
                     .Select(column =>
                         new IndexedChar
                         {
                             position = new Position(line + 1, column + 1),
-                            c = linsStr[line][column]
+                            c = linesStr[line][column]
                         }
                     ).Concat(new[] { new IndexedChar { c = ' ' } })
                 );
