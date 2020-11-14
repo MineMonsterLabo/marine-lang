@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace MarineLang.LexicalAnalysis
 {
-    public class Lexer
+    public class LexicalAnalyzer
     {
         public IEnumerable<Token> GetTokens(string str)
         {

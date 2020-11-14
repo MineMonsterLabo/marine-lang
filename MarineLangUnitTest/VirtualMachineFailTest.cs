@@ -2,7 +2,6 @@ using System.Linq;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Models;
 using MarineLang.Models.Errors;
-using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
 using MarineLang.VirtualMachines.Attributes;
@@ -14,12 +13,11 @@ namespace MarineLangUnitTest
     {
         public HighLevelVirtualMachine VmCreateHelper(string str)
         {
-            var lexer = new Lexer();
+            var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
 
             var tokens = lexer.GetTokens(str).ToArray();
-            var tokenStream = TokenStream.Create(tokens);
-            var parseResult = parser.Parse(tokenStream);
+            var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
                 return null;
             var vm = new HighLevelVirtualMachine();

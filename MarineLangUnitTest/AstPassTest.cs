@@ -1,8 +1,6 @@
 using MarineLang.LexicalAnalysis;
 using MarineLang.Models.Asts;
-using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
-using System.Linq;
 using Xunit;
 
 namespace MarineLangUnitTest
@@ -11,11 +9,10 @@ namespace MarineLangUnitTest
     {
         public IParseResult<ProgramAst> ParseHelper(string str)
         {
-            var lexer = new Lexer();
+            var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
 
-            var tokenStream = TokenStream.Create(lexer.GetTokens(str).ToArray());
-            return parser.Parse(tokenStream);
+            return parser.Parse(lexer.GetTokens(str));
         }
 
         [Theory]
