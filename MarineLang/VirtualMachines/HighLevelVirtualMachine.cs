@@ -22,6 +22,11 @@ namespace MarineLang.VirtualMachines
             GlobalVariableRegister("action_object_generator", new ActionObjectGenerator(this));
         }
 
+        public bool ContainsMarineFunc(string funcName)
+        {
+            return ILGeneratedData?.funcILIndexDict?.ContainsKey(funcName) ?? false;
+        }
+
         public void GlobalFuncRegister(MethodInfo methodInfo)
         {
             methodInfoDict.Add(methodInfo.Name, methodInfo);
