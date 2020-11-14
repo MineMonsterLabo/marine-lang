@@ -2,9 +2,7 @@
 using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
-using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
-using System.Linq;
 using Xunit;
 
 namespace MarineLangUnitTest
@@ -16,8 +14,7 @@ namespace MarineLangUnitTest
             var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
 
-            var tokenStream = TokenStream.Create(lexer.GetTokens(str).ToArray());
-            return parser.Parse(tokenStream);
+            return parser.Parse(lexer.GetTokens(str));
         }
 
         internal void ErrorCheckHelper(string str, int line, int column, ErrorCode expectedErrorCode)

@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using System.IO;
 using MarineLang.LexicalAnalysis;
 using MarineLang.SyntaxAnalysis;
-using MarineLang.Streams;
 using MarineLang.VirtualMachines;
 
 namespace Example
@@ -52,9 +50,7 @@ namespace Example
             }
             Console.WriteLine("");
 
-            var tokenStream = TokenStream.Create(tokens.ToArray());
-
-            var parserResult = new SyntaxAnalyzer().Parse(tokenStream);
+            var parserResult = new SyntaxAnalyzer().Parse(tokens);
 
             if (parserResult.IsError)
             {

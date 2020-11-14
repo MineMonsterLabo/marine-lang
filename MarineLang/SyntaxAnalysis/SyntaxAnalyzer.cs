@@ -9,8 +9,9 @@ namespace MarineLang.SyntaxAnalysis
 {
     public class SyntaxAnalyzer
     {
-        public IParseResult<ProgramAst> Parse(TokenStream stream)
+        public IParseResult<ProgramAst> Parse(IEnumerable<Token> tokens)
         {
+            var stream = TokenStream.Create(tokens.ToArray());
             stream.MoveNext();
 
             return
