@@ -14,7 +14,7 @@ namespace MarineLangUnitTest
     {
         public HighLevelVirtualMachine VmCreateHelper(string str)
         {
-            var lexer = new Lexer();
+            var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
 
             var tokens = lexer.GetTokens(str).ToArray();

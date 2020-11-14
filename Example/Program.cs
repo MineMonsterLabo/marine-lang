@@ -42,7 +42,7 @@ namespace Example
 
         static void SetProgram(string code)
         {
-            var lexer = new Lexer();
+            var lexer = new LexicalAnalyzer();
 
             var tokens = lexer.GetTokens(code);
             Console.WriteLine("トークン解析結果");

@@ -11,7 +11,7 @@ namespace MarineLangUnitTest
     {
         public IParseResult<ProgramAst> ParseHelper(string str)
         {
-            var lexer = new Lexer();
+            var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
 
             var tokenStream = TokenStream.Create(lexer.GetTokens(str).ToArray());

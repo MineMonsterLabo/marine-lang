@@ -15,7 +15,7 @@ namespace MarineLangUnitTest
     {
         public HighLevelVirtualMachine VmCreateHelper(string str)
         {
-            var lexer = new Lexer();
+            var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
 
             var tokens = lexer.GetTokens(str).ToArray();
@@ -37,7 +37,7 @@ namespace MarineLangUnitTest
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(Wait5)));
             vm.GlobalFuncRegister(typeof(VirtualMachinePassTest).GetMethod(nameof(WaitWait5)));
             vm.GlobalVariableRegister("hoge", new Hoge());
-            vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
+            vm.GlobalVariableRegister("names", new string[] { "aaa", "bbb" });
             vm.GlobalVariableRegister("namess", new string[][]
             {
                 new string[] {"ccc", "ddd"},
@@ -63,7 +63,7 @@ namespace MarineLangUnitTest
         public class Hoge
         {
             public bool flag;
-            public string[] Names { get; } = new string[] {"rrr", "qqq"};
+            public string[] Names { get; } = new string[] { "rrr", "qqq" };
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
             public Hoge GetThis() => this;
@@ -79,7 +79,7 @@ namespace MarineLangUnitTest
         {
             [MemberPublic] public int member1 = 12;
             [MemberPublic] public string Member2 { get; set; } = "hello";
-            [MemberPublic] public string[] Member3 { get; set; } = {"hello", "hello2"};
+            [MemberPublic] public string[] Member3 { get; set; } = { "hello", "hello2" };
 
             [MemberPublic]
             public int Plus(int a, int b)
@@ -442,8 +442,8 @@ end", 18)]
         }
 
         [Theory]
-        [InlineData("fun main() ret [0,1,3] end", new object[] {0, 1, 3})]
-        [InlineData("fun main() ret [7;3] end", new object[] {7, null, null})]
+        [InlineData("fun main() ret [0,1,3] end", new object[] { 0, 1, 3 })]
+        [InlineData("fun main() ret [7;3] end", new object[] { 7, null, null })]
         public void ArrayLiteral<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
