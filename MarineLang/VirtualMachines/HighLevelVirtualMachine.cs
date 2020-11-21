@@ -75,14 +75,8 @@ namespace MarineLang.VirtualMachines
 
         public void CreateDump(string filePath)
         {
-            JObject dumps = new JObject();
-            foreach (KeyValuePair<string, object> pair in globalVariableDict)
-            {
-                ClassDumper dumper = new ClassDumper(pair.Value);
-                dumps[pair.Key] = dumper.ToJObject();
-            }
-
-            File.WriteAllText(filePath, dumps.ToString(Formatting.Indented));
+            DumpSerializer serializer = new DumpSerializer();
+            File.WriteAllText(filePath, serializer.Serialize(globalVariableDict));
         }
 
         private IEnumerable<object> YieldRun(LowLevelVirtualMachine lowLevelVirtualMachine)
