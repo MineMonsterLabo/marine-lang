@@ -13,16 +13,23 @@ namespace MarineLang.VirtualMachines
 {
     public class HighLevelVirtualMachine
     {
-        Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
-        SortedDictionary<string, object> globalVariableDict = new SortedDictionary<string, object>();
-        ILGeneratedData iLGeneratedData;
+        readonly Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
+        readonly SortedDictionary<string, object> globalVariableDict = new SortedDictionary<string, object>();
         ILGenerator iLGenerator;
 
-        public IReadOnlyList<IMarineIL> MarineILs => iLGeneratedData?.marineILs;
+        public ILGeneratedData ILGeneratedData { get; private set; }
+        public IReadOnlyDictionary<string, MethodInfo> GlobalFuncDict => methodInfoDict;
+        public IReadOnlyDictionary<string, object> GlobalVariableDict => globalVariableDict;
 
+        public IReadOnlyList<IMarineIL> MarineILs => ILGeneratedData?.marineILs;
         public HighLevelVirtualMachine()
         {
             GlobalVariableRegister("action_object_generator", new ActionObjectGenerator(this));
+        }
+
+        public bool ContainsMarineFunc(string funcName)
+        {
+            return ILGeneratedData?.funcILIndexDict?.ContainsKey(funcName) ?? false;
         }
 
         public void GlobalFuncRegister(MethodInfo methodInfo)
@@ -42,7 +49,7 @@ namespace MarineLang.VirtualMachines
 
         public void Compile()
         {
-            iLGeneratedData = iLGenerator.Generate(methodInfoDict, globalVariableDict.Keys.ToArray());
+            ILGeneratedData = iLGenerator.Generate(methodInfoDict, globalVariableDict.Keys.ToArray());
         }
 
         public RET Run<RET>(string marineFuncName, params object[] args)
@@ -54,7 +61,7 @@ namespace MarineLang.VirtualMachines
         {
             var lowLevelVirtualMachine = new LowLevelVirtualMachine();
             lowLevelVirtualMachine.Init();
-            lowLevelVirtualMachine.nextILIndex = iLGeneratedData.funcILIndexDict[marineFuncName];
+            lowLevelVirtualMachine.nextILIndex = ILGeneratedData.funcILIndexDict[marineFuncName];
             foreach (var val in globalVariableDict.Values)
                 lowLevelVirtualMachine.Push(val);
             lowLevelVirtualMachine.stackBaseCount = lowLevelVirtualMachine.GetStackCurrent();
@@ -62,7 +69,7 @@ namespace MarineLang.VirtualMachines
                 lowLevelVirtualMachine.Push(arg);
             lowLevelVirtualMachine.Push(lowLevelVirtualMachine.stackBaseCount);
             lowLevelVirtualMachine.Push(lowLevelVirtualMachine.nextILIndex + 1);
-            lowLevelVirtualMachine.Run(iLGeneratedData);
+            lowLevelVirtualMachine.Run(ILGeneratedData);
             if (lowLevelVirtualMachine.yieldFlag)
                 return (RET) YieldRun(lowLevelVirtualMachine);
             return (RET) lowLevelVirtualMachine.Pop();

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MarineLang.Models.Errors;
+using System;
 
 namespace MarineLang.SyntaxAnalysis
 {
@@ -6,7 +7,7 @@ namespace MarineLang.SyntaxAnalysis
     public interface IParseResult<out T>
     {
         bool IsError { get; }
-        Error Error { get; }
+        ParseErrorInfo Error { get; }
 
         T Value { get; }
 
@@ -18,10 +19,10 @@ namespace MarineLang.SyntaxAnalysis
     public class ParseResult<T> : IParseResult<T>
     {
         public bool IsError => Error != null;
-        public Error Error { get; }
+        public ParseErrorInfo Error { get; }
         public T Value { get; }
 
-        public ParseResult(Error error, T value)
+        public ParseResult(ParseErrorInfo error, T value)
         {
             Value = value;
             Error = error;
@@ -44,7 +45,7 @@ namespace MarineLang.SyntaxAnalysis
             return new ParseResult<T>(null, value);
         }
 
-        public static IParseResult<T> CreateError(Error error)
+        public static IParseResult<T> CreateError(ParseErrorInfo error)
         {
             return new ParseResult<T>(error, default);
         }

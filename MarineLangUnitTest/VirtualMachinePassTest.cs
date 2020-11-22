@@ -3,6 +3,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using MarineLang.BuildInObjects;
 using MarineLang.BuiltInTypes;
+using MarineLang.LexicalAnalysis;
+using MarineLang.SyntaxAnalysis;
+using MarineLang.VirtualMachines;
 using MarineLang.VirtualMachines.Attributes;
 using MarineLangUnitTest.Helper;
 using Xunit;
@@ -330,8 +333,8 @@ end", 18)]
         }
 
         [Theory]
-        [InlineData("fun main() ret [0,1,3] end", new object[] {0, 1, 3})]
-        [InlineData("fun main() ret [7;3] end", new object[] {7, null, null})]
+        [InlineData("fun main() ret [0,1,3] end", new object[] { 0, 1, 3 })]
+        [InlineData("fun main() ret [7;3] end", new object[] { 7, null, null })]
         public void ArrayLiteral<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -468,6 +471,22 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
             "hello2")]
         [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
         public void AccessibilityTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret 5 end // s65g4sgsdggggjoiregああ  ", 5)]
+        [InlineData(@"
+fun main() 
+    ret 5 //+1
+//end
+end
+", 5)]
+        [InlineData("fun main() ret 5/*+1*/+2 end", 7)]
+        [InlineData("fun main() ret 5/*/*+1*/+2 end", 7)]
+
+        public void CommentOutTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }

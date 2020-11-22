@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using System.IO;
 using MarineLang.LexicalAnalysis;
 using MarineLang.SyntaxAnalysis;
-using MarineLang.Streams;
 using MarineLang.VirtualMachines;
 
 namespace Example
@@ -42,7 +40,7 @@ namespace Example
 
         static void SetProgram(string code)
         {
-            var lexer = new Lexer();
+            var lexer = new LexicalAnalyzer();
 
             var tokens = lexer.GetTokens(code);
             Console.WriteLine("トークン解析結果");
@@ -52,9 +50,7 @@ namespace Example
             }
             Console.WriteLine("");
 
-            var tokenStream = TokenStream.Create(tokens.ToArray());
-
-            var parserResult = new SyntaxAnalyzer().Parse(tokenStream);
+            var parserResult = new SyntaxAnalyzer().Parse(tokens);
 
             if (parserResult.IsError)
             {

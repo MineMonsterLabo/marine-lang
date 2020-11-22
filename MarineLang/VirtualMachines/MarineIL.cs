@@ -3,11 +3,22 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 using MarineLang.Models;
+using MarineLang.Models.Errors;
 using MarineLang.Utils;
 using MarineLang.VirtualMachines.Attributes;
 
 namespace MarineLang.VirtualMachines
 {
+
+    public class ILDebugInfo
+    {
+        public readonly Position position;
+        public ILDebugInfo(Position position)
+        {
+            this.position = position;
+        }
+    }
+
     public interface IMarineIL
     {
         void Run(LowLevelVirtualMachine vm);
@@ -39,11 +50,13 @@ namespace MarineLang.VirtualMachines
     {
         public readonly string funcName;
         public readonly int argCount;
+        public readonly ILDebugInfo iLDebugInfo;
 
-        public InstanceCSharpFuncCallIL(string funcName, int argCount)
+        public InstanceCSharpFuncCallIL(string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
         {
             this.funcName = funcName;
             this.argCount = argCount;
+            this.iLDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -63,7 +76,13 @@ namespace MarineLang.VirtualMachines
             if (ClassAccessibilityChecker.CheckMember(methodInfo))
                 vm.Push(methodInfo.Invoke(instance, args));
             else
-                throw new MemberAccessException($"Accessed a private member. ({funcName})");
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"({funcName})",
+                        ErrorCode.RuntimeMemberAccessPrivate,
+                        iLDebugInfo.position
+                    )
+                );
         }
 
         public override string ToString()
@@ -75,10 +94,13 @@ namespace MarineLang.VirtualMachines
     public struct InstanceCSharpFieldLoadIL : IMarineIL
     {
         public readonly string fieldName;
+        public readonly ILDebugInfo iLDebugInfo;
 
-        public InstanceCSharpFieldLoadIL(string fieldName)
+
+        public InstanceCSharpFieldLoadIL(string fieldName, ILDebugInfo iLDebugInfo = null)
         {
             this.fieldName = fieldName;
+            this.iLDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -93,7 +115,13 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo))
                     vm.Push(fieldInfo.GetValue(instance));
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
             }
             else
             {
@@ -102,7 +130,13 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     vm.Push(propertyInfo.GetValue(instance));
                 else
-                    throw new MemberAccessException($"Accessed a private member. ({fieldName})");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
             }
         }
 
@@ -129,7 +163,12 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     vm.Push(propertyInfo.GetValue(instance, new object[] {indexValue}));
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            "(Indexer)",
+                            ErrorCode.RuntimeMemberAccessPrivate
+                        )
+                    );
             }
         }
 
@@ -157,7 +196,12 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     propertyInfo.SetValue(instance, storeValue, new object[] {indexValue});
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            "(Indexer)",
+                            ErrorCode.RuntimeMemberAccessPrivate
+                        )
+                    );
             }
         }
 
@@ -170,10 +214,12 @@ namespace MarineLang.VirtualMachines
     public struct InstanceCSharpFieldStoreIL : IMarineIL
     {
         public readonly string fieldName;
+        public readonly ILDebugInfo iLDebugInfo;
 
-        public InstanceCSharpFieldStoreIL(string fieldName)
+        public InstanceCSharpFieldStoreIL(string fieldName, ILDebugInfo iLDebugInfo = null)
         {
             this.fieldName = fieldName;
+            this.iLDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -189,7 +235,13 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo))
                     fieldInfo.SetValue(instance, value);
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
             }
             else
             {
@@ -198,7 +250,13 @@ namespace MarineLang.VirtualMachines
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     propertyInfo.SetValue(instance, value);
                 else
-                    throw new MemberAccessException($"Accessed a private member. (Indexer)");
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
             }
         }
 
