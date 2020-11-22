@@ -14,7 +14,7 @@ namespace MarineLang.VirtualMachines.Dumps.Models
 
         public bool IsOptional { get; }
 
-        public object Value { get; }
+        public object DefaultValue { get; }
 
         public TypeDumpModel Type { get; }
 
@@ -33,7 +33,7 @@ namespace MarineLang.VirtualMachines.Dumps.Models
         {
             IsOptional = true;
 
-            Value = defaultValue;
+            DefaultValue = defaultValue;
         }
     }
 }

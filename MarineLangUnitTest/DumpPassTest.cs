@@ -25,7 +25,8 @@ namespace MarineLangUnitTest
             string json = File.ReadAllText(path);
             Assert.True(json.Length > 2);
 
-            return new Dictionary<string, ClassDumpModel>();
+            DumpDeserializer deserializer = new DumpDeserializer();
+            return deserializer.Deserialize(json);
         }
 
         [Theory]
@@ -75,7 +76,7 @@ namespace MarineLangUnitTest
             Assert.Equal(typeof(int).MakeByRefType().FullName, methodDumper2.Parameters.ElementAt(0).Type.FullName);
             Assert.True(methodDumper2.Parameters.ElementAt(1).IsOptional);
             Assert.Equal(typeof(int).FullName, methodDumper2.Parameters.ElementAt(1).Type.FullName);
-            Assert.Equal(1234, Convert.ToInt32(methodDumper2.Parameters.ElementAt(1).Value));
+            Assert.Equal(1234, Convert.ToInt32(methodDumper2.Parameters.ElementAt(1).DefaultValue));
         }
     }
 }

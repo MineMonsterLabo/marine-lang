@@ -85,9 +85,9 @@ namespace MarineLang.VirtualMachines.Dumps
             {
                 bool isRef = parameter.ParameterType.IsByRef && !parameter.IsOut;
                 if (parameter.IsOptional)
-                    parameterList.Add(new ParameterDumpModel(parameter.Name, SerializeType(parameter.ParameterType), parameter.IsIn, parameter.IsOut, isRef));
-                else
                     parameterList.Add(new ParameterDumpModel(parameter.Name, SerializeType(parameter.ParameterType), parameter.IsIn, parameter.IsOut, isRef, parameter.RawDefaultValue));
+                else
+                    parameterList.Add(new ParameterDumpModel(parameter.Name, SerializeType(parameter.ParameterType), parameter.IsIn, parameter.IsOut, isRef));
             }
 
             return parameterList.ToArray();
