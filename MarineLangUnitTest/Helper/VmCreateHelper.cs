@@ -14,12 +14,12 @@ namespace MarineLangUnitTest.Helper
     {
         public static HighLevelVirtualMachine Create(string str)
         {
-            var lexer = new Lexer();
+            var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
 
             var tokens = lexer.GetTokens(str).ToArray();
             var tokenStream = TokenStream.Create(tokens);
-            var parseResult = parser.Parse(tokenStream);
+            var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
                 return null;
             var vm = new HighLevelVirtualMachine();

@@ -24,14 +24,14 @@ namespace MarineLangUnitTest
         }
 
         [Theory]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member1 end ", 12, 1, 46)]
-        [InlineData("fun main() let fuga = create_fuga() fuga.member1 = 20 ret fuga.member1 end ", 20, 1, 42)]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member2 end ", "hello", 1, 46)]
-        [InlineData("fun main() let fuga = create_fuga() fuga.member2 = \"hello2\" ret fuga.member2 end ", "hello2", 1, 42)]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member3[0] end ", "hello", 1, 46)]
-        [InlineData("fun main() let fuga = create_fuga() fuga.member3[0] = \"hello2\" ret fuga.member3[0] end ",
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.member1 end ", 12, 1, 46)]
+        [InlineData("fun main() let piyo = create_piyo() piyo.member1 = 20 ret piyo.member1 end ", 20, 1, 42)]
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.member2 end ", "hello", 1, 46)]
+        [InlineData("fun main() let piyo = create_piyo() piyo.member2 = \"hello2\" ret piyo.member2 end ", "hello2", 1, 42)]
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.member3[0] end ", "hello", 1, 46)]
+        [InlineData("fun main() let piyo = create_piyo() piyo.member3[0] = \"hello2\" ret piyo.member3[0] end ",
             "hello2", 1, 42)]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7, 1, 46)]
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.plus(2, 5) end ", 7, 1, 46)]
         public void AccessibilityThrowTest<T>(string str, T expected, int line = 0, int column = 0)
         {
             var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, expected));
