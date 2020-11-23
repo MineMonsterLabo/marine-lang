@@ -1,8 +1,13 @@
-﻿using MarineLang.BuildInObjects;
-using MarineLang.Models.Asts;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using MarineLang.BuildInObjects;
+using MarineLang.Models.Asts;
+using MarineLang.VirtualMachines.Dumps;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MarineLang.VirtualMachines
 {
@@ -66,8 +71,19 @@ namespace MarineLang.VirtualMachines
             lowLevelVirtualMachine.Push(lowLevelVirtualMachine.nextILIndex + 1);
             lowLevelVirtualMachine.Run(ILGeneratedData);
             if (lowLevelVirtualMachine.yieldFlag)
-                return (RET)YieldRun(lowLevelVirtualMachine);
-            return (RET)lowLevelVirtualMachine.Pop();
+                return (RET) YieldRun(lowLevelVirtualMachine);
+            return (RET) lowLevelVirtualMachine.Pop();
+        }
+
+        public void CreateDump()
+        {
+            CreateDump($"{Environment.CurrentDirectory}/marine_dump.json");
+        }
+
+        public void CreateDump(string filePath)
+        {
+            DumpSerializer serializer = new DumpSerializer();
+            File.WriteAllText(filePath, serializer.Serialize(globalVariableDict));
         }
 
         private IEnumerable<object> YieldRun(LowLevelVirtualMachine lowLevelVirtualMachine)
@@ -79,9 +95,8 @@ namespace MarineLang.VirtualMachines
                     break;
                 yield return null;
             }
+
             yield return lowLevelVirtualMachine.Pop();
         }
-
     }
-
 }
