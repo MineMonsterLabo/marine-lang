@@ -83,6 +83,13 @@ namespace MarineLang.SyntaxAnalysis
                 .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4]));
         }
 
+        public static Parser<(T1, T2, T3, T4, T5, T6)> Tuple<T1, T2, T3, T4, T5, T6>
+            (Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4, Parser<T5> parser5, Parser<T6> parser6)
+        {
+            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>, parser5 as Parser<object>, parser6 as Parser<object>)
+                .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4], (T6)objects[5]));
+        }
+
         public static Parser<T> Try<T>(Parser<T> parser)
         {
             return

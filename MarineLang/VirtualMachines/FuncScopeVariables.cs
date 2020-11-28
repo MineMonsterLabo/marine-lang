@@ -16,7 +16,7 @@ namespace MarineLang.VirtualMachines
         public FuncScopeVariables(VariableAst[] varArgs, string[] globalVariableNames, string[] captureVariableNames = null)
         {
             variableDict = Enumerable.Range(0, varArgs.Length)
-                .ToDictionary(idx => varArgs[idx].varName, idx => idx + 1);
+                .ToDictionary(idx => varArgs[idx].VarName, idx => idx + 1);
 
             globalVariableDict = Enumerable.Range(0, globalVariableNames.Length)
                 .ToDictionary(idx => globalVariableNames[idx]);
