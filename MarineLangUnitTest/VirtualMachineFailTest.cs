@@ -1,10 +1,5 @@
-using System.Linq;
-using MarineLang.LexicalAnalysis;
 using MarineLang.Models;
 using MarineLang.Models.Errors;
-using MarineLang.SyntaxAnalysis;
-using MarineLang.VirtualMachines;
-using MarineLang.VirtualMachines.Attributes;
 using MarineLangUnitTest.Helper;
 using Xunit;
 

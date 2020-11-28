@@ -1,12 +1,6 @@
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using MarineLang.BuildInObjects;
 using MarineLang.BuiltInTypes;
-using MarineLang.LexicalAnalysis;
-using MarineLang.SyntaxAnalysis;
-using MarineLang.VirtualMachines;
-using MarineLang.VirtualMachines.Attributes;
 using MarineLangUnitTest.Helper;
 using Xunit;
 

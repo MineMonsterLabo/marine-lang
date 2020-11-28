@@ -6,8 +6,6 @@ using System.Reflection;
 using MarineLang.BuildInObjects;
 using MarineLang.Models.Asts;
 using MarineLang.VirtualMachines.Dumps;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MarineLang.VirtualMachines
 {
