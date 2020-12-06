@@ -14,9 +14,9 @@ namespace Example
         static void Main(string[] args)
         {
             vm = new HighLevelVirtualMachine();
-            vm.GlobalFuncRegister(typeof(Program).GetMethod("print", BindingFlags.Static | BindingFlags.NonPublic));
-            vm.GlobalFuncRegister(typeof(Program).GetMethod("plus", BindingFlags.Static | BindingFlags.NonPublic));
-            vm.GlobalFuncRegister(typeof(Program).GetMethod("to_string", BindingFlags.Static | BindingFlags.NonPublic));
+            vm.GlobalFuncRegister(typeof(Program).GetMethod(nameof(Print), BindingFlags.Static | BindingFlags.NonPublic));
+            vm.GlobalFuncRegister(typeof(Program).GetMethod(nameof(Plus), BindingFlags.Static | BindingFlags.NonPublic));
+            vm.GlobalFuncRegister(typeof(Program).GetMethod(nameof(ToString), BindingFlags.Static | BindingFlags.NonPublic));
 
             while (true)
             {
@@ -63,17 +63,17 @@ namespace Example
             vm.Compile();
         }
 
-        static void print(string str)
+        static void Print(string str)
         {
             Console.WriteLine(str);
         }
 
-        static int plus(int a, int b)
+        static int Plus(int a, int b)
         {
             return a + b;
         }
 
-        static string to_string(int a)
+        static string ToString(int a)
         {
             return a.ToString();
         }
