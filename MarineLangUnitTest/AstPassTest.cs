@@ -69,7 +69,7 @@ namespace MarineLangUnitTest
             Assert.Single(funcDefinitionAst.statementAsts);
             Assert.Equal(
                 "f",
-                funcDefinitionAst.statementAsts[0].GetExprAst().GetFuncCallAst().funcName
+                funcDefinitionAst.statementAsts[0].GetExprAst().GetFuncCallAst().FuncName
             );
         }
 

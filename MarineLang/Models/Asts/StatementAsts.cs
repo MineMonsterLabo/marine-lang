@@ -5,6 +5,9 @@ namespace MarineLang.Models.Asts
 {
     public abstract class StatementAst : IAst
     {
+        public abstract Position Start { get; }
+        public abstract Position End { get; }
+
         public ExprAst GetExprAst()
         {
             return this as ExprAst;
@@ -54,11 +57,15 @@ namespace MarineLang.Models.Asts
 
     public class ReturnAst : StatementAst
     {
+        public Token retToken;
         public ExprAst expr;
 
-        public static ReturnAst Create(ExprAst expr)
+        public override Position Start => retToken.position;
+        public override Position End => expr.End;
+
+        public static ReturnAst Create(Token retToken, ExprAst expr)
         {
-            return new ReturnAst { expr = expr };
+            return new ReturnAst { retToken = retToken, expr = expr };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -71,10 +78,14 @@ namespace MarineLang.Models.Asts
     {
         public ExprAst expr;
         public string varName;
+        public Token letToken;
 
-        public static AssignmentVariableAst Create(string varName, ExprAst expr)
+        public override Position Start => letToken.position;
+        public override Position End => expr.End;
+
+        public static AssignmentVariableAst Create(Token letToken, string varName, ExprAst expr)
         {
-            return new AssignmentVariableAst { varName = varName, expr = expr };
+            return new AssignmentVariableAst { letToken = letToken, varName = varName, expr = expr };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -85,12 +96,15 @@ namespace MarineLang.Models.Asts
 
     public class ReAssignmentVariableAst : StatementAst
     {
+        public Token varNameToken;
         public ExprAst expr;
-        public string varName;
 
-        public static ReAssignmentVariableAst Create(string varName, ExprAst expr)
+        public override Position Start => varNameToken.position;
+        public override Position End => expr.End;
+
+        public static ReAssignmentVariableAst Create(Token varNameToken, ExprAst expr)
         {
-            return new ReAssignmentVariableAst { varName = varName, expr = expr };
+            return new ReAssignmentVariableAst { varNameToken = varNameToken, expr = expr };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -104,6 +118,9 @@ namespace MarineLang.Models.Asts
         public ExprAst instanceExpr;
         public ExprAst indexExpr;
         public ExprAst assignmentExpr;
+
+        public override Position Start => instanceExpr.Start;
+        public override Position End => assignmentExpr.End;
 
         public static ReAssignmentIndexerAst Create(ExprAst instanceExpr, ExprAst indexExpr, ExprAst assignmentExpr)
         {
@@ -125,6 +142,9 @@ namespace MarineLang.Models.Asts
         public ExprAst instanceExpr;
         public VariableAst variableAst;
 
+        public override Position Start => instanceExpr.Start;
+        public override Position End => expr.End;
+
         public static FieldAssignmentAst Create(VariableAst variableAst, ExprAst instanceExpr, ExprAst expr)
         {
             return new FieldAssignmentAst { variableAst = variableAst, instanceExpr = instanceExpr, expr = expr };
@@ -140,12 +160,23 @@ namespace MarineLang.Models.Asts
 
     public class WhileAst : StatementAst
     {
+        public Token whileToken;
         public ExprAst conditionExpr;
         public StatementAst[] statements;
+        public Token endRightCurlyBracket;
 
-        public static WhileAst Create(ExprAst conditionExpr, StatementAst[] statements)
+        public override Position Start => whileToken.position;
+        public override Position End => endRightCurlyBracket.PositionEnd;
+
+        public static WhileAst Create(Token whileToken, ExprAst conditionExpr, StatementAst[] statements, Token endRightCurlyBracket)
         {
-            return new WhileAst { conditionExpr = conditionExpr, statements = statements };
+            return new WhileAst
+            {
+                whileToken = whileToken,
+                conditionExpr = conditionExpr,
+                statements = statements,
+                endRightCurlyBracket = endRightCurlyBracket
+            };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -158,22 +189,36 @@ namespace MarineLang.Models.Asts
 
     public class ForAst : StatementAst
     {
+        public Token forToken;
         public VariableAst initVariable;
         public ExprAst initExpr;
         public ExprAst maxValueExpr;
         public ExprAst addValueExpr;
         public StatementAst[] statements;
+        public Token endRightCurlyBracket;
 
-        public static ForAst Create
-        (VariableAst initVariable, ExprAst initExpr, ExprAst maxValueExpr, ExprAst addValueExpr, StatementAst[] statements)
+        public override Position Start => forToken.position;
+        public override Position End => endRightCurlyBracket.PositionEnd;
+
+        public static ForAst Create(
+            Token forToken,
+            VariableAst initVariable,
+            ExprAst initExpr,
+            ExprAst maxValueExpr,
+            ExprAst addValueExpr,
+            StatementAst[] statements,
+            Token endRightCurlyBracket
+        )
         {
             return new ForAst
             {
+                forToken = forToken,
                 initVariable = initVariable,
                 initExpr = initExpr,
                 maxValueExpr = maxValueExpr,
                 addValueExpr = addValueExpr,
-                statements = statements
+                statements = statements,
+                endRightCurlyBracket = endRightCurlyBracket
             };
         }
 
@@ -190,6 +235,15 @@ namespace MarineLang.Models.Asts
 
     public class YieldAst : StatementAst
     {
+        public Token yieldToken;
+
+        public override Position Start => yieldToken.position;
+        public override Position End => yieldToken.PositionEnd;
+
+        public static YieldAst Create(Token yieldToken)
+        {
+            return new YieldAst { yieldToken = yieldToken };
+        }
 
         public override IEnumerable<T> LookUp<T>()
         {

@@ -68,11 +68,15 @@ namespace MarineLang.Models.Asts
 
     public class ValueAst : ExprAst
     {
-        public object value;
+        public override Position Start => token.position;
+        public override Position End => token.PositionEnd;
 
-        public static ValueAst Create(object value)
+        public object value;
+        public Token token;
+
+        public static ValueAst Create(object value, Token token)
         {
-            return new ValueAst { value = value };
+            return new ValueAst { value = value, token = token };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -84,12 +88,15 @@ namespace MarineLang.Models.Asts
 
     public class VariableAst : ExprAst
     {
-        public string varName;
-        public Position position;
+        public string VarName => varToken.text;
+        public override Position Start => varToken.position;
+        public override Position End => varToken.PositionEnd;
 
-        public static VariableAst Create(string varName, Position position)
+        public Token varToken;
+
+        public static VariableAst Create(Token varToken)
         {
-            return new VariableAst { varName = varName, position = position };
+            return new VariableAst { varToken = varToken };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -102,12 +109,12 @@ namespace MarineLang.Models.Asts
         {
             public bool Equals(VariableAst x, VariableAst y)
             {
-                return x.varName == y.varName;
+                return x.VarName == y.VarName;
             }
 
             public int GetHashCode(VariableAst obj)
             {
-                return obj.varName.GetHashCode();
+                return obj.VarName.GetHashCode();
             }
         }
     }
@@ -117,6 +124,9 @@ namespace MarineLang.Models.Asts
         public TokenType opKind;
         public ExprAst leftExpr;
         public ExprAst rightExpr;
+
+        public override Position Start => leftExpr.Start;
+        public override Position End => rightExpr.End;
 
         public static BinaryOpAst Create(ExprAst leftExpr, ExprAst rightExpr, TokenType opKind)
         {
@@ -136,15 +146,18 @@ namespace MarineLang.Models.Asts
 
     public class UnaryOpAst : ExprAst
     {
-        public TokenType opKind;
+        public Token opToken;
         public ExprAst expr;
 
-        public static UnaryOpAst Create(ExprAst expr, TokenType opKind)
+        public override Position Start => opToken.position;
+        public override Position End => expr.End;
+
+        public static UnaryOpAst Create(ExprAst expr, Token opToken)
         {
             return new UnaryOpAst
             {
                 expr = expr,
-                opKind = opKind
+                opToken = opToken
             };
         }
 
@@ -158,6 +171,9 @@ namespace MarineLang.Models.Asts
     {
         public ExprAst instanceExpr;
         public FuncCallAst instancefuncCallAst;
+
+        public override Position Start => instanceExpr.Start;
+        public override Position End => instancefuncCallAst.End;
 
         public static InstanceFuncCallAst Create(ExprAst instanceExpr, FuncCallAst instancefuncCallAst)
         {
@@ -179,6 +195,9 @@ namespace MarineLang.Models.Asts
         public ExprAst instanceExpr;
         public VariableAst variableAst;
 
+        public override Position Start => instanceExpr.Start;
+        public override Position End => variableAst.End;
+
         public static InstanceFieldAst Create(ExprAst instanceExpr, VariableAst variableAst)
         {
             return new InstanceFieldAst
@@ -196,12 +215,17 @@ namespace MarineLang.Models.Asts
 
     public class AwaitAst : ExprAst
     {
+        public Token awaitToken;
         public ExprAst instanceExpr;
 
-        public static AwaitAst Create(ExprAst instanceExpr)
+        public override Position Start => awaitToken.position;
+        public override Position End => instanceExpr.End;
+
+        public static AwaitAst Create(Token awaitToken, ExprAst instanceExpr)
         {
             return new AwaitAst
             {
+                awaitToken = awaitToken,
                 instanceExpr = instanceExpr,
             };
         }
@@ -214,17 +238,30 @@ namespace MarineLang.Models.Asts
 
     public class IfExprAst : ExprAst
     {
+        Token ifToken;
         public ExprAst conditionExpr;
         public StatementAst[] thenStatements;
         public StatementAst[] elseStatements;
+        public Token endRightCurlyBracket;
 
-        public static IfExprAst Create(ExprAst conditionExpr, StatementAst[] thenStatements, StatementAst[] elseStatements)
+        public override Position Start => ifToken.position;
+        public override Position End => endRightCurlyBracket.PositionEnd;
+
+        public static IfExprAst Create(
+            Token ifToken,
+            ExprAst conditionExpr,
+            StatementAst[] thenStatements,
+            StatementAst[] elseStatements,
+            Token endRightCurlyBracket
+        )
         {
             return new IfExprAst
             {
+                ifToken = ifToken,
                 conditionExpr = conditionExpr,
                 thenStatements = thenStatements,
-                elseStatements = elseStatements
+                elseStatements = elseStatements,
+                endRightCurlyBracket = endRightCurlyBracket
             };
         }
 
@@ -239,12 +276,22 @@ namespace MarineLang.Models.Asts
 
     public class GetIndexerAst : ExprAst
     {
+        public Token leftBracketToken;
+        public Token rightBracketToken;
         public ExprAst instanceExpr;
         public ExprAst indexExpr;
 
-        public static GetIndexerAst Create(ExprAst expr, ExprAst indexExpr)
+        public override Position Start => instanceExpr.Start;
+        public override Position End => rightBracketToken.PositionEnd;
+
+        public static GetIndexerAst Create(ExprAst expr, ExprAst indexExpr, Token rightBracketToken)
         {
-            return new GetIndexerAst { instanceExpr = expr, indexExpr = indexExpr };
+            return new GetIndexerAst
+            {
+                instanceExpr = expr,
+                indexExpr = indexExpr,
+                rightBracketToken = rightBracketToken
+            };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -255,17 +302,32 @@ namespace MarineLang.Models.Asts
 
     public class ArrayLiteralAst : ExprAst
     {
-        public ExprAst[] exprAsts;
-        public int size;
+        public Token leftBracketToken;
+        public Token rightBracketToken;
+        public ArrayLiteralExprs arrayLiteralExprs;
 
-        public static ArrayLiteralAst Create(ExprAst[] exprAsts, int size)
+        public override Position Start => leftBracketToken.position;
+        public override Position End => rightBracketToken.PositionEnd;
+
+        public class ArrayLiteralExprs
         {
-            return new ArrayLiteralAst { exprAsts = exprAsts, size = size };
+            public ExprAst[] exprAsts;
+            public int size;
+        }
+
+        public static ArrayLiteralAst Create(Token leftBracketToken, ArrayLiteralExprs arrayLiteralExprs, Token rightBracketToken)
+        {
+            return new ArrayLiteralAst
+            {
+                leftBracketToken = leftBracketToken,
+                arrayLiteralExprs = arrayLiteralExprs,
+                rightBracketToken = rightBracketToken
+            };
         }
 
         public override IEnumerable<T> LookUp<T>()
         {
-            return exprAsts.SelectMany(x => x.LookUp<T>());
+            return arrayLiteralExprs.exprAsts.SelectMany(x => x.LookUp<T>());
         }
     }
 
@@ -273,10 +335,21 @@ namespace MarineLang.Models.Asts
     {
         public VariableAst[] args;
         public StatementAst[] statementAsts;
+        public Token leftCurlyBracketToken;
+        public Token rightCurlyBracketToken;
 
-        public static ActionAst Create(VariableAst[] args, StatementAst[] statementAsts)
+        public override Position Start => leftCurlyBracketToken.position;
+        public override Position End => rightCurlyBracketToken.PositionEnd;
+
+        public static ActionAst Create(Token leftCurlyBracketToken, VariableAst[] args, StatementAst[] statementAsts, Token rightCurlyBracketToken)
         {
-            return new ActionAst { args = args, statementAsts = statementAsts };
+            return new ActionAst
+            {
+                leftCurlyBracketToken = leftCurlyBracketToken,
+                args = args,
+                statementAsts = statementAsts,
+                rightCurlyBracketToken = rightCurlyBracketToken
+            };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -287,17 +360,19 @@ namespace MarineLang.Models.Asts
         }
     }
 
-
-
     public class FuncCallAst : ExprAst
     {
-        public string funcName;
+        public Token funcNameToken;
         public ExprAst[] args;
-        public Position position;
+        public Token rightParen;
 
-        public static FuncCallAst Create(string funcName, ExprAst[] args, Position position)
+        public string FuncName => funcNameToken.text;
+        public override Position Start => funcNameToken.position;
+        public override Position End => rightParen.PositionEnd;
+
+        public static FuncCallAst Create(Token funcNameToken, ExprAst[] args, Token rightParen)
         {
-            return new FuncCallAst { funcName = funcName, args = args, position = position };
+            return new FuncCallAst { funcNameToken = funcNameToken, args = args, rightParen = rightParen };
         }
 
         public override IEnumerable<T> LookUp<T>()
