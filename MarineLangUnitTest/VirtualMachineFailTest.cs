@@ -15,7 +15,7 @@ namespace MarineLangUnitTest
 
             var ret = vm.Run<RET>("main");
 
-            Assert.Equal(expected, ret);
+            Assert.Equal(expected, ret.Value);
         }
 
         [Theory]

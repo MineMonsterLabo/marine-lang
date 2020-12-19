@@ -136,7 +136,7 @@ namespace MarineLangUnitTest.Helper
 
         public static int InvokeInt(ActionObject actionObject, int val)
         {
-            return actionObject.InvokeGeneric<int>(val);
+            return actionObject.InvokeGeneric<int>(val).Value;
         }
 
         public static IEnumerator<int> Wait5()

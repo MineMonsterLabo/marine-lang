@@ -34,14 +34,14 @@ namespace MarineLang.BuildInObjects
         public object Get(int i) => captures[i];
         public void Set(int i, object obj) => captures[i] = obj;
 
-        public T InvokeGeneric<T>(params object[] args)
+        public MarineValue<T> InvokeGeneric<T>(params object[] args)
         {
             return vm.Run<T>(marineFuncName, new object[] { this }.Concat(args));
         }
 
-        public object Invoke(params object[] args)
+        public MarineValue Invoke(params object[] args)
         {
-            return vm.Run<object>(marineFuncName, new object[] { this }.Concat(args));
+            return vm.Run(marineFuncName, new object[] { this }.Concat(args));
         }
 
     }
