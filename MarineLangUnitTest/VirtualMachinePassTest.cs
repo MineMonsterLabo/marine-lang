@@ -16,7 +16,7 @@ namespace MarineLangUnitTest
 
             var ret = vm.Run<RET>("main");
 
-            Assert.Equal(expected, ret);
+            Assert.Equal(expected, ret.Value);
         }
 
         [Theory]
@@ -143,7 +143,7 @@ fun f() let a=3 ret a end
 
             var ret = vm.Run<int>("main", 12, 8);
 
-            Assert.Equal(20, ret);
+            Assert.Equal(20, ret.Value);
         }
 
         [Theory]
@@ -387,9 +387,9 @@ fun main()
     let bb = 5
     let action = {|x| 
         bb=bb+1 
-        ret bb + x - aa+{ |y| ret x*y }.invoke([2])
+        ret bb + x - aa+{ |y| ret x*y }.invoke([2]).value
     }
-    ret action.invoke([8])+aa
+    ret action.invoke([8]).value+aa
 end
 ")]
         public void ActionObjectCall2(string str)
@@ -402,19 +402,19 @@ end
 fun main()
     ret {|f| 
         ret 
-            { |x| ret f.invoke( [{ |y| ret x.invoke([x]).invoke([y]) }] ) }
-            .invoke( [{|x| ret f.invoke( [{ |y| ret x.invoke([x]).invoke([y]) }] ) }] )   
+            { |x| ret f.invoke( [{ |y| ret x.invoke([x]).value.invoke([y]).value }] ).value }
+            .invoke( [{|x| ret f.invoke( [{ |y| ret x.invoke([x]).value.invoke([y]).value }] ).value }] ).value   
     }.invoke([
         { |f| 
             ret { |n| 
-                ret if n==0 {1} else {n * f.invoke([n - 1]) } 
+                ret if n==0 {1} else {n * f.invoke([n - 1]).value } 
             }
         } 
-    ]).invoke([5])
+    ]).value.invoke([5]).value
 end
 ")]
         [InlineData(@"
-fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invoke([{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}])}.invoke([{|f|ret{|n|ret if n==0{1}else{n*f.invoke([n-1])}}}]).invoke([5])end
+fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).value}]).value}.invoke([{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).value}]).value}]).value}.invoke([{|f|ret{|n|ret if n==0{1}else{n*f.invoke([n-1]).value}}}]).value.invoke([5]).value end
 ")]
         public void ActionObjectCall3(string str)
         {
@@ -430,9 +430,9 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
 
             Assert.NotNull(vm);
 
-            var ret = vm.Run<IEnumerable<object>>("main");
+            var ret = vm.Run<T>("main");
 
-            var value = ret.ToArray().Last();
+            var value = ret.Eval();
 
             Assert.Equal(expected, value);
         }
@@ -448,9 +448,9 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).invoke([y])}])}.invo
 
             Assert.NotNull(vm);
 
-            var ret = vm.Run<IEnumerable<object>>("main");
+            var ret = vm.Run<T>("main");
 
-            var value = ret.ToArray().Last();
+            var value = ret.Eval();
 
             Assert.Equal(expected, value);
         }

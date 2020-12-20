@@ -50,12 +50,22 @@ namespace MarineLang.VirtualMachines
             ILGeneratedData = iLGenerator.Generate(methodInfoDict, globalVariableDict.Keys.ToArray());
         }
 
-        public RET Run<RET>(string marineFuncName, params object[] args)
+        public MarineValue<RET> Run<RET>(string marineFuncName, params object[] args)
         {
             return Run<RET>(marineFuncName, args.AsEnumerable());
         }
 
-        public RET Run<RET>(string marineFuncName, IEnumerable<object> args)
+        public MarineValue Run(string marineFuncName, params object[] args)
+        {
+            return Run(marineFuncName, args.AsEnumerable());
+        }
+
+        public MarineValue<RET> Run<RET>(string marineFuncName, IEnumerable<object> args)
+        {
+            return new MarineValue<RET>( Run(marineFuncName, args));
+        }
+
+        public MarineValue Run(string marineFuncName, IEnumerable<object> args)
         {
             var lowLevelVirtualMachine = new LowLevelVirtualMachine();
             lowLevelVirtualMachine.Init();
@@ -69,8 +79,8 @@ namespace MarineLang.VirtualMachines
             lowLevelVirtualMachine.Push(lowLevelVirtualMachine.nextILIndex + 1);
             lowLevelVirtualMachine.Run(ILGeneratedData);
             if (lowLevelVirtualMachine.yieldFlag)
-                return (RET) YieldRun(lowLevelVirtualMachine);
-            return (RET) lowLevelVirtualMachine.Pop();
+                return new MarineValue(YieldRun(lowLevelVirtualMachine));
+            return new MarineValue(lowLevelVirtualMachine.Pop());
         }
 
         public void CreateDump()
