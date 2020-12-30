@@ -90,21 +90,6 @@ namespace MarineLang.SyntaxAnalysis
                 .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4], (T6)objects[5]));
         }
 
-        public static Parser<T> Try<T>(Parser<T> parser)
-        {
-            return
-                stream =>
-                {
-                    var backUpIndex = stream.Index;
-                    var parseResult = parser(stream);
-
-                    if (parseResult.IsError)
-                        stream.SetIndex(backUpIndex);
-
-                    return parseResult;
-                };
-        }
-
         public static Parser<T> Or<T>(params Parser<T>[] parsers)
         {
             return
@@ -147,6 +132,11 @@ namespace MarineLang.SyntaxAnalysis
         {
             return stream =>
             {
+                if (stream.IsEnd)
+                {
+                    return ParseResult<Token>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                }
+
                 var token = stream.Current;
                 if (test(token))
                 {
