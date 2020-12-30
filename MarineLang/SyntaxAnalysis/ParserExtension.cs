@@ -21,10 +21,10 @@ namespace MarineLang.SyntaxAnalysis
         }
 
         public static Parser<T> InCompleteError<T>
-            (this Parser<T> parser, ErrorCode errorCode, Position position, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
+            (this Parser<T> parser, ErrorCode errorCode, RangePosition rangePosition, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(stream =>
-               new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, position)
+               new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, rangePosition)
            );
         }
 
@@ -32,7 +32,7 @@ namespace MarineLang.SyntaxAnalysis
             (this Parser<T> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(stream =>
-                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, stream.LastCurrent.PositionEnd)
+                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, stream.LastCurrent.rangePosition)
             );
         }
 
@@ -40,7 +40,7 @@ namespace MarineLang.SyntaxAnalysis
             (this Parser<T> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(stream =>
-                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, stream.LastCurrent.position)
+                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, stream.LastCurrent.rangePosition)
             );
         }
 
