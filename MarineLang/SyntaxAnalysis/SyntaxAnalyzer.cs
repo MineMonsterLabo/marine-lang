@@ -22,7 +22,7 @@ namespace MarineLang.SyntaxAnalysis
 
             return
                 ParserCombinator.Many(
-                    ParserCombinator.Try(ParseFuncDefinition)
+                    ParserExtension.Try(ParseFuncDefinition)
                 )(stream)
                 .Map(Enumerable.ToArray)
                 .Map(ProgramAst.Create);
@@ -39,10 +39,10 @@ namespace MarineLang.SyntaxAnalysis
                 .ExpectCanMoveNext()
                 .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonFuncParen)
                 .Bind(funcNameToken =>
-                     ParserCombinator.Try(ParseVariableList)
+                     ParserExtension.Try(ParseVariableList)
                      .InCompleteError(ErrorCode.SyntaxNonFuncParen, funcNameToken.PositionEnd)
                      .Bind(varList =>
-                        ParserCombinator.Try(ParseFuncBody(TokenType.End))
+                        ParserExtension.Try(ParseFuncBody(TokenType.End))
                         .MapResult(pair => FuncDefinitionAst.Create(headToken, funcNameToken.text, varList, pair.statementAsts, pair.endToken))
                      )
                  )
@@ -78,15 +78,15 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParserCombinator.Or(
-                    ParserCombinator.Try(ParseYield()),
-                    ParserCombinator.Try(ParseWhile()),
-                    ParserCombinator.Try(ParseFor()),
-                    ParserCombinator.Try(ParseReturn),
-                    ParserCombinator.Try(ParseAssignmentVariable),
-                    ParserCombinator.Try(ParseFieldAssignment),
-                    ParserCombinator.Try(ParseReAssignmentVariable),
-                    ParserCombinator.Try(ParseReAssignmentIndexer),
-                    ParserCombinator.Try(ParseExpr())
+                    ParserExtension.Try(ParseYield()),
+                    ParserExtension.Try(ParseWhile()),
+                    ParserExtension.Try(ParseFor()),
+                    ParserExtension.Try(ParseReturn()),
+                    ParserExtension.Try(ParseAssignmentVariable),
+                    ParserExtension.Try(ParseFieldAssignment),
+                    ParserExtension.Try(ParseReAssignmentVariable),
+                    ParserExtension.Try(ParseReAssignmentIndexer()),
+                    ParserExtension.Try(ParseExpr())
                 );
         }
 
@@ -97,91 +97,64 @@ namespace MarineLang.SyntaxAnalysis
 
         Parser<WhileAst> ParseWhile()
         {
-            var whileWardParser = ParseToken(TokenType.While);
-            var conditionExprParser = ParseExpr();
-            var blockParser = ParseBlock();
-
-            return ParserCombinator.Tuple(whileWardParser, conditionExprParser, blockParser)
-                 .MapResult(tuple => WhileAst.Create(tuple.Item1, tuple.Item2, tuple.Item3.statementAsts, tuple.Item3.endToken));
+            return
+                from whileToken in ParseToken(TokenType.While)
+                from conditionExpr in ParseExpr()
+                from block in ParseBlock()
+                select
+                    WhileAst.Create(
+                        whileToken,
+                        conditionExpr,
+                        block.statementAsts,
+                        block.endToken
+                    );
         }
 
         Parser<ForAst> ParseFor()
         {
-            var forWardParser = ParseToken(TokenType.For);
-
-            var initVariableParser =
-                ParseVariable()
-                .Left(ParseToken(TokenType.AssignmentOp));
-
-            var initExprParser = ParseExpr();
-
-            var maxValueParser =
-                ParseToken(TokenType.Comma)
-                .Right(ParseExpr());
-
-            var addValueParser =
-                ParseToken(TokenType.Comma)
-                .Right(ParseExpr());
-
-            var blockParser = ParseBlock();
-
             return
-                ParserCombinator.Tuple(forWardParser, initVariableParser, initExprParser, maxValueParser, addValueParser, blockParser)
-                .MapResult(tuple =>
+                from forToken in ParseToken(TokenType.For)
+                from initVariable in ParseVariable().Left(ParseToken(TokenType.AssignmentOp))
+                from initExpr in ParseExpr()
+                from maxValue in ParseToken(TokenType.Comma).Right(ParseExpr())
+                from addValue in ParseToken(TokenType.Comma).Right(ParseExpr())
+                from block in ParseBlock()
+                select 
                     ForAst.Create(
-                        tuple.Item1,
-                        tuple.Item2,
-                        tuple.Item3,
-                        tuple.Item4,
-                        tuple.Item5,
-                        tuple.Item6.statementAsts,
-                        tuple.Item6.endToken
-                ));
+                        forToken, 
+                        initVariable, 
+                        initExpr, 
+                        maxValue, 
+                        addValue, 
+                        block.statementAsts,
+                        block.endToken
+                    );
         }
 
         Parser<ExprAst> ParseExpr()
         {
-            return stream =>
+            return  
                 ParserCombinator.Or(
                     ParseIfExpr(),
                     ParseBinaryOpExpr()
-                )(stream);
+                );
         }
 
         Parser<ExprAst> ParseIfExpr()
         {
             return
-                ParserCombinator.Tuple(ParseToken(TokenType.If), ParseExpr())
-                .Bind(conditionPair =>
-                    ParseBlock()
-                    .Bind<Block, IfExprAst>(thenPair =>
-                          stream =>
-                          {
-                              var elseExprResult = ParserCombinator.Try(
-                                  ParseToken(TokenType.Else)
-                                  .Right(ParseBlock())
-                                  )(stream);
-                              if (elseExprResult.IsError)
-                                  return ParseResult<IfExprAst>.CreateSuccess(
-                                         IfExprAst.Create(
-                                             conditionPair.Item1,
-                                             conditionPair.Item2,
-                                             thenPair.statementAsts,
-                                             new StatementAst[] { },
-                                             thenPair.endToken
-                                         )
-                                      );
-                              return ParseResult<IfExprAst>.CreateSuccess(
-                                     IfExprAst.Create(
-                                         conditionPair.Item1,
-                                         conditionPair.Item2,
-                                         thenPair.statementAsts,
-                                         elseExprResult.Value.statementAsts,
-                                         elseExprResult.Value.endToken)
-                                  );
-                          }
-                    )
-               );
+                from ifToken in ParseToken(TokenType.If)
+                from conditionExpr in ParseExpr()
+                from thenBlock in ParseBlock()
+                from elseBlock in ParseToken(TokenType.Else).Right(ParseBlock()).Try().Default(null)
+                select
+                           IfExprAst.Create(
+                               ifToken,
+                               conditionExpr,
+                               thenBlock.statementAsts,
+                               elseBlock?.statementAsts ?? new StatementAst[] { },
+                               elseBlock?.endToken ?? thenBlock.endToken
+                           );
         }
 
         Parser<Block> ParseBlock()
@@ -220,58 +193,46 @@ namespace MarineLang.SyntaxAnalysis
 
         Parser<ExprAst> ParseBinaryOpExpr()
         {
-            return stream =>
-            {
-                var exprResult = ParseUnaryOpExpr()(stream);
-                if (exprResult.IsError || stream.IsEnd)
-                    return exprResult;
-
-                var opResult = ParseBinaryOpToken()(stream);
-                if (opResult.IsError)
-                    return exprResult;
-                return
-                    ParseBinaryOp2Expr(exprResult.Value, opResult.Value.tokenType)(stream);
-            };
+            return
+                from expr in ParseUnaryOpExpr()
+                from opToken in ParseBinaryOpToken().Default(null)
+                from expr2 in opToken == null ? Return(expr) : ParseBinaryOp2Expr(expr, opToken.tokenType)
+                select expr2;
         }
         Parser<ExprAst> ParseBinaryOp2Expr(ExprAst beforeExpr, TokenType beforeTokenType)
         {
-            return stream =>
-            {
-                var exprResult = ParseUnaryOpExpr()(stream);
-                if (exprResult.IsError || stream.IsEnd)
-                    return exprResult;
+            return
+                from expr in ParseUnaryOpExpr()
+                from opToken in ParseBinaryOpToken().Default(null)
+                from expr2 in ParseBinaryOp3Expr(beforeExpr, beforeTokenType, expr, opToken)
+                select expr2;
+        }
 
-                var opResult = ParseBinaryOpToken()(stream);
-                if (opResult.IsError)
-                    return ParseResult<ExprAst>.CreateSuccess(
-                        BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType)
-                    );
-                var tokenType = opResult.Value.tokenType;
-                if (GetBinaryOpPriority(beforeTokenType) >= GetBinaryOpPriority(tokenType))
-                    return
-                        ParseBinaryOp2Expr(BinaryOpAst.Create(beforeExpr, exprResult.Value, beforeTokenType), tokenType)(stream);
+        Parser<ExprAst> ParseBinaryOp3Expr(ExprAst beforeExpr, TokenType beforeTokenType, ExprAst expr, Token opToken)
+        {
+            if (opToken == null)
+                return 
+                    Return(BinaryOpAst.Create(beforeExpr, expr, beforeTokenType));
+         
+            if (GetBinaryOpPriority(beforeTokenType) >= GetBinaryOpPriority(opToken.tokenType))
                 return
-                    ParseBinaryOp2Expr(exprResult.Value, tokenType)
-                    .MapResult(expr => BinaryOpAst.Create(beforeExpr, expr, beforeTokenType))
-                    (stream);
-            };
+                    ParseBinaryOp2Expr(BinaryOpAst.Create(beforeExpr, expr, beforeTokenType), opToken.tokenType);
+            return
+                from expr2 in ParseBinaryOp2Expr(expr, opToken.tokenType)
+                select BinaryOpAst.Create(beforeExpr, expr2, beforeTokenType);
         }
 
         Parser<ExprAst> ParseUnaryOpExpr()
         {
             return
-                ParserCombinator.Tuple(
-                    ParserCombinator.Many(ParseUnaryOpToken()),
-                    ParseDotOpExpr()
-                )
-                .MapResult(pair =>
-                {
-                    pair.Item1.Reverse();
-                    return pair.Item1.Aggregate(
-                        pair.Item2,
+                from opTokens in ParserCombinator.Many(ParseUnaryOpToken())
+                from expr in ParseDotOpExpr()
+                let revOpTokens = opTokens.AsEnumerable().Reverse()
+                select 
+                    revOpTokens.Aggregate(
+                        expr, 
                         (expr, unaryOpToken) => UnaryOpAst.Create(expr, unaryOpToken)
                     );
-                });
         }
 
         Parser<Token> ParseUnaryOpToken()
@@ -281,43 +242,35 @@ namespace MarineLang.SyntaxAnalysis
 
         Parser<ExprAst> ParseDotOpExpr()
         {
-            return stream =>
-            {
-                var termResult = ParseIndexerOpExpr()(stream);
-                if (termResult.IsError || stream.IsEnd)
-                    return termResult;
-
-                return ParseDotTerms(termResult.Value)(stream);
-            };
+            return
+                from instanceExpr in ParseIndexerOpExpr()
+                from expr in ParseDotTerms(instanceExpr)
+                select expr;
         }
 
         Parser<ExprAst> ParseIndexerOpExpr()
         {
-            return stream =>
-            {
-                var termResult = ParseTerm()(stream);
-                if (termResult.IsError || stream.IsEnd)
-                    return termResult;
-
-                return ParseIndexers(false)
-                    .MapResult(indexExprs =>
-                        indexExprs.Aggregate(termResult.Value, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3))
-                    )(stream);
-            };
+            return
+                from term in ParseTerm()
+                from indexExprs in ParseIndexers(false)
+                select indexExprs.Aggregate(term, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
         }
 
         Parser<ExprAst> ParseDotTerms(ExprAst instance)
         {
-            var dotTermParser = ParseToken(TokenType.DotOp)
-                      .Right(
-                          ParserCombinator.Or<ExprAst>(
-                              ParseToken(TokenType.Await).MapResult(awaitToken => AwaitAst.Create(awaitToken, instance)),
-                                  ParserCombinator.Try(ParseFuncCall)
-                                      .MapResult(funcCallAst => InstanceFuncCallAst.Create(instance, funcCallAst)),
-                                  ParseVariable()
-                                      .MapResult(variableAst => InstanceFieldAst.Create(instance, variableAst))
-                          )
-                      );
+            var dotTermParser =
+                from dotOpToken in ParseToken(TokenType.DotOp)
+                from expr in
+                        ParserCombinator.Or<ExprAst>(
+                            from awaitToken in ParseToken(TokenType.Await)
+                            select AwaitAst.Create(awaitToken, instance),
+                            from funcCall in ParseFuncCall().Try()
+                            select InstanceFuncCallAst.Create(instance, funcCall),
+                            from variable in ParseVariable()
+                            select InstanceFieldAst.Create(instance, variable)
+                        )
+                select expr;
+
             return stream =>
             {
                 while (stream.IsEnd == false)
@@ -369,16 +322,16 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParserCombinator.Or(
-                    ParserCombinator.Try(ParseParenExpr()),
-                    ParserCombinator.Try(ParseFuncCall),
-                    ParserCombinator.Try(ParseFloat),
-                    ParserCombinator.Try(ParseInt),
-                    ParserCombinator.Try(ParseBool),
-                    ParserCombinator.Try(ParseChar),
-                    ParserCombinator.Try(ParseString),
-                    ParserCombinator.Try(ParseArrayLiteral()),
-                    ParserCombinator.Try(ParseActionLiteral()),
-                    ParserCombinator.Try(ParseVariable())
+                    ParserExtension.Try(ParseParenExpr()),
+                    ParserExtension.Try(ParseFuncCall()),
+                    ParserExtension.Try(ParseFloat),
+                    ParserExtension.Try(ParseInt),
+                    ParserExtension.Try(ParseBool),
+                    ParserExtension.Try(ParseChar),
+                    ParserExtension.Try(ParseString),
+                    ParserExtension.Try(ParseArrayLiteral()),
+                    ParserExtension.Try(ParseActionLiteral()),
+                    ParserExtension.Try(ParseVariable())
                 );
         }
 
@@ -391,16 +344,12 @@ namespace MarineLang.SyntaxAnalysis
         }
 
 
-        IParseResult<FuncCallAst> ParseFuncCall(TokenStream stream)
+        Parser<FuncCallAst> ParseFuncCall()
         {
             return
-                ParseToken(TokenType.Id)
-                .Bind(funcNameToken =>
-                    ParserCombinator.Try(ParseParamList)
-                    .MapResult(tuple =>
-                        FuncCallAst.Create(funcNameToken, tuple.Item2, tuple.Item3)
-                    )
-                )(stream);
+                from funcNameToken in ParseToken(TokenType.Id)
+                from tuple in ParserExtension.Try(ParseParamList)
+                select FuncCallAst.Create(funcNameToken, tuple.Item2, tuple.Item3);
         }
 
         Parser<IReadOnlyList<(Token, ExprAst, Token)>> ParseIndexers(bool once)
@@ -415,18 +364,17 @@ namespace MarineLang.SyntaxAnalysis
             return once ? ParserCombinator.OneMany(parserIndexer) : ParserCombinator.Many(parserIndexer);
         }
 
-        IParseResult<ReturnAst> ParseReturn(TokenStream stream)
+        Parser<ReturnAst> ParseReturn()
         {
             return
-                ParserCombinator.Tuple(
+                from pair in ParserCombinator.Tuple(
                     ParseToken(TokenType.Return)
                     .InCompleteErrorWithPositionHead(ErrorCode.Unknown, ErrorKind.None, "retを期待してます")
                     .ExpectCanMoveNext()
                     .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonRetExpr, ErrorKind.ForceError),
                     ParseExpr().InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonRetExpr, ErrorKind.ForceError)
                 )
-                .MapResult(pair => ReturnAst.Create(pair.Item1, pair.Item2))
-                (stream);
+                select ReturnAst.Create(pair.Item1, pair.Item2);
         }
 
         IParseResult<AssignmentVariableAst> ParseAssignmentVariable
@@ -473,34 +421,40 @@ namespace MarineLang.SyntaxAnalysis
                (stream);
         }
 
-        IParseResult<ReAssignmentIndexerAst> ParseReAssignmentIndexer(TokenStream stream)
+        Parser<ReAssignmentIndexerAst> ParseReAssignmentIndexer()
         {
             return
-                ParserCombinator.Tuple(ParseTerm(), ParseIndexers(true))
-                .InCompleteErrorWithPositionHead(ErrorCode.Unknown)
-                .Left(ParseToken(TokenType.AssignmentOp))
-                .InCompleteErrorWithPositionHead(ErrorCode.Unknown, ErrorKind.None, "=を期待してます")
-                .ExpectCanMoveNext()
-                .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
+                (
+                    from pair in
+                        ParserCombinator.Tuple(ParseTerm(), ParseIndexers(true))
+                        .InCompleteErrorWithPositionHead(ErrorCode.Unknown)
+                    from _ in
+                        ParseToken(TokenType.AssignmentOp)
+                        .InCompleteErrorWithPositionHead(ErrorCode.Unknown, ErrorKind.None, "=を期待してます")
+                        .ExpectCanMoveNext()
+                        .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
+                    select pair
+                )
                 .Bind(pair =>
                 {
                     if (pair.Item2.Count > 1)
                         pair.Item1 = pair.Item2.Take(pair.Item2.Count - 1)
                         .Aggregate(pair.Item1, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
 
-                    return ParseExpr()
-                    .MapResult(expr => ReAssignmentIndexerAst.Create(pair.Item1, pair.Item2.Last().Item2, expr))
-                    .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError);
+                    return 
+                        from expr in 
+                            ParseExpr()
+                            .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
+                        select ReAssignmentIndexerAst.Create(pair.Item1, pair.Item2.Last().Item2, expr);
                 }
-               )
-               (stream);
+               );
         }
 
         IParseResult<StatementAst> ParseFieldAssignment(TokenStream stream)
         {
             return
                 ParseIndexerOpExpr()
-                .Bind(instance => ParseDotTerms(instance))
+                .Bind(ParseDotTerms)
                 .InCompleteErrorWithPositionHead(ErrorCode.Unknown)
                 .Left(ParseToken(TokenType.AssignmentOp))
                 .InCompleteErrorWithPositionHead(ErrorCode.Unknown, ErrorKind.None, "=を期待してます")
@@ -648,6 +602,11 @@ namespace MarineLang.SyntaxAnalysis
         Parser<Token> ParseToken(TokenType tokenType)
         {
             return ParserCombinator.TestOnce(token => token.tokenType == tokenType);
+        }
+
+        Parser<T> Return<T>(T t)
+        {
+            return stream => ParseResult<T>.CreateSuccess(t);
         }
     }
 }

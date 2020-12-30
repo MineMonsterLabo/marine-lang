@@ -7,7 +7,7 @@ namespace MarineLang.SyntaxAnalysis
 {
 
 
-    public static class ParserCombinatorExtension
+    public static class ParserExtension
     {
         public static Parser<T> InCompleteError<T>(this Parser<T> parser, Func<TokenStream, ParseErrorInfo> func)
         {
@@ -92,10 +92,16 @@ namespace MarineLang.SyntaxAnalysis
                 var result = parser(stream);
                 if (result.IsError)
                     return result.CastError<TT>();
-                if (stream.IsEnd)
-                    return ParseResult<TT>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                 return func(result.Value)(stream);
             };
+        }
+
+        public static Parser<V> SelectMany<T, U, V>(
+                 this Parser<T> parser,
+                 Func<T, Parser<U>> selector,
+                 Func<T, U, V> projector)
+        {
+            return parser.Bind(t => selector(t).Select(u => projector(t, u)));
         }
 
         public static Parser<TT> BindResult<T, TT>(this Parser<T> parser, Func<T, IParseResult<TT>> func)
@@ -112,6 +118,39 @@ namespace MarineLang.SyntaxAnalysis
         public static Parser<TT> MapResult<T, TT>(this Parser<T> parser, Func<T, TT> func)
         {
             return parser.BindResult(t => ParseResult<TT>.CreateSuccess(func(t)));
+        }
+
+        public static Parser<TT> Select<T, TT>(this Parser<T> parser, Func<T, TT> selector)
+        {
+            return MapResult<T, TT>(parser, selector);
+        }
+
+        public static Parser<T> Try<T>(this Parser<T> parser)
+        {
+            return
+                stream =>
+                {
+                    var backUpIndex = stream.Index;
+                    var parseResult = parser(stream);
+
+                    if (parseResult.IsError)
+                        stream.SetIndex(backUpIndex);
+
+                    return parseResult;
+                };
+        }
+
+        public static Parser<T> Default<T>(this Parser<T> parser, T defaultValue)
+        {
+            return stream =>
+            {
+                var parseResult = parser(stream);
+                if (parseResult.IsError)
+                {
+                    return ParseResult<T>.CreateSuccess(defaultValue);
+                }
+                return parseResult;
+            };
         }
     }
 }
