@@ -35,12 +35,12 @@ namespace MarineLang.SyntaxAnalysis
                 ParseToken(TokenType.Func)
                 .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonFuncWord, ErrorKind.None, $"\"{stream.Current.text}\"")
                 .Right(ParseToken(TokenType.Id))
-                .InCompleteError(ErrorCode.SyntaxNonFuncName, headToken.PositionEnd)
+                .InCompleteError(ErrorCode.SyntaxNonFuncName, new RangePosition(headToken.position, headToken.PositionEnd))
                 .ExpectCanMoveNext()
                 .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonFuncParen)
                 .Bind(funcNameToken =>
                      ParserExtension.Try(ParseVariableList)
-                     .InCompleteError(ErrorCode.SyntaxNonFuncParen, funcNameToken.PositionEnd)
+                     .InCompleteError(ErrorCode.SyntaxNonFuncParen, funcNameToken.rangePosition)
                      .Bind(varList =>
                         ParserExtension.Try(ParseFuncBody(TokenType.End))
                         .MapResult(pair => FuncDefinitionAst.Create(headToken, funcNameToken.text, varList, pair.statementAsts, pair.endToken))
