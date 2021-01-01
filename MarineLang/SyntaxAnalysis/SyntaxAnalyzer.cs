@@ -214,7 +214,11 @@ namespace MarineLang.SyntaxAnalysis
                 return 
                     Return(BinaryOpAst.Create(beforeExpr, expr, beforeTokenType));
          
-            if (GetBinaryOpPriority(beforeTokenType) >= GetBinaryOpPriority(opToken.tokenType))
+            if (
+                ExprPriorityHelpr.GetBinaryOpPriority(beforeTokenType) 
+                >= 
+                ExprPriorityHelpr.GetBinaryOpPriority(opToken.tokenType)
+            )
                 return
                     ParseBinaryOp2Expr(BinaryOpAst.Create(beforeExpr, expr, beforeTokenType), opToken.tokenType);
             return
@@ -299,23 +303,6 @@ namespace MarineLang.SyntaxAnalysis
                     token.tokenType >= TokenType.OrOp
                     && token.tokenType <= TokenType.ModOp
                 );
-        }
-
-        int GetBinaryOpPriority(TokenType tokenType)
-        {
-            if (tokenType == TokenType.MinusOp)
-                return (int)TokenType.PlusOp;
-            if (tokenType == TokenType.NotEqualOp)
-                return (int)TokenType.EqualOp;
-            if (
-                tokenType == TokenType.GreaterOp ||
-                tokenType == TokenType.LessOp ||
-                tokenType == TokenType.LessEqualOp
-            )
-                return (int)TokenType.GreaterEqualOp;
-            if (tokenType == TokenType.DivOp || tokenType == TokenType.ModOp)
-                return (int)TokenType.MulOp;
-            return (int)tokenType;
         }
 
         Parser<ExprAst> ParseTerm()

@@ -499,10 +499,10 @@ namespace MarineLang.VirtualMachines
         public readonly int initSize;
         public readonly int size;
 
-        public CreateArrayIL(int initSize, int size)
+        public CreateArrayIL(int initSize, int? size)
         {
             this.initSize = initSize;
-            this.size = size;
+            this.size = size ?? initSize;
         }
 
         public void Run(LowLevelVirtualMachine vm)
