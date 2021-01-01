@@ -68,7 +68,12 @@ namespace MarineLang.LexicalAnalysis
             return true;
         }
 
-        static public Token GetCharToken(IndexedCharStream stream, char c, TokenType tokenType)
+        static public Token GetCharToken(IndexedCharStream stream, TokenType tokenType)
+        {
+            return GetCharToken(stream, tokenType.GetText()[0], tokenType);
+        }
+
+            static public Token GetCharToken(IndexedCharStream stream, char c, TokenType tokenType)
         {
             var indexedChar = stream.Current;
             if (indexedChar.c == c)
@@ -77,6 +82,11 @@ namespace MarineLang.LexicalAnalysis
                 return new Token(tokenType, indexedChar.c.ToString(), indexedChar.position);
             }
             return null;
+        }
+
+        static public Func<IndexedCharStream, Token> GetStringToken(TokenType tokenType)
+        {
+            return GetStringToken(tokenType.GetText(), tokenType);
         }
 
         static public Func<IndexedCharStream, Token> GetStringToken(string str, TokenType tokenType)
@@ -91,6 +101,11 @@ namespace MarineLang.LexicalAnalysis
                  return TestResult.End;
              }
              );
+        }
+
+        static public Token GetStringTokenTailDelimiter(TokenType tokenType, IndexedCharStream stream)
+        {
+            return GetStringTokenTailDelimiter(tokenType.GetText(), tokenType, stream);
         }
 
         static public Token GetStringTokenTailDelimiter(string str, TokenType tokenType, IndexedCharStream stream)
