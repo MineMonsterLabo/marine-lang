@@ -82,6 +82,11 @@ namespace MarineLang.Models.Asts
             return new ValueAst { value = value, token = token };
         }
 
+        public static ValueAst Create(object value)
+        {
+            return new ValueAst { value = value};
+        }
+
         public override IEnumerable<T> LookUp<T>()
         {
             if (this is T t)
@@ -101,6 +106,11 @@ namespace MarineLang.Models.Asts
         public static VariableAst Create(Token varToken)
         {
             return new VariableAst { varToken = varToken };
+        }
+
+        public static VariableAst Create(string name)
+        {
+            return new VariableAst { varToken = new Token(TokenType.Id, name) };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -239,6 +249,14 @@ namespace MarineLang.Models.Asts
             };
         }
 
+        public static AwaitAst Create(ExprAst instanceExpr)
+        {
+            return new AwaitAst
+            {
+                instanceExpr = instanceExpr,
+            };
+        }
+
         public override IEnumerable<T> LookUp<T>()
         {
             return instanceExpr.LookUp<T>();
@@ -275,6 +293,20 @@ namespace MarineLang.Models.Asts
             };
         }
 
+        public static IfExprAst Create(
+            ExprAst conditionExpr,
+            StatementAst[] thenStatements,
+            StatementAst[] elseStatements
+        )
+        {
+            return new IfExprAst
+            {
+                conditionExpr = conditionExpr,
+                thenStatements = thenStatements,
+                elseStatements = elseStatements,
+            };
+        }
+
         public override IEnumerable<T> LookUp<T>()
         {
             return
@@ -305,6 +337,15 @@ namespace MarineLang.Models.Asts
             };
         }
 
+        public static GetIndexerAst Create(ExprAst expr, ExprAst indexExpr)
+        {
+            return new GetIndexerAst
+            {
+                instanceExpr = expr,
+                indexExpr = indexExpr,
+            };
+        }
+
         public override IEnumerable<T> LookUp<T>()
         {
             return instanceExpr.LookUp<T>().Concat(indexExpr.LookUp<T>());
@@ -324,7 +365,7 @@ namespace MarineLang.Models.Asts
         public class ArrayLiteralExprs
         {
             public ExprAst[] exprAsts;
-            public int size;
+            public int? size;
         }
 
         public static ArrayLiteralAst Create(Token leftBracketToken, ArrayLiteralExprs arrayLiteralExprs, Token rightBracketToken)
@@ -334,6 +375,14 @@ namespace MarineLang.Models.Asts
                 leftBracketToken = leftBracketToken,
                 arrayLiteralExprs = arrayLiteralExprs,
                 rightBracketToken = rightBracketToken
+            };
+        }
+
+        public static ArrayLiteralAst Create(ArrayLiteralExprs arrayLiteralExprs)
+        {
+            return new ArrayLiteralAst
+            {
+                arrayLiteralExprs = arrayLiteralExprs,
             };
         }
 
@@ -365,6 +414,15 @@ namespace MarineLang.Models.Asts
             };
         }
 
+        public static ActionAst Create(VariableAst[] args, StatementAst[] statementAsts)
+        {
+            return new ActionAst
+            {
+                args = args,
+                statementAsts = statementAsts,
+            };
+        }
+
         public override IEnumerable<T> LookUp<T>()
         {
             return
@@ -387,6 +445,11 @@ namespace MarineLang.Models.Asts
         public static FuncCallAst Create(Token funcNameToken, ExprAst[] args, Token rightParen)
         {
             return new FuncCallAst { funcNameToken = funcNameToken, args = args, rightParen = rightParen };
+        }
+
+        public static FuncCallAst Create(string funcName, ExprAst[] args)
+        {
+            return new FuncCallAst { funcNameToken = new Token(TokenType.Id, funcName), args = args };
         }
 
         public override IEnumerable<T> LookUp<T>()

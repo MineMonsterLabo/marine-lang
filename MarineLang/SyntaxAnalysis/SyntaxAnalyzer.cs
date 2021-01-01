@@ -402,7 +402,7 @@ namespace MarineLang.SyntaxAnalysis
                 .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
                 .Bind(variable =>
                     ParseExpr()
-                    .MapResult(expr => ReAssignmentVariableAst.Create(variable.varToken, expr))
+                    .MapResult(expr => ReAssignmentVariableAst.Create(variable, expr))
                     .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
                )
                (stream);
@@ -428,11 +428,15 @@ namespace MarineLang.SyntaxAnalysis
                         pair.Item1 = pair.Item2.Take(pair.Item2.Count - 1)
                         .Aggregate(pair.Item1, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
 
-                    return 
-                        from expr in 
+                    return
+                        from expr in
                             ParseExpr()
                             .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
-                        select ReAssignmentIndexerAst.Create(pair.Item1, pair.Item2.Last().Item2, expr);
+                        select
+                            ReAssignmentIndexerAst.Create(
+                                GetIndexerAst.Create(pair.Item1, pair.Item2.Last().Item2),
+                                expr
+                            );
                 }
                );
         }
@@ -453,13 +457,13 @@ namespace MarineLang.SyntaxAnalysis
                           return
                               ParseExpr()
                               .MapResult(expr =>
-                                FieldAssignmentAst.Create(fieldAst.variableAst, fieldAst.instanceExpr, expr)
+                                FieldAssignmentAst.Create(fieldAst, expr)
                               );
 
                       if (exprAst is GetIndexerAst getIndexerAst)
                           return
                               ParseExpr()
-                              .MapResult(expr => ReAssignmentIndexerAst.Create(getIndexerAst.instanceExpr, getIndexerAst.indexExpr, expr));
+                              .MapResult(expr => ReAssignmentIndexerAst.Create(getIndexerAst, expr));
                       return _ => ParseResult<StatementAst>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                   })
                 (stream);

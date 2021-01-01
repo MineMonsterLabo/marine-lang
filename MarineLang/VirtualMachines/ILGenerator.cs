@@ -112,8 +112,8 @@ namespace MarineLang.VirtualMachines
                 ReAssignmentVariableILGenerate(statementAst.GetReAssignmentVariableAst(), argCount, variables);
             else if (statementAst.GetReAssignmentIndexerAst() != null)
                 ReAssignmentIndexerILGenerate(statementAst.GetReAssignmentIndexerAst(), argCount, variables);
-            else if (statementAst.GetAssignmentAst() != null)
-                AssignmentILGenerate(statementAst.GetAssignmentAst(), argCount, variables);
+            else if (statementAst.GetAssignmentVariableAst() != null)
+                AssignmentILGenerate(statementAst.GetAssignmentVariableAst(), argCount, variables);
             else if (statementAst.GetFieldAssignmentAst() != null)
                 FieldAssignmentILGenerate(statementAst.GetFieldAssignmentAst(), argCount, variables);
             else if (statementAst.GetWhileAst() != null)
@@ -265,7 +265,10 @@ namespace MarineLang.VirtualMachines
         {
             foreach (var exprAst in arrayLiteralAst.arrayLiteralExprs.exprAsts)
                 ExprILGenerate(exprAst, argCount, variables);
-            marineILs.Add(new CreateArrayIL(arrayLiteralAst.arrayLiteralExprs.exprAsts.Length, arrayLiteralAst.arrayLiteralExprs.size));
+            marineILs.Add(new CreateArrayIL(
+                arrayLiteralAst.arrayLiteralExprs.exprAsts.Length, 
+                arrayLiteralAst.arrayLiteralExprs.size
+            ));
         }
 
         void ActionILGenerate(ActionAst actionAst, int argCount, FuncScopeVariables variables)
@@ -325,7 +328,7 @@ namespace MarineLang.VirtualMachines
 
         void ReAssignmentVariableILGenerate(ReAssignmentVariableAst reAssignmentAst, int argCount, FuncScopeVariables variables)
         {
-            var captureIdx = variables.GetCaptureVariableIdx(reAssignmentAst.varNameToken.text);
+            var captureIdx = variables.GetCaptureVariableIdx(reAssignmentAst.variableAst.VarName);
             if (captureIdx.HasValue)
             {
                 var ast =
@@ -342,14 +345,14 @@ namespace MarineLang.VirtualMachines
             else
             {
                 ExprILGenerate(reAssignmentAst.expr, argCount, variables);
-                marineILs.Add(new StoreIL(variables.GetVariableIdx(reAssignmentAst.varNameToken.text)));
+                marineILs.Add(new StoreIL(variables.GetVariableIdx(reAssignmentAst.variableAst.VarName)));
             }
         }
 
         void ReAssignmentIndexerILGenerate(ReAssignmentIndexerAst reAssignmentAst, int argCount, FuncScopeVariables variables)
         {
-            ExprILGenerate(reAssignmentAst.instanceExpr, argCount, variables);
-            ExprILGenerate(reAssignmentAst.indexExpr, argCount, variables);
+            ExprILGenerate(reAssignmentAst.getIndexerAst.instanceExpr, argCount, variables);
+            ExprILGenerate(reAssignmentAst.getIndexerAst.indexExpr, argCount, variables);
             ExprILGenerate(reAssignmentAst.assignmentExpr, argCount, variables);
             marineILs.Add(new InstanceCSharpIndexerStoreIL());
         }
@@ -363,12 +366,12 @@ namespace MarineLang.VirtualMachines
 
         void FieldAssignmentILGenerate(FieldAssignmentAst fieldAssignmentAst, int argCount, FuncScopeVariables variables)
         {
-            ExprILGenerate(fieldAssignmentAst.instanceExpr, argCount, variables);
+            ExprILGenerate(fieldAssignmentAst.instanceFieldAst.instanceExpr, argCount, variables);
             ExprILGenerate(fieldAssignmentAst.expr, argCount, variables);
             marineILs.Add(
                 new InstanceCSharpFieldStoreIL(
-                    fieldAssignmentAst.variableAst.VarName,
-                    new ILDebugInfo(fieldAssignmentAst.variableAst.Start)
+                    fieldAssignmentAst.instanceFieldAst.variableAst.VarName,
+                    new ILDebugInfo(fieldAssignmentAst.instanceFieldAst.variableAst.Start)
                 )
             );
         }

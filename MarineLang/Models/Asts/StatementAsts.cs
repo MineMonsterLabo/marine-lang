@@ -18,7 +18,7 @@ namespace MarineLang.Models.Asts
             return this as ReturnAst;
         }
 
-        public AssignmentVariableAst GetAssignmentAst()
+        public AssignmentVariableAst GetAssignmentVariableAst()
         {
             return this as AssignmentVariableAst;
         }
@@ -68,6 +68,11 @@ namespace MarineLang.Models.Asts
             return new ReturnAst { retToken = retToken, expr = expr };
         }
 
+        public static ReturnAst Create(ExprAst expr)
+        {
+            return new ReturnAst { expr = expr };
+        }
+
         public override IEnumerable<T> LookUp<T>()
         {
             return expr.LookUp<T>();
@@ -88,6 +93,11 @@ namespace MarineLang.Models.Asts
             return new AssignmentVariableAst { letToken = letToken, varName = varName, expr = expr };
         }
 
+        public static AssignmentVariableAst Create(string varName, ExprAst expr)
+        {
+            return new AssignmentVariableAst { varName = varName, expr = expr };
+        }
+
         public override IEnumerable<T> LookUp<T>()
         {
             return expr.LookUp<T>();
@@ -96,15 +106,15 @@ namespace MarineLang.Models.Asts
 
     public class ReAssignmentVariableAst : StatementAst
     {
-        public Token varNameToken;
+        public VariableAst variableAst;
         public ExprAst expr;
 
-        public override Position Start => varNameToken.position;
+        public override Position Start => variableAst.Start;
         public override Position End => expr.End;
 
-        public static ReAssignmentVariableAst Create(Token varNameToken, ExprAst expr)
+        public static ReAssignmentVariableAst Create(VariableAst variableAst, ExprAst expr)
         {
-            return new ReAssignmentVariableAst { varNameToken = varNameToken, expr = expr };
+            return new ReAssignmentVariableAst { variableAst = variableAst, expr = expr };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -115,23 +125,21 @@ namespace MarineLang.Models.Asts
 
     public class ReAssignmentIndexerAst : StatementAst
     {
-        public ExprAst instanceExpr;
-        public ExprAst indexExpr;
+        public GetIndexerAst getIndexerAst;
         public ExprAst assignmentExpr;
 
-        public override Position Start => instanceExpr.Start;
+        public override Position Start => getIndexerAst.Start;
         public override Position End => assignmentExpr.End;
 
-        public static ReAssignmentIndexerAst Create(ExprAst instanceExpr, ExprAst indexExpr, ExprAst assignmentExpr)
+        public static ReAssignmentIndexerAst Create(GetIndexerAst getIndexerAst, ExprAst assignmentExpr)
         {
-            return new ReAssignmentIndexerAst { instanceExpr = instanceExpr, indexExpr = indexExpr, assignmentExpr = assignmentExpr };
+            return new ReAssignmentIndexerAst { getIndexerAst = getIndexerAst, assignmentExpr = assignmentExpr };
         }
 
         public override IEnumerable<T> LookUp<T>()
         {
             return
-                instanceExpr.LookUp<T>()
-                .Concat(indexExpr.LookUp<T>())
+                getIndexerAst.LookUp<T>()
                 .Concat(assignmentExpr.LookUp<T>());
         }
     }
@@ -139,22 +147,20 @@ namespace MarineLang.Models.Asts
     public class FieldAssignmentAst : StatementAst
     {
         public ExprAst expr;
-        public ExprAst instanceExpr;
-        public VariableAst variableAst;
-
-        public override Position Start => instanceExpr.Start;
+        public InstanceFieldAst instanceFieldAst;
+        public override Position Start => instanceFieldAst.Start;
         public override Position End => expr.End;
 
-        public static FieldAssignmentAst Create(VariableAst variableAst, ExprAst instanceExpr, ExprAst expr)
+        public static FieldAssignmentAst Create(InstanceFieldAst instanceFieldAst, ExprAst expr)
         {
-            return new FieldAssignmentAst { variableAst = variableAst, instanceExpr = instanceExpr, expr = expr };
+            return new FieldAssignmentAst { instanceFieldAst= instanceFieldAst, expr = expr };
         }
 
         public override IEnumerable<T> LookUp<T>()
         {
             return
                 expr.LookUp<T>()
-                .Concat(instanceExpr.LookUp<T>());
+                .Concat(instanceFieldAst.LookUp<T>());
         }
     }
 
@@ -176,6 +182,15 @@ namespace MarineLang.Models.Asts
                 conditionExpr = conditionExpr,
                 statements = statements,
                 endRightCurlyBracket = endRightCurlyBracket
+            };
+        }
+
+        public static WhileAst Create(ExprAst conditionExpr, StatementAst[] statements)
+        {
+            return new WhileAst
+            {
+                conditionExpr = conditionExpr,
+                statements = statements,
             };
         }
 
@@ -222,6 +237,24 @@ namespace MarineLang.Models.Asts
             };
         }
 
+        public static ForAst Create(
+           VariableAst initVariable,
+           ExprAst initExpr,
+           ExprAst maxValueExpr,
+           ExprAst addValueExpr,
+           StatementAst[] statements
+       )
+        {
+            return new ForAst
+            {
+                initVariable = initVariable,
+                initExpr = initExpr,
+                maxValueExpr = maxValueExpr,
+                addValueExpr = addValueExpr,
+                statements = statements,
+            };
+        }
+
         public override IEnumerable<T> LookUp<T>()
         {
             return
@@ -243,6 +276,11 @@ namespace MarineLang.Models.Asts
         public static YieldAst Create(Token yieldToken)
         {
             return new YieldAst { yieldToken = yieldToken };
+        }
+
+        public static YieldAst Create()
+        {
+            return new YieldAst { };
         }
 
         public override IEnumerable<T> LookUp<T>()
