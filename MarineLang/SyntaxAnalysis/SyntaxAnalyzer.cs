@@ -214,7 +214,11 @@ namespace MarineLang.SyntaxAnalysis
                 return 
                     Return(BinaryOpAst.Create(beforeExpr, expr, beforeTokenType));
          
-            if (GetBinaryOpPriority(beforeTokenType) >= GetBinaryOpPriority(opToken.tokenType))
+            if (
+                ExprPriorityHelpr.GetBinaryOpPriority(beforeTokenType) 
+                >= 
+                ExprPriorityHelpr.GetBinaryOpPriority(opToken.tokenType)
+            )
                 return
                     ParseBinaryOp2Expr(BinaryOpAst.Create(beforeExpr, expr, beforeTokenType), opToken.tokenType);
             return
@@ -299,23 +303,6 @@ namespace MarineLang.SyntaxAnalysis
                     token.tokenType >= TokenType.OrOp
                     && token.tokenType <= TokenType.ModOp
                 );
-        }
-
-        int GetBinaryOpPriority(TokenType tokenType)
-        {
-            if (tokenType == TokenType.MinusOp)
-                return (int)TokenType.PlusOp;
-            if (tokenType == TokenType.NotEqualOp)
-                return (int)TokenType.EqualOp;
-            if (
-                tokenType == TokenType.GreaterOp ||
-                tokenType == TokenType.LessOp ||
-                tokenType == TokenType.LessEqualOp
-            )
-                return (int)TokenType.GreaterEqualOp;
-            if (tokenType == TokenType.DivOp || tokenType == TokenType.ModOp)
-                return (int)TokenType.MulOp;
-            return (int)tokenType;
         }
 
         Parser<ExprAst> ParseTerm()
@@ -415,7 +402,7 @@ namespace MarineLang.SyntaxAnalysis
                 .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
                 .Bind(variable =>
                     ParseExpr()
-                    .MapResult(expr => ReAssignmentVariableAst.Create(variable.varToken, expr))
+                    .MapResult(expr => ReAssignmentVariableAst.Create(variable, expr))
                     .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
                )
                (stream);
@@ -441,11 +428,15 @@ namespace MarineLang.SyntaxAnalysis
                         pair.Item1 = pair.Item2.Take(pair.Item2.Count - 1)
                         .Aggregate(pair.Item1, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
 
-                    return 
-                        from expr in 
+                    return
+                        from expr in
                             ParseExpr()
                             .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
-                        select ReAssignmentIndexerAst.Create(pair.Item1, pair.Item2.Last().Item2, expr);
+                        select
+                            ReAssignmentIndexerAst.Create(
+                                GetIndexerAst.Create(pair.Item1, pair.Item2.Last().Item2),
+                                expr
+                            );
                 }
                );
         }
@@ -466,13 +457,13 @@ namespace MarineLang.SyntaxAnalysis
                           return
                               ParseExpr()
                               .MapResult(expr =>
-                                FieldAssignmentAst.Create(fieldAst.variableAst, fieldAst.instanceExpr, expr)
+                                FieldAssignmentAst.Create(fieldAst, expr)
                               );
 
                       if (exprAst is GetIndexerAst getIndexerAst)
                           return
                               ParseExpr()
-                              .MapResult(expr => ReAssignmentIndexerAst.Create(getIndexerAst.instanceExpr, getIndexerAst.indexExpr, expr));
+                              .MapResult(expr => ReAssignmentIndexerAst.Create(getIndexerAst, expr));
                       return _ => ParseResult<StatementAst>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                   })
                 (stream);

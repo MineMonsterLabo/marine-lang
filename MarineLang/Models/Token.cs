@@ -8,7 +8,7 @@
         public Position PositionEnd => new Position(position.line, position.column + text.Length);
         public RangePosition rangePosition => new RangePosition(position, PositionEnd);
 
-        public Token(TokenType tokenType, string text, Position position)
+        public Token(TokenType tokenType, string text, Position position = default)
         {
             this.tokenType = tokenType;
             this.text = text;

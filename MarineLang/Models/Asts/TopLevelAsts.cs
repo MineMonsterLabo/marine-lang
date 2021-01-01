@@ -52,6 +52,16 @@ namespace MarineLang.Models.Asts
             };
         }
 
+        public static FuncDefinitionAst Create(string funcName, VariableAst[] args, StatementAst[] statementAsts)
+        {
+            return new FuncDefinitionAst
+            {
+                funcName = funcName,
+                args = args,
+                statementAsts = statementAsts,
+            };
+        }
+
         public IEnumerable<T> LookUp<T>()
         {
             return
