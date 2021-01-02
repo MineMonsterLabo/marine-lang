@@ -9,7 +9,6 @@ namespace MarineLang.LexicalAnalysis
         public IEnumerable<Token> GetTokens(string str)
         {
             var stream = IndexedCharStream.Create(str);
-            stream.MoveNext();
 
             if (stream.IsEnd == false)
                 LexerHelper.ManySkip(stream);
