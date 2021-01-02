@@ -18,7 +18,6 @@ namespace MarineLang.SyntaxAnalysis
         public IParseResult<ProgramAst> Parse(IEnumerable<Token> tokens)
         {
             var stream = TokenStream.Create(tokens.ToArray());
-            stream.MoveNext();
 
             return
                 ParserCombinator.Many(

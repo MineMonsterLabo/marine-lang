@@ -14,6 +14,7 @@ namespace MarineLang.Streams
         public Stream(T[] items)
         {
             this.items = items;
+            MoveNext();
         }
 
         public bool MoveNext()
