@@ -318,6 +318,8 @@ end", 18)]
         [InlineData("fun main() ret names[2-1] end", "bbb")]
         [InlineData("fun main() ret namess[1][0] end", "xxx")]
         [InlineData("fun main() ret hoge.names[1] end", "qqq")]
+        [InlineData("fun main() ret hoge[\"nnn\"] end", "nnn")]
+        [InlineData("fun main() ret hoge.dict[\"hoge\"] end", "fuga")]
         [InlineData("fun main() names[1] = \"SAO\" ret names[1] end", "SAO")]
         [InlineData("fun main() hoge.names[1] = \"AAA\" ret hoge.names[1] end", "AAA")]
         [InlineData("fun main() hoge.get_this().get_this().names[1] = \"AAA\" ret hoge.get_this().names[1] end", "AAA")]
@@ -329,6 +331,7 @@ end", 18)]
         [Theory]
         [InlineData("fun main() ret [0,1,3] end", new object[] { 0, 1, 3 })]
         [InlineData("fun main() ret [7;3] end", new object[] { 7, null, null })]
+        [InlineData("fun main() ret [;3] end", new object[] { null, null, null })]
         public void ArrayLiteral<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
