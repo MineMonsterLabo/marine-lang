@@ -1,10 +1,10 @@
-using MarineLang.VirtualMachines.Dumps;
-using MarineLang.VirtualMachines.Dumps.Models;
-using MarineLangUnitTest.Helper;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using MarineLang.VirtualMachines.Dumps;
+using MarineLang.VirtualMachines.Dumps.Models;
+using MarineLangUnitTest.Helper;
 using Xunit;
 
 namespace MarineLangUnitTest
