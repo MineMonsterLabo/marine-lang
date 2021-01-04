@@ -1,10 +1,10 @@
+using MarineLang.VirtualMachines.Dumps;
+using MarineLang.VirtualMachines.Dumps.Models;
+using MarineLangUnitTest.Helper;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using MarineLang.VirtualMachines.Dumps;
-using MarineLang.VirtualMachines.Dumps.Models;
-using MarineLangUnitTest.Helper;
 using Xunit;
 
 namespace MarineLangUnitTest
@@ -37,7 +37,7 @@ namespace MarineLangUnitTest
             var dumps = CreateDump(path);
             Assert.True(dumps.Count > 0);
 
-            Assert.Equal(9, dumps["hoge"].Members.Length);
+            Assert.Equal(11, dumps["hoge"].Members.Length);
             Assert.Equal(nameof(VmCreateHelper.Hoge), dumps["hoge"].Type.Name);
             Assert.Equal(typeof(VmCreateHelper.Hoge).FullName, dumps["hoge"].Type.FullName);
             Assert.Equal(typeof(VmCreateHelper.Hoge).AssemblyQualifiedName, dumps["hoge"].Type.QualifiedName);
