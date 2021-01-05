@@ -55,6 +55,11 @@ namespace MarineLangUnitTest.Helper
         {
             public bool flag;
             public string[] Names { get; } = new string[] {"rrr", "qqq"};
+            public string this[string index]
+            {
+                get => index;
+            }
+            public Dictionary<string, string> Dict => new Dictionary<string, string> { { "hoge", "fuga" } };
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
             public Hoge GetThis() => this;

@@ -30,7 +30,7 @@ namespace MarineLang.VirtualMachines.Dumps
             List<MemberDumpModel> memberList = new List<MemberDumpModel>();
             foreach (JToken member in membersData)
             {
-                MemberDumpKind kind = (MemberDumpKind) member.Value<int>("Kind");
+                MemberDumpKind kind = (MemberDumpKind)member.Value<int>("Kind");
                 switch (kind)
                 {
                     case MemberDumpKind.Field:
@@ -59,7 +59,7 @@ namespace MarineLang.VirtualMachines.Dumps
         {
             bool isIndexer = propertyData.Value<bool>("IsIndexer");
             if (isIndexer)
-                return new PropertyDumpModel(propertyData.Value<string>("Name"), DeserializeType(propertyData["Type"] as JObject), propertyData.Value<bool>("CanRead"), propertyData.Value<bool>("CanWrite"), DeserializeParameters(propertyData["IndexerParameter"] as JArray), propertyData.Value<bool>("IsStatic"));
+                return new PropertyDumpModel(propertyData.Value<string>("Name"), DeserializeType(propertyData["Type"] as JObject), propertyData.Value<bool>("CanRead"), propertyData.Value<bool>("CanWrite"), DeserializeParameters(propertyData["IndexerParameters"] as JArray), propertyData.Value<bool>("IsStatic"));
             else
                 return new PropertyDumpModel(propertyData.Value<string>("Name"), DeserializeType(propertyData["Type"] as JObject), propertyData.Value<bool>("CanRead"), propertyData.Value<bool>("CanWrite"), propertyData.Value<bool>("IsStatic"));
         }
