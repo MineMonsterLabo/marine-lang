@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using MarineLang.BuiltInTypes;
 using MarineLangUnitTest.Helper;
 using Xunit;
@@ -484,6 +482,19 @@ end
         [InlineData("fun main() ret 5/*/*+1*/+2 end", 7)]
 
         public void CommentOutTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret over_load.hoge(5,4) end", "int_int")]
+        [InlineData("fun main() ret over_load.hoge(5,4.3) end", "int_float")]
+        [InlineData("fun main() ret over_load.hoge(4.3,5) end", "float_int")]
+        [InlineData("fun main() ret over_load.hoge(5) end", "int")]
+        [InlineData("fun main() ret over_load.hoge('v') end", "int")]
+        [InlineData("fun main() ret over_load.hoge(5.3) end", "double")]
+        [InlineData("fun main() ret over_load.hoge(\"aaa\") end", "object")]
+        public void OverLoadTest(string str,string expected)
         {
             RunReturnCheck(str, expected);
         }
