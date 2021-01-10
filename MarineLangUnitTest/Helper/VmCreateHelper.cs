@@ -36,6 +36,7 @@ namespace MarineLangUnitTest.Helper
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(CreatePiyo)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Wait5)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(WaitWait5)));
+            vm.GlobalVariableRegister("over_load", new OverLoad());
             vm.GlobalVariableRegister("hoge", new Hoge());
             vm.GlobalVariableRegister("fuga", new Fuga());
             vm.GlobalVariableRegister("piyo", new Piyo());
@@ -152,6 +153,16 @@ namespace MarineLangUnitTest.Helper
         public static IEnumerator<IEnumerator<int>> WaitWait5()
         {
             yield return Wait5();
+        }
+
+        public class OverLoad
+        {
+            public string Hoge(int a, int b) => "int_int";
+            public string Hoge(int a, float b) => "int_float";
+            public string Hoge(float a, int b) => "float_int";
+            public string Hoge(object a) => "object";
+            public string Hoge(int a) => "int";
+            public string Hoge(double a) => "double";
         }
     }
 }

@@ -6,6 +6,7 @@ using MarineLang.Models;
 using MarineLang.Models.Errors;
 using MarineLang.Utils;
 using MarineLang.VirtualMachines.Attributes;
+using MarineLang.VirtualMachines.CSharpFunctionCallResolver;
 
 namespace MarineLang.VirtualMachines
 {
@@ -63,15 +64,13 @@ namespace MarineLang.VirtualMachines
         {
             var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
             var instance = vm.Pop();
-            var methodInfo =
-                instance.GetType()
-                    .GetMethod(
-                        funcName,
-                        BindingFlags.Public | BindingFlags.Instance,
-                        Type.DefaultBinder,
-                        args.Select(arg => arg.GetType()).ToArray(),
-                        new ParameterModifier[] { }
-                    );
+            var methodInfo = 
+                MethodInfoResolver.Select(
+                    instance.GetType(), 
+                    funcName, 
+                    BindingFlags.Public | BindingFlags.Instance, 
+                    args.Select(arg => arg.GetType()).ToArray()
+                );
 
             if (ClassAccessibilityChecker.CheckMember(methodInfo))
                 vm.Push(methodInfo.Invoke(instance, args));
