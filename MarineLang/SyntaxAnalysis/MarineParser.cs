@@ -597,7 +597,10 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParserCombinator.Tuple(
                     ParseToken(TokenType.LeftCurlyBracket),
-                    ParseActionVariableList(),
+                    ParserCombinator.Or(
+                        ParseToken(TokenType.OrOp).MapResult(_=>new VariableAst[] { }),
+                        ParseActionVariableList()
+                    ),
                     ParseFuncBody(TokenType.RightCurlyBracket),
                     ParseToken(TokenType.RightCurlyBracket)
                 )
