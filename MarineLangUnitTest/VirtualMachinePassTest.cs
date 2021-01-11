@@ -423,6 +423,14 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
         }
 
         [Theory]
+        [InlineData("fun main() ret {| |ret 1+2 }.invoke([]).value end")]
+        [InlineData("fun main() ret {||ret 1+2 }.invoke([]).value end")]
+        public void ActionObjectCall4(string str)
+        {
+            RunReturnCheck(str, 3);
+        }
+
+        [Theory]
         [InlineData("fun main() yield ret 4 end ", 4)]
         [InlineData("fun main() yield ret hoge() + 1 end fun hoge() yield ret 5 end ", 6)]
         public void YieldTest<T>(string str, T expected)

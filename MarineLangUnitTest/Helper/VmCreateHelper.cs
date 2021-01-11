@@ -21,7 +21,7 @@ namespace MarineLangUnitTest.Helper
             var tokenStream = TokenStream.Create(tokens);
             var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
-                return null;
+                throw new System.Exception(parseResult.Error.FullErrorMessage);
             var vm = new HighLevelVirtualMachine();
 
             vm.SetProgram(parseResult.Value);
