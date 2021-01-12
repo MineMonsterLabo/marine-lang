@@ -397,7 +397,7 @@ namespace MarineLang.SyntaxAnalysis
                         .InCompleteErrorWithPositionHead(ErrorCode.Unknown, ErrorKind.None, "letを期待してます")
                         .ExpectCanMoveNext()
                         .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonLetVarName, ErrorKind.ForceError),
-                    ParseToken(TokenType.Id)
+                    ParseVariable
                         .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonLetVarName, ErrorKind.ForceError)
                         .ExpectCanMoveNext()
                         .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonLetEqual, ErrorKind.ForceError)
@@ -410,7 +410,7 @@ namespace MarineLang.SyntaxAnalysis
                 ).Bind(pair =>
                     ParseExpr()
                     .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr, ErrorKind.ForceError)
-                    .MapResult(expr => AssignmentVariableAst.Create(pair.Item1, pair.Item2.text, expr))
+                    .MapResult(expr => AssignmentVariableAst.Create(pair.Item1, pair.Item2, expr))
                 );
         }
 

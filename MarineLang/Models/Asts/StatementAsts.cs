@@ -82,20 +82,20 @@ namespace MarineLang.Models.Asts
     public class AssignmentVariableAst : StatementAst
     {
         public ExprAst expr;
-        public string varName;
+        public VariableAst variableAst;
         public Token letToken;
 
         public override Position Start => letToken.position;
         public override Position End => expr.End;
 
-        public static AssignmentVariableAst Create(Token letToken, string varName, ExprAst expr)
+        public static AssignmentVariableAst Create(Token letToken, VariableAst variableAst, ExprAst expr)
         {
-            return new AssignmentVariableAst { letToken = letToken, varName = varName, expr = expr };
+            return new AssignmentVariableAst { letToken = letToken, variableAst = variableAst, expr = expr };
         }
 
-        public static AssignmentVariableAst Create(string varName, ExprAst expr)
+        public static AssignmentVariableAst Create(VariableAst variableAst, ExprAst expr)
         {
-            return new AssignmentVariableAst { varName = varName, expr = expr };
+            return new AssignmentVariableAst { variableAst = variableAst, expr = expr };
         }
 
         public override IEnumerable<T> LookUp<T>()
@@ -119,7 +119,7 @@ namespace MarineLang.Models.Asts
 
         public override IEnumerable<T> LookUp<T>()
         {
-            return expr.LookUp<T>();
+            return expr.LookUp<T>().Concat(variableAst.LookUp<T>());
         }
     }
 
