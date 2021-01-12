@@ -360,8 +360,8 @@ namespace MarineLang.VirtualMachines
         void AssignmentILGenerate(AssignmentVariableAst assignmentAst, int argCount, FuncScopeVariables variables)
         {
             ExprILGenerate(assignmentAst.expr, argCount, variables);
-            variables.AddLocalVariable(assignmentAst.varName);
-            marineILs.Add(new StoreIL(variables.GetVariableIdx(assignmentAst.varName)));
+            variables.AddLocalVariable(assignmentAst.variableAst.VarName);
+            marineILs.Add(new StoreIL(variables.GetVariableIdx(assignmentAst.variableAst.VarName)));
         }
 
         void FieldAssignmentILGenerate(FieldAssignmentAst fieldAssignmentAst, int argCount, FuncScopeVariables variables)

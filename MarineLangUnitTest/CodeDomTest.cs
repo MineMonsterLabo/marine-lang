@@ -28,11 +28,11 @@ namespace MarineLangUnitTest
                         VariableAst.Create("b")
                     },
                     new StatementAst[]{
-                        AssignmentVariableAst.Create("foo",ValueAst.Create(5)),
-                        AssignmentVariableAst.Create("ggg",ValueAst.Create(3.5)),
-                        AssignmentVariableAst.Create("c",ValueAst.Create('あ')),
-                        AssignmentVariableAst.Create("flag",ValueAst.Create(false)),
-                        AssignmentVariableAst.Create("aaa",ValueAst.Create("aaa")),
+                        AssignmentVariableAst.Create(VariableAst.Create("foo"),ValueAst.Create(5)),
+                        AssignmentVariableAst.Create(VariableAst.Create("ggg"),ValueAst.Create(3.5)),
+                        AssignmentVariableAst.Create(VariableAst.Create("c"),ValueAst.Create('あ')),
+                        AssignmentVariableAst.Create(VariableAst.Create("flag"),ValueAst.Create(false)),
+                        AssignmentVariableAst.Create(VariableAst.Create("aaa"),ValueAst.Create("aaa")),
                         BinaryOpAst.Create(
                             BinaryOpAst.Create(
                                 ValueAst.Create(2),
@@ -60,7 +60,7 @@ namespace MarineLangUnitTest
                             TokenType.MulOp
                         ),
                         AssignmentVariableAst.Create(
-                            "a",
+                            VariableAst.Create("a"),
                             UnaryOpAst.Create(
                                 ValueAst.Create(5),
                                 new Token(TokenType.MinusOp,"-")
@@ -151,7 +151,7 @@ namespace MarineLangUnitTest
                             ValueAst.Create(789)
                         ),
                         AssignmentVariableAst.Create(
-                            "action",
+                            VariableAst.Create("action"),
                             ActionAst.Create(
                                 new VariableAst[]{VariableAst.Create("x"), VariableAst.Create("y")},
                                 new StatementAst[]{ 

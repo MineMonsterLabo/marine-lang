@@ -56,7 +56,7 @@ namespace MarineLang.CodeDoms
 
         public static string CreateAssignmentVariable(AssignmentVariableAst assignmentVariableAst, int indent)
         {
-            var varName = assignmentVariableAst.varName;
+            var varName = assignmentVariableAst.variableAst.VarName;
             var expr = CreateExpr(assignmentVariableAst.expr, indent + 1);
             return $"let {varName} = {expr}";
         }
