@@ -6,7 +6,8 @@ namespace MarineLang.Models.Asts
 
     public interface IAst
     {
-        IEnumerable<T> LookUp<T>();
+        IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor);
+        IEnumerable<IAst> GetChildrenWithThis();
         Position Start { get; }
         Position End { get; }
     }
@@ -23,9 +24,16 @@ namespace MarineLang.Models.Asts
             return new ProgramAst { funcDefinitionAsts = funcDefinitionAsts };
         }
 
-        public IEnumerable<T> LookUp<T>()
+        public IEnumerable<T>  Accept<T>(AstVisitor<T> astVisitor)
         {
-            return funcDefinitionAsts.SelectMany(x => x.LookUp<T>());
+            return Enumerable.Repeat(astVisitor.Visit(this), 1);
+        }
+
+        public IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return 
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(funcDefinitionAsts.SelectMany(x => x.GetChildrenWithThis()));
         }
     }
 
@@ -62,11 +70,17 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public IEnumerable<T> LookUp<T>()
+        public IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return Enumerable.Repeat(astVisitor.Visit(this), 1);
+        }
+
+        public IEnumerable<IAst> GetChildrenWithThis()
         {
             return
-                args.SelectMany(x => x.LookUp<T>())
-                .Concat(statementAsts.SelectMany(x => x.LookUp<T>()));
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(args.SelectMany(x => x.GetChildrenWithThis()))
+                .Concat(statementAsts.SelectMany(x => x.GetChildrenWithThis()));
         }
     }
 }
