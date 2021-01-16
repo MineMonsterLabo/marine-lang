@@ -66,6 +66,11 @@ namespace MarineLang.Models.Asts
         {
             return this as UnaryOpAst;
         }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
     }
 
     public class ValueAst : ExprAst
@@ -87,10 +92,14 @@ namespace MarineLang.Models.Asts
             return new ValueAst { value = value};
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            if (this is T t)
-                yield return t;
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return Enumerable.Empty<IAst>().Append(this);
         }
     }
 
@@ -113,12 +122,6 @@ namespace MarineLang.Models.Asts
             return new VariableAst { varToken = new Token(TokenType.Id, name) };
         }
 
-        public override IEnumerable<T> LookUp<T>()
-        {
-            if (this is T t)
-                yield return t;
-        }
-
         public class Comparer : IEqualityComparer<VariableAst>
         {
             public bool Equals(VariableAst x, VariableAst y)
@@ -130,6 +133,16 @@ namespace MarineLang.Models.Asts
             {
                 return obj.VarName.GetHashCode();
             }
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return Enumerable.Empty<IAst>().Append(this);
         }
     }
 
@@ -153,9 +166,17 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return leftExpr.LookUp<T>().Concat(rightExpr.LookUp<T>());
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(leftExpr.GetChildrenWithThis())
+                .Concat(rightExpr.GetChildrenWithThis());
         }
     }
 
@@ -177,9 +198,16 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return expr.LookUp<T>();
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(expr.GetChildrenWithThis());
         }
     }
 
@@ -201,9 +229,17 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return instanceExpr.LookUp<T>().Concat(instancefuncCallAst.LookUp<T>());
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(instanceExpr.GetChildrenWithThis())
+                .Concat(instancefuncCallAst.GetChildrenWithThis());
         }
     }
 
@@ -225,9 +261,17 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return instanceExpr.LookUp<T>();
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(instanceExpr.GetChildrenWithThis())
+                .Concat(variableAst.GetChildrenWithThis());
         }
     }
 
@@ -257,9 +301,16 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return instanceExpr.LookUp<T>();
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(instanceExpr.GetChildrenWithThis());
         }
     }
 
@@ -307,12 +358,18 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
         {
             return
-                conditionExpr.LookUp<T>()
-                .Concat(thenStatements.SelectMany(x => x.LookUp<T>()))
-                .Concat(elseStatements.SelectMany(x => x.LookUp<T>()));
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(conditionExpr.GetChildrenWithThis())
+                .Concat(thenStatements.SelectMany(x => x.GetChildrenWithThis()))
+                .Concat(elseStatements.SelectMany(x => x.GetChildrenWithThis()));
         }
     }
 
@@ -346,9 +403,17 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return instanceExpr.LookUp<T>().Concat(indexExpr.LookUp<T>());
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(instanceExpr.GetChildrenWithThis())
+                .Concat(indexExpr.GetChildrenWithThis());
         }
     }
 
@@ -386,9 +451,16 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return arrayLiteralExprs.exprAsts.SelectMany(x => x.LookUp<T>());
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(arrayLiteralExprs.exprAsts.SelectMany(x => x.GetChildrenWithThis()));
         }
     }
 
@@ -423,11 +495,17 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
         {
             return
-                args.SelectMany(x => x.LookUp<T>())
-                .Concat(statementAsts.SelectMany(x => x.LookUp<T>()));
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(args.SelectMany(x => x.GetChildrenWithThis()))
+                .Concat(statementAsts.SelectMany(x => x.GetChildrenWithThis()));
         }
     }
 
@@ -452,9 +530,16 @@ namespace MarineLang.Models.Asts
             return new FuncCallAst { funcNameToken = new Token(TokenType.Id, funcName), args = args };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return args.SelectMany(x => x.LookUp<T>());
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(args.SelectMany(x => x.GetChildrenWithThis()));
         }
     }
 }

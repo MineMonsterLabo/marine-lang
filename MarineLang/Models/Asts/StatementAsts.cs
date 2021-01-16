@@ -52,7 +52,12 @@ namespace MarineLang.Models.Asts
             return this as YieldAst;
         }
 
-        public abstract IEnumerable<T> LookUp<T>();
+        public virtual IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return Enumerable.Empty<T>().Append(astVisitor.Visit(this));
+        }
+
+        public abstract IEnumerable<IAst> GetChildrenWithThis();
     }
 
     public class ReturnAst : StatementAst
@@ -73,9 +78,16 @@ namespace MarineLang.Models.Asts
             return new ReturnAst { expr = expr };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return expr.LookUp<T>();
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(expr.GetChildrenWithThis());
         }
     }
 
@@ -98,9 +110,17 @@ namespace MarineLang.Models.Asts
             return new AssignmentVariableAst { variableAst = variableAst, expr = expr };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return expr.LookUp<T>();
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(variableAst.GetChildrenWithThis())
+                .Concat(expr.GetChildrenWithThis());
         }
     }
 
@@ -117,9 +137,17 @@ namespace MarineLang.Models.Asts
             return new ReAssignmentVariableAst { variableAst = variableAst, expr = expr };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return expr.LookUp<T>().Concat(variableAst.LookUp<T>());
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(variableAst.GetChildrenWithThis())
+                .Concat(expr.GetChildrenWithThis());
         }
     }
 
@@ -136,11 +164,17 @@ namespace MarineLang.Models.Asts
             return new ReAssignmentIndexerAst { getIndexerAst = getIndexerAst, assignmentExpr = assignmentExpr };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
         {
             return
-                getIndexerAst.LookUp<T>()
-                .Concat(assignmentExpr.LookUp<T>());
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(getIndexerAst.GetChildrenWithThis())
+                .Concat(assignmentExpr.GetChildrenWithThis());
         }
     }
 
@@ -156,11 +190,17 @@ namespace MarineLang.Models.Asts
             return new FieldAssignmentAst { instanceFieldAst= instanceFieldAst, expr = expr };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
         {
             return
-                expr.LookUp<T>()
-                .Concat(instanceFieldAst.LookUp<T>());
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(instanceFieldAst.GetChildrenWithThis())
+                .Concat(expr.GetChildrenWithThis());
         }
     }
 
@@ -194,11 +234,17 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
         {
             return
-                conditionExpr.LookUp<T>()
-                .Concat(statements.SelectMany(x_ => x_.LookUp<T>()));
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(conditionExpr.GetChildrenWithThis())
+                .Concat(statements.SelectMany(x => x.GetChildrenWithThis()));
         }
     }
 
@@ -255,14 +301,20 @@ namespace MarineLang.Models.Asts
             };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
         {
             return
-                initVariable.LookUp<T>()
-                .Concat(initExpr.LookUp<T>())
-                .Concat(maxValueExpr.LookUp<T>())
-                .Concat(addValueExpr.LookUp<T>())
-                .Concat(statements.SelectMany(x => x.LookUp<T>()));
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(initVariable.GetChildrenWithThis())
+                .Concat(initExpr.GetChildrenWithThis())
+                .Concat(maxValueExpr.GetChildrenWithThis())
+                .Concat(addValueExpr.GetChildrenWithThis())
+                .Concat(statements.SelectMany(x => x.GetChildrenWithThis()));
         }
     }
 
@@ -283,9 +335,15 @@ namespace MarineLang.Models.Asts
             return new YieldAst { };
         }
 
-        public override IEnumerable<T> LookUp<T>()
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return Enumerable.Empty<T>();
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst>  GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this);
         }
     }
 }
