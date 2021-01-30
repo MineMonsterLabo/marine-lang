@@ -75,8 +75,7 @@ namespace MarineLang.Models.Asts
 
     public class ValueAst : ExprAst
     {
-        public override Position Start => token.position;
-        public override Position End => token.PositionEnd;
+        public override RangePosition Range => new RangePosition(token.position, token.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public object value;
@@ -89,7 +88,7 @@ namespace MarineLang.Models.Asts
 
         public static ValueAst Create(object value)
         {
-            return new ValueAst { value = value};
+            return new ValueAst { value = value };
         }
 
         public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
@@ -106,8 +105,7 @@ namespace MarineLang.Models.Asts
     public class VariableAst : ExprAst
     {
         public string VarName => varToken.text;
-        public override Position Start => varToken.position;
-        public override Position End => varToken.PositionEnd;
+        public override RangePosition Range => new RangePosition(varToken.position, varToken.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public Token varToken;
@@ -152,8 +150,7 @@ namespace MarineLang.Models.Asts
         public ExprAst leftExpr;
         public ExprAst rightExpr;
 
-        public override Position Start => leftExpr.Start;
-        public override Position End => rightExpr.End;
+        public override RangePosition Range => new RangePosition(leftExpr.Range.Start, rightExpr.Range.End);
         public override ExprPriority ExprPriority => ExprPriorityHelpr.GetBinaryOpPriority(opKind);
 
         public static BinaryOpAst Create(ExprAst leftExpr, ExprAst rightExpr, TokenType opKind)
@@ -185,8 +182,7 @@ namespace MarineLang.Models.Asts
         public Token opToken;
         public ExprAst expr;
 
-        public override Position Start => opToken.position;
-        public override Position End => expr.End;
+        public override RangePosition Range => new RangePosition(opToken.position, expr.Range.End);
         public override ExprPriority ExprPriority => ExprPriority.Unary;
 
         public static UnaryOpAst Create(ExprAst expr, Token opToken)
@@ -216,8 +212,7 @@ namespace MarineLang.Models.Asts
         public ExprAst instanceExpr;
         public FuncCallAst instancefuncCallAst;
 
-        public override Position Start => instanceExpr.Start;
-        public override Position End => instancefuncCallAst.End;
+        public override RangePosition Range => new RangePosition(instanceExpr.Range.Start, instancefuncCallAst.Range.End);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public static InstanceFuncCallAst Create(ExprAst instanceExpr, FuncCallAst instancefuncCallAst)
@@ -248,8 +243,7 @@ namespace MarineLang.Models.Asts
         public ExprAst instanceExpr;
         public VariableAst variableAst;
 
-        public override Position Start => instanceExpr.Start;
-        public override Position End => variableAst.End;
+        public override RangePosition Range => new RangePosition(instanceExpr.Range.Start, variableAst.Range.End);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public static InstanceFieldAst Create(ExprAst instanceExpr, VariableAst variableAst)
@@ -280,8 +274,7 @@ namespace MarineLang.Models.Asts
         public Token awaitToken;
         public ExprAst instanceExpr;
 
-        public override Position Start => awaitToken.position;
-        public override Position End => instanceExpr.End;
+        public override RangePosition Range => new RangePosition(awaitToken.position, instanceExpr.Range.End);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public static AwaitAst Create(Token awaitToken, ExprAst instanceExpr)
@@ -322,8 +315,7 @@ namespace MarineLang.Models.Asts
         public StatementAst[] elseStatements;
         public Token endRightCurlyBracket;
 
-        public override Position Start => ifToken.position;
-        public override Position End => endRightCurlyBracket.PositionEnd;
+        public override RangePosition Range => new RangePosition(ifToken.position, endRightCurlyBracket.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public static IfExprAst Create(
@@ -380,8 +372,7 @@ namespace MarineLang.Models.Asts
         public ExprAst instanceExpr;
         public ExprAst indexExpr;
 
-        public override Position Start => instanceExpr.Start;
-        public override Position End => rightBracketToken.PositionEnd;
+        public override RangePosition Range => new RangePosition(instanceExpr.Range.Start, rightBracketToken.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public static GetIndexerAst Create(ExprAst expr, ExprAst indexExpr, Token rightBracketToken)
@@ -423,8 +414,7 @@ namespace MarineLang.Models.Asts
         public Token rightBracketToken;
         public ArrayLiteralExprs arrayLiteralExprs;
 
-        public override Position Start => leftBracketToken.position;
-        public override Position End => rightBracketToken.PositionEnd;
+        public override RangePosition Range => new RangePosition(leftBracketToken.position, rightBracketToken.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public class ArrayLiteralExprs
@@ -471,8 +461,7 @@ namespace MarineLang.Models.Asts
         public Token leftCurlyBracketToken;
         public Token rightCurlyBracketToken;
 
-        public override Position Start => leftCurlyBracketToken.position;
-        public override Position End => rightCurlyBracketToken.PositionEnd;
+        public override RangePosition Range => new RangePosition(leftCurlyBracketToken.position, rightCurlyBracketToken.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public static ActionAst Create(Token leftCurlyBracketToken, VariableAst[] args, StatementAst[] statementAsts, Token rightCurlyBracketToken)
@@ -516,8 +505,7 @@ namespace MarineLang.Models.Asts
         public Token rightParen;
 
         public string FuncName => funcNameToken.text;
-        public override Position Start => funcNameToken.position;
-        public override Position End => rightParen.PositionEnd;
+        public override RangePosition Range => new RangePosition(funcNameToken.position, rightParen.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public static FuncCallAst Create(Token funcNameToken, ExprAst[] args, Token rightParen)

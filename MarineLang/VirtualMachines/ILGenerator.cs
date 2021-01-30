@@ -185,7 +185,11 @@ namespace MarineLang.VirtualMachines
                 var ast =
                     InstanceFuncCallAst.Create(
                         VariableAst.Create(new Token(default, "_action", default)),
-                        FuncCallAst.Create(new Token(default, "get", default), new[] { ValueAst.Create(captureIdx.Value, default) }, default)
+                        FuncCallAst.Create(
+                            new Token(default, "get", default),
+                            new[] { ValueAst.Create(captureIdx.Value, default) },
+                            new Token(default, "")
+                        )
                     );
                 ExprILGenerate(ast, argCount, variables);
             }
@@ -237,7 +241,7 @@ namespace MarineLang.VirtualMachines
             foreach (var arg in funcCallAst.args)
                 ExprILGenerate(arg, argCount, variables);
             marineILs.Add(
-                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length, new ILDebugInfo(funcCallAst.Start))
+                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length, new ILDebugInfo(funcCallAst.Range.Start))
             );
         }
 
@@ -247,7 +251,7 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(
                 new InstanceCSharpFieldLoadIL(
                     instanceFieldAst.variableAst.VarName,
-                    new ILDebugInfo(instanceFieldAst.variableAst.Start)
+                    new ILDebugInfo(instanceFieldAst.variableAst.Range.Start)
                 )
             );
         }
@@ -266,7 +270,7 @@ namespace MarineLang.VirtualMachines
             foreach (var exprAst in arrayLiteralAst.arrayLiteralExprs.exprAsts)
                 ExprILGenerate(exprAst, argCount, variables);
             marineILs.Add(new CreateArrayIL(
-                arrayLiteralAst.arrayLiteralExprs.exprAsts.Length, 
+                arrayLiteralAst.arrayLiteralExprs.exprAsts.Length,
                 arrayLiteralAst.arrayLiteralExprs.size
             ));
         }
@@ -296,7 +300,7 @@ namespace MarineLang.VirtualMachines
                                 default
                             )
                         },
-                        default
+                        new Token(default, "")
                     )
                 );
             ExprILGenerate(ast, argCount, variables);
@@ -337,7 +341,7 @@ namespace MarineLang.VirtualMachines
                        FuncCallAst.Create(
                            new Token(default, "set", default),
                            new[] { ValueAst.Create(captureIdx.Value, default), reAssignmentAst.expr },
-                           default
+                           new Token(default, "")
                        )
                    );
                 ExprILGenerate(ast, argCount, variables);
@@ -371,7 +375,7 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(
                 new InstanceCSharpFieldStoreIL(
                     fieldAssignmentAst.instanceFieldAst.variableAst.VarName,
-                    new ILDebugInfo(fieldAssignmentAst.instanceFieldAst.variableAst.Start)
+                    new ILDebugInfo(fieldAssignmentAst.instanceFieldAst.variableAst.Range.Start)
                 )
             );
         }

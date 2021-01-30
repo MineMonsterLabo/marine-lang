@@ -8,16 +8,17 @@ namespace MarineLang.Models.Asts
     {
         IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor);
         IEnumerable<IAst> GetChildrenWithThis();
-        Position Start { get; }
-        Position End { get; }
+        RangePosition Range { get; }
     }
 
     public class ProgramAst : IAst
     {
         public FuncDefinitionAst[] funcDefinitionAsts;
 
-        public Position Start => funcDefinitionAsts.Length == 0 ? new Position() : funcDefinitionAsts[0].Start;
-        public Position End => funcDefinitionAsts.Length == 0 ? new Position() : funcDefinitionAsts.Last().End;
+        public RangePosition Range =>
+            funcDefinitionAsts.Length == 0 ?
+                new RangePosition() :
+                new RangePosition(funcDefinitionAsts[0].Range.Start, funcDefinitionAsts.Last().Range.End);
 
         public static ProgramAst Create(FuncDefinitionAst[] funcDefinitionAsts)
         {
@@ -45,8 +46,7 @@ namespace MarineLang.Models.Asts
         public StatementAst[] statementAsts;
         Token endToken;
 
-        public Position Start => funToken.position;
-        public Position End => endToken.PositionEnd;
+        public RangePosition Range => new RangePosition(funToken.position, endToken.PositionEnd);
 
         public static FuncDefinitionAst Create(Token funToken, string funcName, VariableAst[] args, StatementAst[] statementAsts, Token endToken)
         {

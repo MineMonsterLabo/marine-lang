@@ -5,8 +5,7 @@ namespace MarineLang.Models.Asts
 {
     public abstract class StatementAst : IAst
     {
-        public abstract Position Start { get; }
-        public abstract Position End { get; }
+        public abstract RangePosition Range { get; }
 
         public ExprAst GetExprAst()
         {
@@ -65,8 +64,7 @@ namespace MarineLang.Models.Asts
         public Token retToken;
         public ExprAst expr;
 
-        public override Position Start => retToken.position;
-        public override Position End => expr.End;
+        public override RangePosition Range => new RangePosition(retToken.position, expr.Range.End);
 
         public static ReturnAst Create(Token retToken, ExprAst expr)
         {
@@ -97,8 +95,7 @@ namespace MarineLang.Models.Asts
         public VariableAst variableAst;
         public Token letToken;
 
-        public override Position Start => letToken.position;
-        public override Position End => expr.End;
+        public override RangePosition Range => new RangePosition(letToken.position, expr.Range.End);
 
         public static AssignmentVariableAst Create(Token letToken, VariableAst variableAst, ExprAst expr)
         {
@@ -129,8 +126,7 @@ namespace MarineLang.Models.Asts
         public VariableAst variableAst;
         public ExprAst expr;
 
-        public override Position Start => variableAst.Start;
-        public override Position End => expr.End;
+        public override RangePosition Range => new RangePosition(variableAst.Range.Start, expr.Range.End);
 
         public static ReAssignmentVariableAst Create(VariableAst variableAst, ExprAst expr)
         {
@@ -156,8 +152,8 @@ namespace MarineLang.Models.Asts
         public GetIndexerAst getIndexerAst;
         public ExprAst assignmentExpr;
 
-        public override Position Start => getIndexerAst.Start;
-        public override Position End => assignmentExpr.End;
+        public override RangePosition Range
+            => new RangePosition(getIndexerAst.Range.Start, assignmentExpr.Range.End);
 
         public static ReAssignmentIndexerAst Create(GetIndexerAst getIndexerAst, ExprAst assignmentExpr)
         {
@@ -182,12 +178,12 @@ namespace MarineLang.Models.Asts
     {
         public ExprAst expr;
         public InstanceFieldAst instanceFieldAst;
-        public override Position Start => instanceFieldAst.Start;
-        public override Position End => expr.End;
+
+        public override RangePosition Range => new RangePosition(instanceFieldAst.Range.Start, expr.Range.End);
 
         public static FieldAssignmentAst Create(InstanceFieldAst instanceFieldAst, ExprAst expr)
         {
-            return new FieldAssignmentAst { instanceFieldAst= instanceFieldAst, expr = expr };
+            return new FieldAssignmentAst { instanceFieldAst = instanceFieldAst, expr = expr };
         }
 
         public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
@@ -211,8 +207,7 @@ namespace MarineLang.Models.Asts
         public StatementAst[] statements;
         public Token endRightCurlyBracket;
 
-        public override Position Start => whileToken.position;
-        public override Position End => endRightCurlyBracket.PositionEnd;
+        public override RangePosition Range => new RangePosition(whileToken.position, endRightCurlyBracket.PositionEnd);
 
         public static WhileAst Create(Token whileToken, ExprAst conditionExpr, StatementAst[] statements, Token endRightCurlyBracket)
         {
@@ -258,8 +253,8 @@ namespace MarineLang.Models.Asts
         public StatementAst[] statements;
         public Token endRightCurlyBracket;
 
-        public override Position Start => forToken.position;
-        public override Position End => endRightCurlyBracket.PositionEnd;
+        public override RangePosition Range
+            => new RangePosition(forToken.position, endRightCurlyBracket.PositionEnd);
 
         public static ForAst Create(
             Token forToken,
@@ -322,8 +317,7 @@ namespace MarineLang.Models.Asts
     {
         public Token yieldToken;
 
-        public override Position Start => yieldToken.position;
-        public override Position End => yieldToken.PositionEnd;
+        public override RangePosition Range => new RangePosition(yieldToken.position, yieldToken.PositionEnd);
 
         public static YieldAst Create(Token yieldToken)
         {
@@ -340,7 +334,7 @@ namespace MarineLang.Models.Asts
             return base.Accept(astVisitor).Append(astVisitor.Visit(this));
         }
 
-        public override IEnumerable<IAst>  GetChildrenWithThis()
+        public override IEnumerable<IAst> GetChildrenWithThis()
         {
             return
                 Enumerable.Empty<IAst>().Append(this);
