@@ -40,8 +40,8 @@ end", 2, 1, 7, 4)]
 
             Assert.False(result.IsError);
             Assert.NotNull(result.Value);
-            Assert.Equal(new Position(startLine, startColumn), result.Value.Start);
-            Assert.Equal(new Position(endLine, endColumn), result.Value.End);
+            Assert.Equal(new Position(startLine, startColumn), result.Value.Range.Start);
+            Assert.Equal(new Position(endLine, endColumn), result.Value.Range.End);
         }
     }
 }
