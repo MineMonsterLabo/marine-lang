@@ -33,7 +33,7 @@ namespace MarineLangUnitTest
                         AssignmentVariableAst.Create(VariableAst.Create("c"),ValueAst.Create('あ')),
                         AssignmentVariableAst.Create(VariableAst.Create("flag"),ValueAst.Create(false)),
                         AssignmentVariableAst.Create(VariableAst.Create("aaa"),ValueAst.Create("aaa")),
-                        BinaryOpAst.Create(
+                        ExprStatementAst.Create(BinaryOpAst.Create(
                             BinaryOpAst.Create(
                                 ValueAst.Create(2),
                                 ValueAst.Create(3),
@@ -45,8 +45,8 @@ namespace MarineLangUnitTest
                                 TokenType.DivOp
                             ),
                             TokenType.PlusOp
-                        ),
-                         BinaryOpAst.Create(
+                        )),
+                        ExprStatementAst.Create(BinaryOpAst.Create(
                             BinaryOpAst.Create(
                                 ValueAst.Create(5),
                                 ValueAst.Create(1),
@@ -58,7 +58,7 @@ namespace MarineLangUnitTest
                                 TokenType.PlusOp
                             ),
                             TokenType.MulOp
-                        ),
+                        )),
                         AssignmentVariableAst.Create(
                             VariableAst.Create("a"),
                             UnaryOpAst.Create(
@@ -66,7 +66,7 @@ namespace MarineLangUnitTest
                                 new Token(TokenType.MinusOp,"-")
                             )
                         ),
-                        InstanceFuncCallAst.Create(
+                        ExprStatementAst.Create(InstanceFuncCallAst.Create(
                              UnaryOpAst.Create(
                                 VariableAst.Create("hoge"),
                                 new Token(TokenType.MinusOp,"-")
@@ -75,31 +75,31 @@ namespace MarineLangUnitTest
                                  "to_string",
                                  new ExprAst[]{ ValueAst.Create(7) , ValueAst.Create(8) }
                             )
-                        ),
-                        UnaryOpAst.Create(
+                        )),
+                        ExprStatementAst.Create(UnaryOpAst.Create(
                             BinaryOpAst.Create(
                                 ValueAst.Create(4),
                                 ValueAst.Create(7),
                                 TokenType.PlusOp
                             ),
                             new Token(TokenType.MinusOp, "-")
-                        ),
-                        InstanceFieldAst.Create(
+                        )),
+                        ExprStatementAst.Create(InstanceFieldAst.Create(
                             ValueAst.Create(777),
                             VariableAst.Create("hoge")
-                        ),
-                        ArrayLiteralAst.Create(
+                        )),
+                        ExprStatementAst.Create(ArrayLiteralAst.Create(
                             new ArrayLiteralAst.ArrayLiteralExprs{
                                 exprAsts = new ExprAst[]{ ValueAst.Create(1), ValueAst.Create(2) }
                             }
-                        ),
-                        ArrayLiteralAst.Create(
+                        )),
+                        ExprStatementAst.Create(ArrayLiteralAst.Create(
                             new ArrayLiteralAst.ArrayLiteralExprs{
                                 exprAsts = new ExprAst[]{ ValueAst.Create(1)},
                                 size = 5
                             }
-                        ),
-                        GetIndexerAst.Create(
+                        )),
+                        ExprStatementAst.Create(GetIndexerAst.Create(
                             BinaryOpAst.Create(
                                 VariableAst.Create("fuga"),
                                 ValueAst.Create(1),
@@ -110,22 +110,22 @@ namespace MarineLangUnitTest
                                 ValueAst.Create(7),
                                 TokenType.PlusOp
                             )
-                        ),
-                        AwaitAst.Create(ValueAst.Create(123)),
-                        IfExprAst.Create(
+                        )),
+                        ExprStatementAst.Create(AwaitAst.Create(ValueAst.Create(123))),
+                        ExprStatementAst.Create(IfExprAst.Create(
                             IfExprAst.Create(
                                 ValueAst.Create(true),
-                                new StatementAst[]{ ValueAst.Create(true)},
+                                new StatementAst[]{ ExprStatementAst.Create(ValueAst.Create(true))},
                                 new StatementAst[]{ }
                             ),
-                            new StatementAst[]{ ValueAst.Create(false) },
+                            new StatementAst[]{ ExprStatementAst.Create(ValueAst.Create(false)) },
                             new StatementAst[]{ }
-                        ),
-                        IfExprAst.Create(
+                        )),
+                        ExprStatementAst.Create(IfExprAst.Create(
                             ValueAst.Create(false),
-                            new StatementAst[]{ ValueAst.Create(1)},
-                            new StatementAst[]{ ValueAst.Create(2)}
-                        ),
+                            new StatementAst[]{ ExprStatementAst.Create(ValueAst.Create(1))},
+                            new StatementAst[]{ ExprStatementAst.Create(ValueAst.Create(2))}
+                        )),
                         YieldAst.Create(),
                         ReturnAst.Create(VariableAst.Create("hhh")),
                         FieldAssignmentAst.Create(
@@ -154,12 +154,12 @@ namespace MarineLangUnitTest
                             VariableAst.Create("action"),
                             ActionAst.Create(
                                 new VariableAst[]{VariableAst.Create("x"), VariableAst.Create("y")},
-                                new StatementAst[]{ 
-                                    BinaryOpAst.Create(
+                                new StatementAst[]{
+                                    ExprStatementAst.Create(BinaryOpAst.Create(
                                         VariableAst.Create("x"),
                                         VariableAst.Create("y"),
                                         TokenType.PlusOp
-                                    ) 
+                                    ))
                                 }
                             )
                         ),
@@ -169,8 +169,8 @@ namespace MarineLangUnitTest
                                 ValueAst.Create(5),
                                 TokenType.GreaterEqualOp
                             ),
-                            new StatementAst[]{ 
-                                FuncCallAst.Create("print",new ExprAst[]{ ValueAst.Create(123)})
+                            new StatementAst[]{
+                               ExprStatementAst.Create( FuncCallAst.Create("print",new ExprAst[]{ ValueAst.Create(123)}))
                             }
                         ),
                         ForAst.Create(

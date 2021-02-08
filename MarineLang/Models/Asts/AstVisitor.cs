@@ -5,6 +5,7 @@
         public virtual T Visit(ProgramAst ast) { return default; }
         public virtual T Visit(FuncDefinitionAst ast) { return default; }
         public virtual T Visit(StatementAst ast) { return default; }
+        public virtual T Visit(ExprStatementAst ast) { return default; }
         public virtual T Visit(ReturnAst ast) { return default; }
         public virtual T Visit(AssignmentVariableAst ast) { return default; }
         public virtual T Visit(ReAssignmentVariableAst ast) { return default; }

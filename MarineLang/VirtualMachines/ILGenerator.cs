@@ -103,9 +103,9 @@ namespace MarineLang.VirtualMachines
                 ReturnILGenerate(statementAst.GetReturnAst(), argCount, variables);
                 return true;
             }
-            else if (statementAst.GetExprAst() != null)
+            else if (statementAst.GetExprStatementAst() != null)
             {
-                ExprILGenerate(statementAst.GetExprAst(), argCount, variables);
+                ExprILGenerate(statementAst.GetExprStatementAst().expr, argCount, variables);
                 marineILs.Add(new PopIL());
             }
             else if (statementAst.GetReAssignmentVariableAst() != null)
@@ -221,9 +221,9 @@ namespace MarineLang.VirtualMachines
             if (statementAsts.Length > 0)
             {
                 var lastStatementAst = statementAsts.Last();
-                if (lastStatementAst.GetExprAst() != null)
+                if (lastStatementAst.GetExprStatementAst() != null)
                 {
-                    ExprILGenerate(lastStatementAst.GetExprAst(), argCount, variables);
+                    ExprILGenerate(lastStatementAst.GetExprStatementAst().expr, argCount, variables);
                     return;
                 }
                 StatementILGenerate(lastStatementAst, argCount, variables);

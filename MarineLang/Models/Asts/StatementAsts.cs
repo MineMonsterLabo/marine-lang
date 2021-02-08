@@ -7,9 +7,9 @@ namespace MarineLang.Models.Asts
     {
         public abstract RangePosition Range { get; }
 
-        public ExprAst GetExprAst()
+        public ExprStatementAst GetExprStatementAst()
         {
-            return this as ExprAst;
+            return this as ExprStatementAst;
         }
 
         public ReturnAst GetReturnAst()
@@ -57,6 +57,30 @@ namespace MarineLang.Models.Asts
         }
 
         public abstract IEnumerable<IAst> GetChildrenWithThis();
+    }
+
+    public class ExprStatementAst : StatementAst
+    {
+        public ExprAst expr;
+
+        public override RangePosition Range => expr.Range;
+
+        public static ExprStatementAst Create(ExprAst expr)
+        {
+            return new ExprStatementAst { expr = expr };
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return 
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(expr.GetChildrenWithThis());
+        }
     }
 
     public class ReturnAst : StatementAst
