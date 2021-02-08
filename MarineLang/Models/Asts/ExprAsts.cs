@@ -3,8 +3,9 @@ using System.Linq;
 
 namespace MarineLang.Models.Asts
 {
-    public abstract class ExprAst : StatementAst
+    public abstract class ExprAst : IAst
     {
+        public abstract RangePosition Range { get; }
         public abstract ExprPriority ExprPriority { get; }
 
         public FuncCallAst GetFuncCallAst()
@@ -67,10 +68,12 @@ namespace MarineLang.Models.Asts
             return this as UnaryOpAst;
         }
 
-        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        public virtual IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
-            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+            return Enumerable.Empty<T>().Append(astVisitor.Visit(this));
         }
+
+        public abstract IEnumerable<IAst> GetChildrenWithThis();
     }
 
     public class ValueAst : ExprAst

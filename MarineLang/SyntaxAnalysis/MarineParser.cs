@@ -111,7 +111,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParseFieldAssignment().Try(),
                     ParseReAssignmentVariable().Try(),
                     ParseReAssignmentIndexer().Try(),
-                    ParseExpr().Try()
+                    ParseExpr().MapResult(ExprStatementAst.Create).Try()
                 );
         }
 

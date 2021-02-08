@@ -34,8 +34,8 @@ namespace MarineLang.CodeDoms
             var text = "";
             if (statementAst.GetAssignmentVariableAst() != null)
                 text = CreateAssignmentVariable(statementAst.GetAssignmentVariableAst(), indent);
-            else if (statementAst.GetExprAst() != null)
-                text = CreateExpr(statementAst.GetExprAst(), indent);
+            else if (statementAst.GetExprStatementAst() != null)
+                text = CreateExpr(statementAst.GetExprStatementAst().expr, indent);
             else if (statementAst.GetYieldAst() != null)
                 text = CreateYield(statementAst.GetYieldAst());
             else if (statementAst.GetReturnAst() != null)
