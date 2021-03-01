@@ -72,8 +72,10 @@ namespace MarineLang.VirtualMachines
                     args.Select(arg => arg.GetType()).ToArray()
                 );
 
+            var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length)).ToArray();
+
             if (ClassAccessibilityChecker.CheckMember(methodInfo))
-                vm.Push(methodInfo.Invoke(instance, args));
+                vm.Push(methodInfo.Invoke(instance, args2));
             else
                 throw new MarineRuntimeException(
                     new RuntimeErrorInfo(
