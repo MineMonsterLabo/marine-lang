@@ -46,6 +46,11 @@ namespace MarineLang.Models.Asts
             return this as ForAst;
         }
 
+        public ForEachAst GetForEachAst()
+        {
+            return this as ForEachAst;
+        }
+
         public YieldAst GetYieldAst()
         {
             return this as YieldAst;
@@ -333,6 +338,64 @@ namespace MarineLang.Models.Asts
                 .Concat(initExpr.GetChildrenWithThis())
                 .Concat(maxValueExpr.GetChildrenWithThis())
                 .Concat(addValueExpr.GetChildrenWithThis())
+                .Concat(statements.SelectMany(x => x.GetChildrenWithThis()));
+        }
+    }
+
+    public class ForEachAst : StatementAst
+    {
+        public Token forEachToken;
+        public VariableAst variable;
+        public ExprAst expr;
+        public StatementAst[] statements;
+        public Token endRightCurlyBracket;
+
+        public override RangePosition Range
+            => new RangePosition(forEachToken.position, endRightCurlyBracket.PositionEnd);
+
+        public static ForEachAst Create(
+            Token forEachToken,
+            VariableAst variable,
+            ExprAst expr,
+            StatementAst[] statements,
+            Token endRightCurlyBracket
+        )
+        {
+            return new ForEachAst
+            {
+                forEachToken = forEachToken,
+                variable = variable,
+                expr = expr,
+                statements = statements,
+                endRightCurlyBracket = endRightCurlyBracket
+            };
+        }
+
+        public static ForEachAst Create(
+            VariableAst variable,
+            ExprAst expr,
+            StatementAst[] statements
+        )
+        {
+            return new ForEachAst
+            {
+                variable = variable,
+                expr = expr,
+                statements = statements
+            };
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(variable.GetChildrenWithThis())
+                .Concat(expr.GetChildrenWithThis())
                 .Concat(statements.SelectMany(x => x.GetChildrenWithThis()));
         }
     }

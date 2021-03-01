@@ -43,6 +43,8 @@
         Return,
         While,
         For,
+        ForEach,
+        In,
         UnKnown,
     }
 
@@ -122,6 +124,10 @@
                     return "while";
                 case TokenType.For:
                     return "for";
+                case TokenType.ForEach:
+                    return "foreach";
+                case TokenType.In:
+                    return "in";
             }
             return null;
         }
