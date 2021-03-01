@@ -506,5 +506,13 @@ end
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData("fun main() let sum = 0 foreach val in [1,2,3] { sum = sum + val } ret sum end", 6)]
+        
+        public void ForeachTest(string str, int expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
