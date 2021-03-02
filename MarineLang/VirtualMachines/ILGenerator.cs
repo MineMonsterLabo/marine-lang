@@ -120,6 +120,8 @@ namespace MarineLang.VirtualMachines
                 WhileILGenerate(statementAst.GetWhileAst(), argCount, variables);
             else if (statementAst.GetForAst() != null)
                 ForILGenerate(statementAst.GetForAst(), argCount, variables);
+            else if (statementAst.GetForEachAst() != null)
+                ForEachILGenerate(statementAst.GetForEachAst(), argCount, variables);
             else if (statementAst.GetYieldAst() != null)
                 marineILs.Add(new YieldIL());
             return false;
@@ -416,6 +418,29 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(new LoadIL(addVarIdx));
             marineILs.Add(new BinaryOpIL(TokenType.PlusOp));
             marineILs.Add(new StoreIL(countVarIdx));
+            marineILs.Add(jumpIL);
+            marineILs[jumpFalseILInsertIndex] = new JumpFalseIL(marineILs.Count);
+        }
+
+        void ForEachILGenerate(ForEachAst forEachAst, int argCount, FuncScopeVariables variables)
+        {
+            variables.AddLocalVariable(forEachAst.variable.VarName);
+
+            var currentVarIdx = variables.GetVariableIdx(forEachAst.variable.VarName);
+            var iterVarIdx = variables.CreateUnnamedLocalVariableIdx();
+            ExprILGenerate(forEachAst.expr, argCount, variables);
+            marineILs.Add(new InstanceCSharpFuncCallIL("GetEnumerator", 0));
+            marineILs.Add(new StoreIL(iterVarIdx));
+            var jumpIL = new JumpIL(marineILs.Count);
+            marineILs.Add(new LoadIL(iterVarIdx));
+            marineILs.Add(new InstanceCSharpFuncCallIL("MoveNext", 0));
+            var jumpFalseILInsertIndex = marineILs.Count;
+            marineILs.Add(null);
+            marineILs.Add(new LoadIL(iterVarIdx));
+            marineILs.Add(new InstanceCSharpFieldLoadIL("current"));
+            marineILs.Add(new StoreIL(currentVarIdx));
+            foreach (var statementAst in forEachAst.statements)
+                StatementILGenerate(statementAst, argCount, variables);
             marineILs.Add(jumpIL);
             marineILs[jumpFalseILInsertIndex] = new JumpFalseIL(marineILs.Count);
         }

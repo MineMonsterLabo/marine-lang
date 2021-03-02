@@ -33,6 +33,8 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetStringTokenTailDelimiter(TokenType.Return, stream) ??
                     LexerHelper.GetStringTokenTailDelimiter(TokenType.While, stream) ??
                     LexerHelper.GetStringTokenTailDelimiter(TokenType.For, stream) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.ForEach, stream) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.In, stream) ??
                     LexerHelper.GetFloatLiteralToken(stream) ??
                     LexerHelper.GetIntLiteralToken()(stream) ??
                     LexerHelper.GetCharLiteralToken(stream) ??

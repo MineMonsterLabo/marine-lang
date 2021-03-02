@@ -13,6 +13,7 @@
         public virtual T Visit(FieldAssignmentAst ast) { return default; }
         public virtual T Visit(WhileAst ast) { return default; }
         public virtual T Visit(ForAst ast) { return default; }
+        public virtual T Visit(ForEachAst ast) { return default; }
         public virtual T Visit(YieldAst ast) { return default; }
         public virtual T Visit(ExprAst ast) { return default; }
         public virtual T Visit(ValueAst ast) { return default; }

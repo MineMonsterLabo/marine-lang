@@ -508,6 +508,13 @@ end
         }
 
         [Theory]
+        [InlineData("fun main() let sum = 0 foreach val in [1,2,3] { sum = sum + val } ret sum end", 6)]
+        public void ForeachTest(string str, int expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+        
+        [Theory]
         [InlineData("fun main() ret optional.hoge(5,4) end", "5,4,10.5")]
         [InlineData("fun main() ret optional.hoge(5,4.3) end", "5,4.3,11.5")]
         [InlineData("fun main() ret optional.hoge(5,4,3.3) end", "5,4,3.3")]

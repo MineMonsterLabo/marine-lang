@@ -57,6 +57,8 @@ statement      =
 while_statement
                = 'while' , expr , block ;
 for_statement  = 'for' , variable, '=', expr  ',' , expr , ',' , expr , block ;
+foreach_statement  
+               = 'foreach' , variable, 'in', expr , block ;
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment_variable ;
 field_assignment  

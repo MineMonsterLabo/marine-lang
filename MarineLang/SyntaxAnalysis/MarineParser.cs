@@ -106,6 +106,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParseYield.Try(),
                     ParseWhile().Try(),
                     ParseFor().Try(),
+                    ParseForEach().Try(),
                     ParseReturn().Try(),
                     ParseAssignmentVariable().Try(),
                     ParseFieldAssignment().Try(),
@@ -151,6 +152,23 @@ namespace MarineLang.SyntaxAnalysis
                         initExpr,
                         maxValue,
                         addValue,
+                        block.statementAsts,
+                        block.endToken
+                    );
+        }
+
+        public Parser<ForEachAst> ParseForEach()
+        {
+            return
+                from forEachToken in ParseToken(TokenType.ForEach)
+                from variable in ParseVariable.Left(ParseToken(TokenType.In))
+                from expr in ParseExpr()
+                from block in ParseBlock()
+                select
+                    ForEachAst.Create(
+                        forEachToken,
+                        variable,
+                        expr,
                         block.statementAsts,
                         block.endToken
                     );
