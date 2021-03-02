@@ -506,5 +506,15 @@ end
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData("fun main() ret optional.hoge(5,4) end", "5,4,10.5")]
+        [InlineData("fun main() ret optional.hoge(5,4.3) end", "5,4.3,11.5")]
+        [InlineData("fun main() ret optional.hoge(5,4,3.3) end", "5,4,3.3")]
+        [InlineData("fun main() ret optional.hoge(\"aaa\") end", "object")]
+        public void OptionalParamsFuncCallTest(string str, string expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
