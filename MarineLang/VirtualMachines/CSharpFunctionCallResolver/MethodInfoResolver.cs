@@ -20,7 +20,7 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
                 return null;
             var methodInfos =
                 classType.GetMethods(bindingFlags)
-                    .Where(f => f.Name == funcName && f.GetParameters().Length == typesLength);
+                    .Where(MatchMethodInfo(funcName,typesLength));
 
             var dataList = methodInfos.Select(
                 m => {
@@ -66,6 +66,20 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
                 throw new NotImplementedException("実装めんどくさい");
             }
             return nearestData.methodInfo;
+        }
+
+        static Func<MethodInfo, bool> MatchMethodInfo(string funcName, int typeLength)
+        {
+            return (methodInfo) =>
+            {
+                if (methodInfo.Name != funcName)
+                    return false;
+
+                var parameterInfoArray = methodInfo.GetParameters();
+                var maxLength = parameterInfoArray.Length;
+                var minLength = parameterInfoArray.Where(x => x.IsOptional == false).Count();
+                return minLength <= typeLength && typeLength <= maxLength;
+            };
         }
     }
 }
