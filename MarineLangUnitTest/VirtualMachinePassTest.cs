@@ -523,5 +523,53 @@ end
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData(@"
+fun main() 
+    for i = 1 , 10 , 1{
+       let a = 10
+    }
+
+    let a = 5 
+
+    ret a 
+end", 5)]
+        [InlineData(@"
+fun main() 
+    foreach val in [1,2,3]{
+       let a = 10
+    }
+
+    let val = 5 
+
+    ret val
+end", 5)]
+        [InlineData(@"
+fun main()
+    let i = 0
+    while i<10{
+        i = i+1
+        let a = 10
+    }
+
+    let a = 5 
+
+    ret a
+end", 5)]
+        [InlineData(@"
+fun main()
+    if true { let a = 7 } 
+    else { let b = 3 }
+
+    let a = 5 
+    let b = 3
+
+    ret a + b
+end", 8)]
+        public void ScopeTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
