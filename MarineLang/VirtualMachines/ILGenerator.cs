@@ -78,8 +78,8 @@ namespace MarineLang.VirtualMachines
                 marineILs.Add(new RetIL(funcDefinitionAst.args.Length));
             }
 
-            if (variables.LocalVariableCount != 0)
-                marineILs[stackAllockIndex] = new StackAllocIL(variables.LocalVariableCount);
+            if (variables.MaxLocalVariableCount != 0)
+                marineILs[stackAllockIndex] = new StackAllocIL(variables.MaxLocalVariableCount);
         }
 
         void ActionFuncILGenerate(ActionFuncData actionFuncData, string[] globalVariableNames)
@@ -217,6 +217,8 @@ namespace MarineLang.VirtualMachines
 
         void BlockExprGenerate(StatementAst[] statementAsts, int argCount, FuncScopeVariables variables)
         {
+            variables.InScope();
+
             for (var i = 0; i < statementAsts.Length - 1; i++)
                 StatementILGenerate(statementAsts[i], argCount, variables);
 
@@ -226,12 +228,14 @@ namespace MarineLang.VirtualMachines
                 if (lastStatementAst.GetExprStatementAst() != null)
                 {
                     ExprILGenerate(lastStatementAst.GetExprStatementAst().expr, argCount, variables);
+                    variables.OutScope();
                     return;
                 }
                 StatementILGenerate(lastStatementAst, argCount, variables);
             }
 
             marineILs.Add(new PushValueIL(new UnitType()));
+            variables.OutScope();
         }
 
         void InstanceFuncCallILGenerate(InstanceFuncCallAst instanceFuncCallAst, int argCount, FuncScopeVariables variables)
@@ -384,6 +388,8 @@ namespace MarineLang.VirtualMachines
 
         void WhileILGenerate(WhileAst whileAst, int argCount, FuncScopeVariables variables)
         {
+            variables.InScope();
+
             var jumpIL = new JumpIL(marineILs.Count);
             ExprILGenerate(whileAst.conditionExpr, argCount, variables);
             var jumpFalseILInsertIndex = marineILs.Count;
@@ -392,10 +398,13 @@ namespace MarineLang.VirtualMachines
                 StatementILGenerate(statementAst, argCount, variables);
             marineILs.Add(jumpIL);
             marineILs[jumpFalseILInsertIndex] = new JumpFalseIL(marineILs.Count);
+
+            variables.OutScope();
         }
 
         void ForILGenerate(ForAst forAst, int argCount, FuncScopeVariables variables)
         {
+            variables.InScope();
             variables.AddLocalVariable(forAst.initVariable.VarName);
             var countVarIdx = variables.GetVariableIdx(forAst.initVariable.VarName);
             var maxVarIdx = variables.CreateUnnamedLocalVariableIdx();
@@ -420,10 +429,12 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(new StoreIL(countVarIdx));
             marineILs.Add(jumpIL);
             marineILs[jumpFalseILInsertIndex] = new JumpFalseIL(marineILs.Count);
+            variables.OutScope();
         }
 
         void ForEachILGenerate(ForEachAst forEachAst, int argCount, FuncScopeVariables variables)
         {
+            variables.InScope();
             variables.AddLocalVariable(forEachAst.variable.VarName);
 
             var currentVarIdx = variables.GetVariableIdx(forEachAst.variable.VarName);
@@ -443,6 +454,7 @@ namespace MarineLang.VirtualMachines
                 StatementILGenerate(statementAst, argCount, variables);
             marineILs.Add(jumpIL);
             marineILs[jumpFalseILInsertIndex] = new JumpFalseIL(marineILs.Count);
+            variables.OutScope();
         }
 
         void ValueILGenerate(ValueAst valueAst)
