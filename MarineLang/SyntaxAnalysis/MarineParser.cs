@@ -22,6 +22,7 @@ namespace MarineLang.SyntaxAnalysis
         public Parser<ValueAst> ParseString { get; }
         public Parser<VariableAst> ParseVariable { get; }
         public Parser<YieldAst> ParseYield { get; }
+        public Parser<BreakAst> ParseBreak { get; }
         public Parser<ProgramAst> ParseProgram { get; }
         public Parser<FuncDefinitionAst> ParseFuncDefinition { get; }
         public Parser<StatementAst> ParseStatement { get; }
@@ -35,6 +36,7 @@ namespace MarineLang.SyntaxAnalysis
             ParseString = InternalParseString();
             ParseVariable = InternalParseVariable();
             ParseYield = InternalParseYield();
+            ParseBreak = InternalParseBreak();
             ParseStatement = InternalParseStatement();
             ParseFuncDefinition = InternalParseFuncDefinition();
             ParseProgram = InternalParseProgram();
@@ -103,6 +105,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParserCombinator.Or(
+                    ParseBreak.Try(),
                     ParseYield.Try(),
                     ParseWhile().Try(),
                     ParseFor().Try(),
@@ -119,6 +122,11 @@ namespace MarineLang.SyntaxAnalysis
         Parser<YieldAst> InternalParseYield()
         {
             return ParseToken(TokenType.Yield).MapResult(_ => new YieldAst());
+        }
+
+        Parser<BreakAst> InternalParseBreak()
+        {
+            return ParseToken(TokenType.Break).MapResult(_ => new BreakAst());
         }
 
         public Parser<WhileAst> ParseWhile()

@@ -409,6 +409,25 @@ namespace MarineLang.VirtualMachines
         }
     }
 
+    public struct BreakIL : IMarineIL
+    {
+        public readonly BreakIndex breakIndex;
+
+        public BreakIL(BreakIndex breakIndex)
+        {
+            this.breakIndex = breakIndex;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            vm.nextILIndex = breakIndex.Index - 1;
+        }
+        public override string ToString()
+        {
+            return typeof(BreakIL).Name + " " + breakIndex.Index;
+        }
+    }
+
     public struct StoreValueIL : IMarineIL
     {
         public readonly StackIndex stackIndex;

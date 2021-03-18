@@ -6,6 +6,7 @@
         Id,
         Await,
         Yield,
+        Break,
         If,
         Else,
         LeftParen,
@@ -60,6 +61,8 @@
                     return "await";
                 case TokenType.Yield:
                     return "yield";
+                case TokenType.Break:
+                    return "break";
                 case TokenType.If:
                     return "if";
                 case TokenType.Else:

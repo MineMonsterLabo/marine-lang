@@ -56,6 +56,11 @@ namespace MarineLang.Models.Asts
             return this as YieldAst;
         }
 
+        public BreakAst GetBreakAst()
+        {
+            return this as BreakAst;
+        }
+
         public virtual IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
             return Enumerable.Empty<T>().Append(astVisitor.Visit(this));
@@ -414,6 +419,34 @@ namespace MarineLang.Models.Asts
         public static YieldAst Create()
         {
             return new YieldAst { };
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this);
+        }
+    }
+
+    public class BreakAst : StatementAst
+    {
+        public Token breakToken;
+
+        public override RangePosition Range => new RangePosition(breakToken.position, breakToken.PositionEnd);
+
+        public static BreakAst Create(Token breakToken)
+        {
+            return new BreakAst { breakToken = breakToken };
+        }
+
+        public static BreakAst Create()
+        {
+            return new BreakAst { };
         }
 
         public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
