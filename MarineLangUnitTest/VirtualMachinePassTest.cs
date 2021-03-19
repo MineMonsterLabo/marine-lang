@@ -571,5 +571,35 @@ end", 8)]
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData(@"
+fun main()
+    for i = 1 , 10 , 1{
+        break
+        ret 0
+    }
+    ret 1
+end", 1)]
+        [InlineData(@"
+fun main()
+    foreach a in [1,2,3]{
+        break
+        ret 0
+    }
+    ret 1
+end", 1)]
+        [InlineData(@"
+fun main()
+    while true {
+        break
+        ret 0
+    }
+    ret 1
+end", 1)]
+        public void BreakTest(string str, int expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
