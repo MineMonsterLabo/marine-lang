@@ -70,14 +70,14 @@ namespace MarineLang.VirtualMachines
             var classType = instance.GetType();
             var types = args.Select(arg => arg.GetType()).ToArray();
             var methodInfos =
-                classType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(e => e.Name == fName).ToArray();
+                classType.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static).Where(e => e.Name == fName).ToArray();
             var methodInfo = MethodInfoResolver.Select(methodInfos, types);
 
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
 
             if (ClassAccessibilityChecker.CheckMember(methodInfo))
-                vm.Push(methodInfo.Invoke(instance, args2));
+                vm.Push(methodInfo.IsStatic ? methodInfo.Invoke(null, args2) : methodInfo.Invoke(instance, args2));
             else
                 throw new MarineRuntimeException(
                     new RuntimeErrorInfo(
