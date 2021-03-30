@@ -13,33 +13,28 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
             public IEnumerable<TypeDistance> paramsTypeDistances;
         }
 
-        static public MethodInfo Select(Type classType, string funcName, BindingFlags bindingFlags, Type[] types)
+        static public MethodInfo Select(IEnumerable<MethodInfo> inputMethodInfos, Type[] types)
         {
             var typesLength = types.Length;
-            if (classType == null)
-                return null;
-            var methodInfos =
-                classType.GetMethods(bindingFlags)
-                    .Where(MatchMethodInfo(funcName,typesLength));
+            var methodInfos = inputMethodInfos.Where(MatchMethodInfo(typesLength));
 
             var dataList = methodInfos.Select(
-                m => {
+                m =>
+                {
                     var parameters = m.GetParameters();
                     Data data;
                     data.methodInfo = m;
                     data.paramsTypeDistances =
-                        parameters.
-                            Zip(types, (param, type) =>
-                                TypeDistanceGenerator.Generate(type, param.ParameterType));
+                        parameters.Zip(types, (param, type) =>
+                            TypeDistanceGenerator.Generate(type, param.ParameterType));
 
                     return data;
                 }).Where(tuple => !tuple.paramsTypeDistances.Contains(null));
 
-            var nearestData = new Data { paramsTypeDistances = null };
+            var nearestData = new Data {paramsTypeDistances = null};
 
             foreach (var data in dataList)
             {
-
                 if (nearestData.paramsTypeDistances == null)
                 {
                     nearestData = data;
@@ -47,37 +42,37 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
                 }
 
                 var sum = data.paramsTypeDistances.Zip(nearestData.paramsTypeDistances,
-                    (paramsPriority, tParamsPriority) => paramsPriority.CompareTo(tParamsPriority))
+                        (paramsPriority, tParamsPriority) => paramsPriority.CompareTo(tParamsPriority))
                     .Sum();
 
                 if (sum == 0)
                 {
                     throw new Exception("比較不可能");
                 }
-                if (sum >0)
+
+                if (sum > 0)
                 {
                     nearestData = data;
                 }
             }
+
             if (nearestData.methodInfo == null)
                 return null;
             if (nearestData.methodInfo.IsGenericMethod)
             {
                 throw new NotImplementedException("実装めんどくさい");
             }
+
             return nearestData.methodInfo;
         }
 
-        static Func<MethodInfo, bool> MatchMethodInfo(string funcName, int typeLength)
+        static Func<MethodInfo, bool> MatchMethodInfo(int typeLength)
         {
-            return (methodInfo) =>
+            return methodInfo =>
             {
-                if (methodInfo.Name != funcName)
-                    return false;
-
                 var parameterInfoArray = methodInfo.GetParameters();
                 var maxLength = parameterInfoArray.Length;
-                var minLength = parameterInfoArray.Where(x => x.IsOptional == false).Count();
+                var minLength = parameterInfoArray.Count(x => x.IsOptional == false);
                 return minLength <= typeLength && typeLength <= maxLength;
             };
         }

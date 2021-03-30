@@ -10,10 +10,10 @@ using MarineLang.VirtualMachines.CSharpFunctionCallResolver;
 
 namespace MarineLang.VirtualMachines
 {
-
     public class ILDebugInfo
     {
         public readonly Position position;
+
         public ILDebugInfo(Position position)
         {
             this.position = position;
@@ -41,6 +41,7 @@ namespace MarineLang.VirtualMachines
             var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
             vm.Push(methodInfo.Invoke(null, args));
         }
+
         public override string ToString()
         {
             return typeof(CSharpFuncCallIL).Name + " '" + methodInfo.Name + "' " + argCount;
@@ -64,15 +65,16 @@ namespace MarineLang.VirtualMachines
         {
             var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
             var instance = vm.Pop();
-            var methodInfo = 
-                MethodInfoResolver.Select(
-                    instance.GetType(), 
-                    funcName, 
-                    BindingFlags.Public | BindingFlags.Instance, 
-                    args.Select(arg => arg.GetType()).ToArray()
-                );
 
-            var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length)).ToArray();
+            var fName = funcName;
+            var classType = instance.GetType();
+            var types = args.Select(arg => arg.GetType()).ToArray();
+            var methodInfos =
+                classType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(e => e.Name == fName).ToArray();
+            var methodInfo = MethodInfoResolver.Select(methodInfos, types);
+
+            var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
+                .ToArray();
 
             if (ClassAccessibilityChecker.CheckMember(methodInfo))
                 vm.Push(methodInfo.Invoke(instance, args2));
@@ -328,7 +330,9 @@ namespace MarineLang.VirtualMachines
 
     public struct NoOpIL : IMarineIL
     {
-        public void Run(LowLevelVirtualMachine vm) { }
+        public void Run(LowLevelVirtualMachine vm)
+        {
+        }
 
         public override string ToString()
         {
@@ -352,11 +356,12 @@ namespace MarineLang.VirtualMachines
                 vm.endFlag = true;
                 return;
             }
+
             vm.callNestCount--;
             var retValue = vm.Pop();
-            var stackBaseCount = (int)vm.Load(vm.stackBaseCount + argCount + 1);
+            var stackBaseCount = (int) vm.Load(vm.stackBaseCount + argCount + 1);
             vm.nextILIndex =
-                (int)vm.Load(vm.stackBaseCount + argCount + VirtualMachineConstants.CALL_RESTORE_STACK_FRAME) - 1;
+                (int) vm.Load(vm.stackBaseCount + argCount + VirtualMachineConstants.CALL_RESTORE_STACK_FRAME) - 1;
             vm.SetStackCurrent(vm.stackBaseCount);
             vm.stackBaseCount = stackBaseCount;
             vm.Push(retValue);
@@ -366,7 +371,6 @@ namespace MarineLang.VirtualMachines
         {
             return typeof(RetIL).Name + " " + argCount;
         }
-
     }
 
     public struct JumpFalseIL : IMarineIL
@@ -380,7 +384,7 @@ namespace MarineLang.VirtualMachines
 
         public void Run(LowLevelVirtualMachine vm)
         {
-            var condValue = (bool)vm.Pop();
+            var condValue = (bool) vm.Pop();
             if (condValue == false) vm.nextILIndex = nextILIndex - 1;
         }
 
@@ -403,6 +407,7 @@ namespace MarineLang.VirtualMachines
         {
             vm.nextILIndex = nextILIndex - 1;
         }
+
         public override string ToString()
         {
             return typeof(JumpIL).Name + " " + nextILIndex;
@@ -422,6 +427,7 @@ namespace MarineLang.VirtualMachines
         {
             vm.nextILIndex = breakIndex.Index - 1;
         }
+
         public override string ToString()
         {
             return typeof(BreakIL).Name + " " + breakIndex.Index;
@@ -432,6 +438,7 @@ namespace MarineLang.VirtualMachines
     {
         public readonly StackIndex stackIndex;
         public readonly object value;
+
         public void Run(LowLevelVirtualMachine vm)
         {
             vm.Store(value, stackIndex.GetIndex(vm.stackBaseCount));
@@ -502,7 +509,6 @@ namespace MarineLang.VirtualMachines
 
     public struct PopIL : IMarineIL
     {
-
         public void Run(LowLevelVirtualMachine vm)
         {
             vm.Pop();
@@ -561,7 +567,6 @@ namespace MarineLang.VirtualMachines
 
     public struct YieldIL : IMarineIL
     {
-
         public void Run(LowLevelVirtualMachine vm)
         {
             vm.yieldFlag = true;
@@ -602,77 +607,87 @@ namespace MarineLang.VirtualMachines
                 case TokenType.PlusOp:
                     switch (leftValue)
                     {
-                        case int v: return v + (int)rightValue;
-                        case float v: return v + (float)rightValue;
+                        case int v: return v + (int) rightValue;
+                        case float v: return v + (float) rightValue;
                         case string v: return v + rightValue;
                     }
+
                     break;
                 case TokenType.MinusOp:
                     switch (leftValue)
                     {
-                        case int v: return v - (int)rightValue;
-                        case float v: return v - (float)rightValue;
+                        case int v: return v - (int) rightValue;
+                        case float v: return v - (float) rightValue;
                     }
+
                     break;
                 case TokenType.MulOp:
                     switch (leftValue)
                     {
-                        case int v: return v * (int)rightValue;
-                        case float v: return v * (float)rightValue;
+                        case int v: return v * (int) rightValue;
+                        case float v: return v * (float) rightValue;
                     }
+
                     break;
                 case TokenType.DivOp:
                     switch (leftValue)
                     {
-                        case int v: return v / (int)rightValue;
-                        case float v: return v / (float)rightValue;
+                        case int v: return v / (int) rightValue;
+                        case float v: return v / (float) rightValue;
                     }
+
                     break;
                 case TokenType.ModOp:
                     switch (leftValue)
                     {
-                        case int v: return v % (int)rightValue;
+                        case int v: return v % (int) rightValue;
                     }
+
                     break;
                 case TokenType.EqualOp:
                     return leftValue.Equals(rightValue);
                 case TokenType.NotEqualOp:
                     return !leftValue.Equals(rightValue);
                 case TokenType.OrOp:
-                    return (bool)leftValue || (bool)rightValue;
+                    return (bool) leftValue || (bool) rightValue;
                 case TokenType.AndOp:
-                    return (bool)leftValue && (bool)rightValue;
+                    return (bool) leftValue && (bool) rightValue;
                 case TokenType.GreaterOp:
                     switch (leftValue)
                     {
-                        case int v: return v > (int)rightValue;
-                        case float v: return v > (float)rightValue;
+                        case int v: return v > (int) rightValue;
+                        case float v: return v > (float) rightValue;
                     }
+
                     break;
                 case TokenType.GreaterEqualOp:
                     switch (leftValue)
                     {
-                        case int v: return v >= (int)rightValue;
-                        case float v: return v >= (float)rightValue;
+                        case int v: return v >= (int) rightValue;
+                        case float v: return v >= (float) rightValue;
                     }
+
                     break;
 
                 case TokenType.LessOp:
                     switch (leftValue)
                     {
-                        case int v: return v < (int)rightValue;
-                        case float v: return v < (float)rightValue;
+                        case int v: return v < (int) rightValue;
+                        case float v: return v < (float) rightValue;
                     }
+
                     break;
 
                 case TokenType.LessEqualOp:
                     switch (leftValue)
                     {
-                        case int v: return v <= (int)rightValue;
-                        case float v: return v <= (float)rightValue;
+                        case int v: return v <= (int) rightValue;
+                        case float v: return v <= (float) rightValue;
                     }
+
                     break;
             }
+
             return null;
         }
     }
@@ -708,10 +723,12 @@ namespace MarineLang.VirtualMachines
                         case int v: return -v;
                         case float v: return -v;
                     }
+
                     break;
                 case TokenType.NotOp:
-                    return !((bool)value);
+                    return !((bool) value);
             }
+
             return null;
         }
     }
