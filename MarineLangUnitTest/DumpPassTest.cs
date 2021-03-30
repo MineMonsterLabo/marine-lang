@@ -37,7 +37,7 @@ namespace MarineLangUnitTest
             var dumps = CreateDump(path);
             Assert.True(dumps.Count > 0);
 
-            Assert.Equal(11, dumps["hoge"].Members.Length);
+            Assert.Equal(12, dumps["hoge"].Members.Length);
             Assert.Equal(nameof(VmCreateHelper.Hoge), dumps["hoge"].Type.Name);
             Assert.Equal(typeof(VmCreateHelper.Hoge).FullName, dumps["hoge"].Type.FullName);
             Assert.Equal(typeof(VmCreateHelper.Hoge).AssemblyQualifiedName, dumps["hoge"].Type.QualifiedName);
