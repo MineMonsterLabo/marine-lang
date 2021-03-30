@@ -12,6 +12,7 @@ namespace MarineLang.Models.Errors
         SyntaxNonLetVarName,
         SyntaxNonLetEqual,
         SyntaxNonEqualExpr,
+        RuntimeMemberNotFound,
         RuntimeMemberAccessPrivate,
         Unknown
     }
@@ -38,11 +39,14 @@ namespace MarineLang.Models.Errors
                     return "letに=がありません";
                 case ErrorCode.SyntaxNonEqualExpr:
                     return "=の後に式がありません";
+                case ErrorCode.RuntimeMemberNotFound:
+                    return "メンバーが見つかりません。";
                 case ErrorCode.RuntimeMemberAccessPrivate:
                     return "privateなメンバーにアクセスしようとしました";
                 case ErrorCode.Unknown:
                     return "";
             }
+
             throw new NotImplementedException();
         }
     }
