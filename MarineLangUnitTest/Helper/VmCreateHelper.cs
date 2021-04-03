@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -22,7 +21,7 @@ namespace MarineLangUnitTest.Helper
             var tokenStream = TokenStream.Create(tokens);
             var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
-                throw new Exception(parseResult.Error.FullErrorMessage);
+                throw new System.Exception(parseResult.Error.FullErrorMessage);
             var vm = new HighLevelVirtualMachine();
 
             vm.SetProgram(parseResult.Value);
@@ -58,20 +57,14 @@ namespace MarineLangUnitTest.Helper
         {
             public bool flag;
             public string[] Names { get; } = new string[] {"rrr", "qqq"};
-
             public string this[string index]
             {
                 get => index;
             }
-
-            public Dictionary<string, string> Dict => new Dictionary<string, string> {{"hoge", "fuga"}};
+            public Dictionary<string, string> Dict => new Dictionary<string, string> { { "hoge", "fuga" } };
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
             public Hoge GetThis() => this;
-
-            public static int StaticPlusOneFunc(int x) => x + 1;
-
-            private static int StaticMinusOneFunc(int x) => x - 1;
         }
 
         public static Hoge CreateHoge()
@@ -175,7 +168,7 @@ namespace MarineLangUnitTest.Helper
 
         public class Optional
         {
-            public string Hoge(int a, int b, float c = 10.5f) => $"{a},{b},{c}";
+            public string Hoge(int a, int b,float c=10.5f) =>$"{a},{b},{c}";
             public string Hoge(int a, float b, float c = 11.5f) => $"{a},{b},{c}";
             public string Hoge(object a) => "object";
         }
