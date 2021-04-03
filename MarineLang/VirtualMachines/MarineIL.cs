@@ -66,11 +66,12 @@ namespace MarineLang.VirtualMachines
             var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
             var instance = vm.Pop();
 
-            var fName = funcName;
+            var funcNameClone = funcName;
             var classType = instance.GetType();
             var types = args.Select(arg => arg.GetType()).ToArray();
             var methodInfos =
-                classType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(e => e.Name == fName).ToArray();
+                classType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(e => e.Name == funcNameClone)
+                    .ToArray();
             var methodInfo = MethodInfoResolver.Select(methodInfos, types);
 
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
@@ -130,6 +131,15 @@ namespace MarineLang.VirtualMachines
             {
                 PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
                     BindingFlags.Public | BindingFlags.Instance);
+                if (propertyInfo == null)
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     vm.Push(propertyInfo.GetValue(instance));
                 else
@@ -151,6 +161,13 @@ namespace MarineLang.VirtualMachines
 
     public struct InstanceCSharpIndexerLoadIL : IMarineIL
     {
+        public readonly ILDebugInfo iLDebugInfo;
+
+        public InstanceCSharpIndexerLoadIL(ILDebugInfo iLDebugInfo = null)
+        {
+            this.iLDebugInfo = iLDebugInfo;
+        }
+
         public void Run(LowLevelVirtualMachine vm)
         {
             var indexValue = vm.Pop();
@@ -163,6 +180,15 @@ namespace MarineLang.VirtualMachines
             {
                 PropertyInfo propertyInfo =
                     instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance);
+                if (propertyInfo == null)
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            string.Empty,
+                            ErrorCode.RuntimeIndexerNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     vm.Push(propertyInfo.GetValue(instance, new object[] {indexValue}));
                 else
@@ -183,6 +209,13 @@ namespace MarineLang.VirtualMachines
 
     public struct InstanceCSharpIndexerStoreIL : IMarineIL
     {
+        public readonly ILDebugInfo iLDebugInfo;
+
+        public InstanceCSharpIndexerStoreIL(ILDebugInfo iLDebugInfo = null)
+        {
+            this.iLDebugInfo = iLDebugInfo;
+        }
+
         public void Run(LowLevelVirtualMachine vm)
         {
             var storeValue = vm.Pop();
@@ -196,6 +229,15 @@ namespace MarineLang.VirtualMachines
             {
                 PropertyInfo propertyInfo =
                     instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance);
+                if (propertyInfo == null)
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            string.Empty,
+                            ErrorCode.RuntimeIndexerNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     propertyInfo.SetValue(instance, storeValue, new object[] {indexValue});
                 else
@@ -250,6 +292,15 @@ namespace MarineLang.VirtualMachines
             {
                 PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
                     BindingFlags.Public | BindingFlags.Instance);
+                if (propertyInfo == null)
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     propertyInfo.SetValue(instance, value);
                 else
