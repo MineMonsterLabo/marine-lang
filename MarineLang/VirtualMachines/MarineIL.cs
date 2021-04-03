@@ -73,6 +73,14 @@ namespace MarineLang.VirtualMachines
                 classType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(e => e.Name == funcNameClone)
                     .ToArray();
             var methodInfo = MethodInfoResolver.Select(methodInfos, types);
+            if (methodInfo == null)
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"{funcName}",
+                        ErrorCode.RuntimeMemberNotFound,
+                        iLDebugInfo.position
+                    )
+                );
 
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
@@ -175,7 +183,18 @@ namespace MarineLang.VirtualMachines
             var instanceType = instance.GetType();
 
             if (instanceType.IsArray)
-                vm.Push((instance as IList)[(int) indexValue]);
+                if (indexValue is int intIndex)
+                    vm.Push((instance as IList)[intIndex]);
+                else
+                {
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            string.Empty,
+                            ErrorCode.RuntimeIndexerNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+                }
             else
             {
                 PropertyInfo propertyInfo =
@@ -224,7 +243,18 @@ namespace MarineLang.VirtualMachines
             var instanceType = instance.GetType();
 
             if (instanceType.IsArray)
-                (instance as IList)[(int) indexValue] = storeValue;
+                if (indexValue is int intIndex)
+                    (instance as IList)[intIndex] = storeValue;
+                else
+                {
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            string.Empty,
+                            ErrorCode.RuntimeIndexerNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+                }
             else
             {
                 PropertyInfo propertyInfo =

@@ -290,7 +290,7 @@ namespace MarineLang.VirtualMachines
             ExprILGenerate(getIndexerAst.instanceExpr, argCount, variables, breakIndex);
             ExprILGenerate(getIndexerAst.indexExpr, argCount, variables, breakIndex);
             marineILs.Add(
-                new InstanceCSharpIndexerLoadIL(new ILDebugInfo(getIndexerAst.Range.Start))
+                new InstanceCSharpIndexerLoadIL(new ILDebugInfo(getIndexerAst.instanceExpr.Range.End))
             );
         }
 
@@ -391,7 +391,9 @@ namespace MarineLang.VirtualMachines
             ExprILGenerate(reAssignmentAst.getIndexerAst.instanceExpr, argCount, variables, breakIndex);
             ExprILGenerate(reAssignmentAst.getIndexerAst.indexExpr, argCount, variables, breakIndex);
             ExprILGenerate(reAssignmentAst.assignmentExpr, argCount, variables, breakIndex);
-            marineILs.Add(new InstanceCSharpIndexerStoreIL(new ILDebugInfo(reAssignmentAst.getIndexerAst.Range.Start)));
+            marineILs.Add(
+                new InstanceCSharpIndexerStoreIL(
+                    new ILDebugInfo(reAssignmentAst.getIndexerAst.instanceExpr.Range.End)));
         }
 
         void AssignmentILGenerate(AssignmentVariableAst assignmentAst, int argCount, FuncScopeVariables variables,

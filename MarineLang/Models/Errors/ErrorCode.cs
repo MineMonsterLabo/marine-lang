@@ -43,7 +43,7 @@ namespace MarineLang.Models.Errors
                 case ErrorCode.RuntimeMemberNotFound:
                     return "メンバーが見つかりません。";
                 case ErrorCode.RuntimeIndexerNotFound:
-                    return "インデクサーが見つかりません。";
+                    return "対応するインデクサーが見つかりません。";
                 case ErrorCode.RuntimeMemberAccessPrivate:
                     return "privateなメンバーにアクセスしようとしました";
                 case ErrorCode.Unknown:
