@@ -1,10 +1,10 @@
-﻿using MarineLang.BuiltInTypes;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using MarineLang.BuiltInTypes;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Utils;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace MarineLang.VirtualMachines
 {
@@ -25,6 +25,7 @@ namespace MarineLang.VirtualMachines
         public readonly string funcName;
         public readonly ActionAst actionAst;
         public readonly string[] captureVarNames;
+
         public ActionFuncData(string funcName, ActionAst actionAst, string[] captureVarNames)
         {
             this.funcName = funcName;
@@ -35,7 +36,7 @@ namespace MarineLang.VirtualMachines
 
     public class BreakIndex
     {
-        public int Index { get; set; } 
+        public int Index { get; set; }
     }
 
     public class ILGenerator
@@ -51,7 +52,8 @@ namespace MarineLang.VirtualMachines
             this.programAst = programAst;
         }
 
-        public ILGeneratedData Generate(IReadOnlyDictionary<string, MethodInfo> csharpFuncDict, string[] globalVariableNames)
+        public ILGeneratedData Generate(IReadOnlyDictionary<string, MethodInfo> csharpFuncDict,
+            string[] globalVariableNames)
         {
             this.csharpFuncDict = csharpFuncDict;
             funcILIndexDict = programAst.funcDefinitionAsts.ToDictionary(x => x.funcName, x => -1);
@@ -62,7 +64,8 @@ namespace MarineLang.VirtualMachines
         void ProgramILGenerate(ProgramAst programAst, string[] globalVariableNames)
         {
             foreach (var funcDefinitionAst in programAst.funcDefinitionAsts)
-                FuncDefinitionILGenerate(funcDefinitionAst, new FuncScopeVariables(funcDefinitionAst.args, globalVariableNames));
+                FuncDefinitionILGenerate(funcDefinitionAst,
+                    new FuncScopeVariables(funcDefinitionAst.args, globalVariableNames));
             for (var i = 0; i < actionFuncDataList.Count; i++)
                 ActionFuncILGenerate(actionFuncDataList[i], globalVariableNames);
         }
@@ -89,7 +92,8 @@ namespace MarineLang.VirtualMachines
 
         void ActionFuncILGenerate(ActionFuncData actionFuncData, string[] globalVariableNames)
         {
-            var args = new[] { VariableAst.Create(new Token(default, "_action", default)) }.Concat(actionFuncData.actionAst.args).ToArray();
+            var args = new[] {VariableAst.Create(new Token(default, "_action", default))}
+                .Concat(actionFuncData.actionAst.args).ToArray();
             var variables = new FuncScopeVariables(args, globalVariableNames, actionFuncData.captureVarNames);
             var funcDefinitionAst = FuncDefinitionAst.Create(
                 null,
@@ -101,7 +105,8 @@ namespace MarineLang.VirtualMachines
             FuncDefinitionILGenerate(funcDefinitionAst, variables);
         }
 
-        bool StatementILGenerate(StatementAst statementAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        bool StatementILGenerate(StatementAst statementAst, int argCount, FuncScopeVariables variables,
+            BreakIndex breakIndex)
         {
             if (statementAst.GetReturnAst() != null)
             {
@@ -114,9 +119,11 @@ namespace MarineLang.VirtualMachines
                 marineILs.Add(new PopIL());
             }
             else if (statementAst.GetReAssignmentVariableAst() != null)
-                ReAssignmentVariableILGenerate(statementAst.GetReAssignmentVariableAst(), argCount, variables, breakIndex);
+                ReAssignmentVariableILGenerate(statementAst.GetReAssignmentVariableAst(), argCount, variables,
+                    breakIndex);
             else if (statementAst.GetReAssignmentIndexerAst() != null)
-                ReAssignmentIndexerILGenerate(statementAst.GetReAssignmentIndexerAst(), argCount, variables, breakIndex);
+                ReAssignmentIndexerILGenerate(statementAst.GetReAssignmentIndexerAst(), argCount, variables,
+                    breakIndex);
             else if (statementAst.GetAssignmentVariableAst() != null)
                 AssignmentILGenerate(statementAst.GetAssignmentVariableAst(), argCount, variables, breakIndex);
             else if (statementAst.GetFieldAssignmentAst() != null)
@@ -131,6 +138,7 @@ namespace MarineLang.VirtualMachines
                 marineILs.Add(new YieldIL());
             else if (statementAst.GetBreakAst() != null)
                 marineILs.Add(new BreakIL(breakIndex));
+
             return false;
         }
 
@@ -176,7 +184,8 @@ namespace MarineLang.VirtualMachines
             if (funcILIndexDict.ContainsKey(funcCallAst.FuncName))
                 marineILs.Add(new MarineFuncCallIL(funcCallAst.FuncName, funcCallAst.args.Length));
             else
-                marineILs.Add(new CSharpFuncCallIL(csharpFuncDict[NameUtil.GetUpperCamelName(funcCallAst.FuncName)], funcCallAst.args.Length));
+                marineILs.Add(new CSharpFuncCallIL(csharpFuncDict[NameUtil.GetUpperCamelName(funcCallAst.FuncName)],
+                    funcCallAst.args.Length));
         }
 
         void BinaryOpILGenerate(BinaryOpAst binaryOpAst, int argCount, FuncScopeVariables args, BreakIndex breakIndex)
@@ -186,7 +195,8 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(new BinaryOpIL(binaryOpAst.opKind));
         }
 
-        void VariableILGenerate(VariableAst variableAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void VariableILGenerate(VariableAst variableAst, int argCount, FuncScopeVariables variables,
+            BreakIndex breakIndex)
         {
             var captureIdx = variables.GetCaptureVariableIdx(variableAst.VarName);
             if (captureIdx.HasValue)
@@ -196,7 +206,7 @@ namespace MarineLang.VirtualMachines
                         VariableAst.Create(new Token(default, "_action", default)),
                         FuncCallAst.Create(
                             new Token(default, "get", default),
-                            new[] { ValueAst.Create(captureIdx.Value, default) },
+                            new[] {ValueAst.Create(captureIdx.Value, default)},
                             new Token(default, "")
                         )
                     );
@@ -222,7 +232,8 @@ namespace MarineLang.VirtualMachines
             marineILs[jumpInsertIndex] = new JumpIL(marineILs.Count);
         }
 
-        void BlockExprGenerate(StatementAst[] statementAsts, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void BlockExprGenerate(StatementAst[] statementAsts, int argCount, FuncScopeVariables variables,
+            BreakIndex breakIndex)
         {
             variables.InScope();
 
@@ -238,6 +249,7 @@ namespace MarineLang.VirtualMachines
                     variables.OutScope();
                     return;
                 }
+
                 StatementILGenerate(lastStatementAst, argCount, variables, breakIndex);
             }
 
@@ -245,7 +257,8 @@ namespace MarineLang.VirtualMachines
             variables.OutScope();
         }
 
-        void InstanceFuncCallILGenerate(InstanceFuncCallAst instanceFuncCallAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void InstanceFuncCallILGenerate(InstanceFuncCallAst instanceFuncCallAst, int argCount,
+            FuncScopeVariables variables, BreakIndex breakIndex)
         {
             ExprILGenerate(instanceFuncCallAst.instanceExpr, argCount, variables, breakIndex);
             var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
@@ -254,11 +267,13 @@ namespace MarineLang.VirtualMachines
             foreach (var arg in funcCallAst.args)
                 ExprILGenerate(arg, argCount, variables, breakIndex);
             marineILs.Add(
-                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length, new ILDebugInfo(funcCallAst.Range.Start))
+                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length,
+                    new ILDebugInfo(funcCallAst.Range.Start))
             );
         }
 
-        void InstanceFieldILGenerate(InstanceFieldAst instanceFieldAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void InstanceFieldILGenerate(InstanceFieldAst instanceFieldAst, int argCount, FuncScopeVariables variables,
+            BreakIndex breakIndex)
         {
             ExprILGenerate(instanceFieldAst.instanceExpr, argCount, variables, breakIndex);
             marineILs.Add(
@@ -269,16 +284,18 @@ namespace MarineLang.VirtualMachines
             );
         }
 
-        void GetGetIndexerILGenerate(GetIndexerAst getIndexerAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void GetGetIndexerILGenerate(GetIndexerAst getIndexerAst, int argCount, FuncScopeVariables variables,
+            BreakIndex breakIndex)
         {
             ExprILGenerate(getIndexerAst.instanceExpr, argCount, variables, breakIndex);
             ExprILGenerate(getIndexerAst.indexExpr, argCount, variables, breakIndex);
             marineILs.Add(
-                new InstanceCSharpIndexerLoadIL()
+                new InstanceCSharpIndexerLoadIL(new ILDebugInfo(getIndexerAst.instanceExpr.Range.End))
             );
         }
 
-        void ArrayLiteralILGenerate(ArrayLiteralAst arrayLiteralAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void ArrayLiteralILGenerate(ArrayLiteralAst arrayLiteralAst, int argCount, FuncScopeVariables variables,
+            BreakIndex breakIndex)
         {
             foreach (var exprAst in arrayLiteralAst.arrayLiteralExprs.exprAsts)
                 ExprILGenerate(exprAst, argCount, variables, breakIndex);
@@ -290,26 +307,27 @@ namespace MarineLang.VirtualMachines
 
         void ActionILGenerate(ActionAst actionAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
         {
-
             var captures =
                 actionAst.statementAsts.SelectMany(x => x.LookUp<VariableAst>())
-                .Where(x => variables.ExistVariable(x.VarName))
-                .Distinct(new VariableAst.Comparer())
-                .ToArray();
+                    .Where(x => variables.ExistVariable(x.VarName))
+                    .Distinct(new VariableAst.Comparer())
+                    .ToArray();
 
             var actionFuncName = "_action_func<" + actionFuncDataList.Count + ">";
-            actionFuncDataList.Add(new ActionFuncData(actionFuncName, actionAst, captures.Select(x => x.VarName).ToArray()));
+            actionFuncDataList.Add(new ActionFuncData(actionFuncName, actionAst,
+                captures.Select(x => x.VarName).ToArray()));
 
             var ast =
                 InstanceFuncCallAst.Create(
                     VariableAst.Create(new Token(default, "action_object_generator", default)),
                     FuncCallAst.Create(
                         new Token(default, "generate", default),
-                        new ExprAst[] {
-                            ValueAst.Create(actionFuncName,default),
+                        new ExprAst[]
+                        {
+                            ValueAst.Create(actionFuncName, default),
                             ArrayLiteralAst.Create(
                                 default,
-                                new ArrayLiteralAst.ArrayLiteralExprs{exprAsts= captures,size= captures.Length },
+                                new ArrayLiteralAst.ArrayLiteralExprs {exprAsts = captures, size = captures.Length},
                                 default
                             )
                         },
@@ -343,20 +361,21 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(new UnaryOpIL(unaryOpAst.opToken.tokenType));
         }
 
-        void ReAssignmentVariableILGenerate(ReAssignmentVariableAst reAssignmentAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void ReAssignmentVariableILGenerate(ReAssignmentVariableAst reAssignmentAst, int argCount,
+            FuncScopeVariables variables, BreakIndex breakIndex)
         {
             var captureIdx = variables.GetCaptureVariableIdx(reAssignmentAst.variableAst.VarName);
             if (captureIdx.HasValue)
             {
                 var ast =
-                   InstanceFuncCallAst.Create(
-                       VariableAst.Create(new Token(default, "_action", default)),
-                       FuncCallAst.Create(
-                           new Token(default, "set", default),
-                           new[] { ValueAst.Create(captureIdx.Value, default), reAssignmentAst.expr },
-                           new Token(default, "")
-                       )
-                   );
+                    InstanceFuncCallAst.Create(
+                        VariableAst.Create(new Token(default, "_action", default)),
+                        FuncCallAst.Create(
+                            new Token(default, "set", default),
+                            new[] {ValueAst.Create(captureIdx.Value, default), reAssignmentAst.expr},
+                            new Token(default, "")
+                        )
+                    );
                 ExprILGenerate(ast, argCount, variables, breakIndex);
             }
             else
@@ -366,22 +385,27 @@ namespace MarineLang.VirtualMachines
             }
         }
 
-        void ReAssignmentIndexerILGenerate(ReAssignmentIndexerAst reAssignmentAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void ReAssignmentIndexerILGenerate(ReAssignmentIndexerAst reAssignmentAst, int argCount,
+            FuncScopeVariables variables, BreakIndex breakIndex)
         {
             ExprILGenerate(reAssignmentAst.getIndexerAst.instanceExpr, argCount, variables, breakIndex);
             ExprILGenerate(reAssignmentAst.getIndexerAst.indexExpr, argCount, variables, breakIndex);
             ExprILGenerate(reAssignmentAst.assignmentExpr, argCount, variables, breakIndex);
-            marineILs.Add(new InstanceCSharpIndexerStoreIL());
+            marineILs.Add(
+                new InstanceCSharpIndexerStoreIL(
+                    new ILDebugInfo(reAssignmentAst.getIndexerAst.instanceExpr.Range.End)));
         }
 
-        void AssignmentILGenerate(AssignmentVariableAst assignmentAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void AssignmentILGenerate(AssignmentVariableAst assignmentAst, int argCount, FuncScopeVariables variables,
+            BreakIndex breakIndex)
         {
             ExprILGenerate(assignmentAst.expr, argCount, variables, breakIndex);
             variables.AddLocalVariable(assignmentAst.variableAst.VarName);
             marineILs.Add(new StoreIL(variables.GetVariableIdx(assignmentAst.variableAst.VarName)));
         }
 
-        void FieldAssignmentILGenerate(FieldAssignmentAst fieldAssignmentAst, int argCount, FuncScopeVariables variables, BreakIndex breakIndex)
+        void FieldAssignmentILGenerate(FieldAssignmentAst fieldAssignmentAst, int argCount,
+            FuncScopeVariables variables, BreakIndex breakIndex)
         {
             ExprILGenerate(fieldAssignmentAst.instanceFieldAst.instanceExpr, argCount, variables, breakIndex);
             ExprILGenerate(fieldAssignmentAst.expr, argCount, variables, breakIndex);
