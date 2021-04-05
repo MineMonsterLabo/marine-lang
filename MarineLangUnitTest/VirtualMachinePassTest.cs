@@ -603,7 +603,8 @@ end", 1)]
 
         [Theory]
         [InlineData("fun main() ret static_type.ret_func_name() end", "func_name")]
-        public void StaticTypeTest(string str, string expected)
+        [InlineData("fun main() ret static_type.sum(1, 4) end", 5)]
+        public void StaticTypeTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }
