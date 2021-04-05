@@ -103,6 +103,11 @@ namespace MarineLang.VirtualMachines
                     )
                 );
         }
+
+        public override string ToString()
+        {
+            return typeof(StaticCSharpFuncCallIL).Name + " '" + funcName + "' " + argCount;
+        }
     }
 
     public struct InstanceCSharpFuncCallIL : IMarineIL
@@ -157,6 +162,77 @@ namespace MarineLang.VirtualMachines
         public override string ToString()
         {
             return typeof(InstanceCSharpFuncCallIL).Name + " '" + funcName + "' " + argCount;
+        }
+    }
+
+    public struct StaticCSharpFieldLoadIL : IMarineIL
+    {
+        public readonly string fieldName;
+        public readonly ILDebugInfo iLDebugInfo;
+
+        public StaticCSharpFieldLoadIL(string fieldName, ILDebugInfo iLDebugInfo = null)
+        {
+            this.fieldName = fieldName;
+            this.iLDebugInfo = iLDebugInfo;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var classType = vm.Pop() as Type;
+            if (classType == null)
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"{fieldName}",
+                        ErrorCode.Unknown,
+                        iLDebugInfo.position
+                    )
+                );
+
+            var fieldInfo = classType.GetField(NameUtil.GetLowerCamelName(fieldName),
+                BindingFlags.Public | BindingFlags.Static);
+
+            if (fieldInfo != null)
+            {
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
+                    vm.Push(fieldInfo.GetValue(null));
+                else
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
+            }
+            else
+            {
+                PropertyInfo propertyInfo = classType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                    BindingFlags.Public | BindingFlags.Static);
+                if (propertyInfo == null)
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
+                    vm.Push(propertyInfo.GetValue(classType));
+                else
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
+            }
+        }
+
+        public override string ToString()
+        {
+            return typeof(StaticCSharpFieldLoadIL).Name + " '" + fieldName;
         }
     }
 
@@ -340,6 +416,78 @@ namespace MarineLang.VirtualMachines
         public override string ToString()
         {
             return typeof(InstanceCSharpIndexerStoreIL).Name;
+        }
+    }
+
+    public struct StaticCSharpFieldStoreIL : IMarineIL
+    {
+        public readonly string fieldName;
+        public readonly ILDebugInfo iLDebugInfo;
+
+        public StaticCSharpFieldStoreIL(string fieldName, ILDebugInfo iLDebugInfo = null)
+        {
+            this.fieldName = fieldName;
+            this.iLDebugInfo = iLDebugInfo;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var value = vm.Pop();
+            var classType = vm.Pop() as Type;
+            if (classType == null)
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"{fieldName}",
+                        ErrorCode.Unknown,
+                        iLDebugInfo.position
+                    )
+                );
+
+            var fieldInfo = classType.GetField(NameUtil.GetLowerCamelName(fieldName),
+                BindingFlags.Public | BindingFlags.Static);
+
+            if (fieldInfo != null)
+            {
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
+                    fieldInfo.SetValue(classType, value);
+                else
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
+            }
+            else
+            {
+                PropertyInfo propertyInfo = classType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                    BindingFlags.Public | BindingFlags.Static);
+                if (propertyInfo == null)
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
+                    propertyInfo.SetValue(classType, value);
+                else
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
+            }
+        }
+
+        public override string ToString()
+        {
+            return typeof(StaticCSharpFieldStoreIL).Name + " '" + fieldName;
         }
     }
 

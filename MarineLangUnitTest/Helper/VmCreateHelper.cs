@@ -182,6 +182,9 @@ namespace MarineLangUnitTest.Helper
         {
             public static string Name => "aaa";
 
+            public static string field = "Hello field!!";
+            public static int field2 = 50;
+
             public static string RetFuncName()
             {
                 return "func_name";

@@ -604,6 +604,9 @@ end", 1)]
         [Theory]
         [InlineData("fun main() ret static_type.ret_func_name() end", "func_name")]
         [InlineData("fun main() ret static_type.sum(1, 4) end", 5)]
+        [InlineData("fun main() ret static_type.name end", "aaa")]
+        [InlineData("fun main() ret static_type.field end", "Hello field!!")]
+        [InlineData("fun main() static_type.field2 = 1000 ret static_type.field2 end", 1000)]
         public void StaticTypeTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
