@@ -48,6 +48,63 @@ namespace MarineLang.VirtualMachines
         }
     }
 
+    public struct StaticCSharpFuncCallIL : IMarineIL
+    {
+        public readonly string funcName;
+        public readonly int argCount;
+        public readonly ILDebugInfo iLDebugInfo;
+
+        public StaticCSharpFuncCallIL(string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
+        {
+            this.funcName = funcName;
+            this.argCount = argCount;
+            this.iLDebugInfo = iLDebugInfo;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
+            var classType = vm.Pop() as Type;
+            if (classType == null)
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"{funcName}",
+                        ErrorCode.Unknown,
+                        iLDebugInfo.position
+                    )
+                );
+
+            var funcNameClone = funcName;
+            var types = args.Select(arg => arg.GetType()).ToArray();
+            var methodInfos =
+                classType.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(e => e.Name == funcNameClone)
+                    .ToArray();
+            var methodInfo = MethodInfoResolver.Select(methodInfos, types);
+            if (methodInfo == null)
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"{funcName}",
+                        ErrorCode.RuntimeMemberNotFound,
+                        iLDebugInfo.position
+                    )
+                );
+
+            var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
+                .ToArray();
+
+            if (ClassAccessibilityChecker.CheckMember(methodInfo))
+                vm.Push(methodInfo.Invoke(null, args2));
+            else
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"({funcName})",
+                        ErrorCode.RuntimeMemberAccessPrivate,
+                        iLDebugInfo.position
+                    )
+                );
+        }
+    }
+
     public struct InstanceCSharpFuncCallIL : IMarineIL
     {
         public readonly string funcName;

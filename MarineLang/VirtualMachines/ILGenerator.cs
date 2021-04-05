@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using MarineLang.BuiltInTypes;
@@ -43,6 +44,7 @@ namespace MarineLang.VirtualMachines
     {
         Dictionary<string, int> funcILIndexDict = new Dictionary<string, int>();
         IReadOnlyDictionary<string, MethodInfo> csharpFuncDict;
+        IReadOnlyDictionary<string, Type> staticTypeDict;
         readonly List<IMarineIL> marineILs = new List<IMarineIL>();
         readonly List<ActionFuncData> actionFuncDataList = new List<ActionFuncData>();
         readonly ProgramAst programAst;
@@ -53,9 +55,10 @@ namespace MarineLang.VirtualMachines
         }
 
         public ILGeneratedData Generate(IReadOnlyDictionary<string, MethodInfo> csharpFuncDict,
-            string[] globalVariableNames)
+            IReadOnlyDictionary<string, Type> staticTypeDict, string[] globalVariableNames)
         {
             this.csharpFuncDict = csharpFuncDict;
+            this.staticTypeDict = staticTypeDict;
             funcILIndexDict = programAst.funcDefinitionAsts.ToDictionary(x => x.funcName, x => -1);
             ProgramILGenerate(programAst, globalVariableNames);
             return new ILGeneratedData(funcILIndexDict, marineILs);
@@ -260,16 +263,33 @@ namespace MarineLang.VirtualMachines
         void InstanceFuncCallILGenerate(InstanceFuncCallAst instanceFuncCallAst, int argCount,
             FuncScopeVariables variables, BreakIndex breakIndex)
         {
-            ExprILGenerate(instanceFuncCallAst.instanceExpr, argCount, variables, breakIndex);
-            var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
-            var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.FuncName);
+            if (instanceFuncCallAst.instanceExpr is VariableAst variableAst &&
+                staticTypeDict.ContainsKey(variableAst.VarName))
+            {
+                marineILs.Add(new PushValueIL(staticTypeDict[variableAst.VarName]));
 
-            foreach (var arg in funcCallAst.args)
-                ExprILGenerate(arg, argCount, variables, breakIndex);
-            marineILs.Add(
-                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length,
-                    new ILDebugInfo(funcCallAst.Range.Start))
-            );
+                var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
+                var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.FuncName);
+                foreach (var arg in funcCallAst.args)
+                    ExprILGenerate(arg, argCount, variables, breakIndex);
+                marineILs.Add(
+                    new StaticCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length,
+                        new ILDebugInfo(funcCallAst.Range.Start))
+                );
+            }
+            else
+            {
+                ExprILGenerate(instanceFuncCallAst.instanceExpr, argCount, variables, breakIndex);
+                var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
+                var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.FuncName);
+
+                foreach (var arg in funcCallAst.args)
+                    ExprILGenerate(arg, argCount, variables, breakIndex);
+                marineILs.Add(
+                    new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length,
+                        new ILDebugInfo(funcCallAst.Range.Start))
+                );
+            }
         }
 
         void InstanceFieldILGenerate(InstanceFieldAst instanceFieldAst, int argCount, FuncScopeVariables variables,

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using MarineLang.BuildInObjects;
 using MarineLang.Models.Asts;
+using MarineLang.Utils;
 using MarineLang.VirtualMachines.Dumps;
 
 namespace MarineLang.VirtualMachines
@@ -12,14 +13,19 @@ namespace MarineLang.VirtualMachines
     public class HighLevelVirtualMachine
     {
         readonly Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
+        readonly Dictionary<string, Type> staticTypeDict = new Dictionary<string, Type>();
         readonly SortedDictionary<string, object> globalVariableDict = new SortedDictionary<string, object>();
         ILGenerator iLGenerator;
 
         public ILGeneratedData ILGeneratedData { get; private set; }
         public IReadOnlyDictionary<string, MethodInfo> GlobalFuncDict => methodInfoDict;
+
+        public IReadOnlyDictionary<string, Type> StaticTypeDict => staticTypeDict;
+
         public IReadOnlyDictionary<string, object> GlobalVariableDict => globalVariableDict;
 
         public IReadOnlyList<IMarineIL> MarineILs => ILGeneratedData?.marineILs;
+
         public HighLevelVirtualMachine()
         {
             GlobalVariableRegister("action_object_generator", new ActionObjectGenerator(this));
@@ -35,6 +41,16 @@ namespace MarineLang.VirtualMachines
             methodInfoDict.Add(methodInfo.Name, methodInfo);
         }
 
+        public void StaticTypeRegister(Type type)
+        {
+            staticTypeDict.Add(NameUtil.GetSnakeCase(type.Name), type);
+        }
+
+        public void StaticTypeRegister(string alias, Type type)
+        {
+            staticTypeDict.Add(alias, type);
+        }
+
         public void GlobalVariableRegister(string name, object val)
         {
             globalVariableDict.Add(name, val);
@@ -47,7 +63,7 @@ namespace MarineLang.VirtualMachines
 
         public void Compile()
         {
-            ILGeneratedData = iLGenerator.Generate(methodInfoDict, globalVariableDict.Keys.ToArray());
+            ILGeneratedData = iLGenerator.Generate(methodInfoDict, staticTypeDict, globalVariableDict.Keys.ToArray());
         }
 
         public MarineValue<RET> Run<RET>(string marineFuncName, params object[] args)
@@ -62,7 +78,7 @@ namespace MarineLang.VirtualMachines
 
         public MarineValue<RET> Run<RET>(string marineFuncName, IEnumerable<object> args)
         {
-            return new MarineValue<RET>( Run(marineFuncName, args));
+            return new MarineValue<RET>(Run(marineFuncName, args));
         }
 
         public MarineValue Run(string marineFuncName, IEnumerable<object> args)
