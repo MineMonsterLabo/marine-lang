@@ -52,6 +52,7 @@ statement      =
                   ret_statement |
                   assignment |
                   field_assignment |
+                  static_field_assignment |
                   re_assignment_variable |
                   re_assignment_indexer |
                   expr ;
@@ -64,6 +65,8 @@ ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment_variable ;
 field_assignment  
                = indexer_op_expr ,  dot_terms , '.' , variable , '=' , expr ;
+static_field_assignment
+               =  class_name , '.' , variable , '=' , expr ;
 re_assignment_variable  =  variable , '=' , expr ;
 re_assignment_indexer  
                = term , indexers , '=' , expr ;
@@ -78,8 +81,9 @@ binary_op_expr = unary_op_expr , [binary_op , binary_op_expr] ;
 unary_op_expr  = { unary_op } , dot_op_expr ;
 dot_op_expr    = indexer_op_expr , dot_terms ;
 indexer_op_expr
-               = class_name | ( term , [indexers] ) ;
+               = static_term | ( term , [indexers] ) ;
 dot_terms      = { '.' , field_term , [indexers] } ;
+static_term    = class_name , '.' , func_call | variable ;
 field_term     = 'await' | func_call | variable ;
 term           =
                  '(' , expr , ')' |
@@ -108,8 +112,7 @@ int_literal    = digit ;
 bool_literal   = 'true' | 'false' ;
 char_literal   = ? 省略 ? ;
 string_literal = ? 省略 ? ;
-class_name     = upper_letter , {upper_word} ; 
-upper_word     = upper_letter , {digit | lower_letter} ;
+class_name     = upper_letter , {digit | lower_letter | upper_letter} ; 
 variable       = id ;
 id             = lower_letter , {id_char} ;
 id_char        = digit | lower_letter | '_' ;
