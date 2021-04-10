@@ -327,9 +327,9 @@ end", 18)]
         }
 
         [Theory]
-        [InlineData("fun main() ret [0,1,3] end", new object[] { 0, 1, 3 })]
-        [InlineData("fun main() ret [7;3] end", new object[] { 7, null, null })]
-        [InlineData("fun main() ret [;3] end", new object[] { null, null, null })]
+        [InlineData("fun main() ret [0,1,3] end", new object[] {0, 1, 3})]
+        [InlineData("fun main() ret [7;3] end", new object[] {7, null, null})]
+        [InlineData("fun main() ret [;3] end", new object[] {null, null, null})]
         public void ArrayLiteral<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -488,7 +488,6 @@ end
 ", 5)]
         [InlineData("fun main() ret 5/*+1*/+2 end", 7)]
         [InlineData("fun main() ret 5/*/*+1*/+2 end", 7)]
-
         public void CommentOutTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -502,7 +501,7 @@ end
         [InlineData("fun main() ret over_load.hoge('v') end", "int")]
         [InlineData("fun main() ret over_load.hoge(5.3) end", "double")]
         [InlineData("fun main() ret over_load.hoge(\"aaa\") end", "object")]
-        public void OverLoadTest(string str,string expected)
+        public void OverLoadTest(string str, string expected)
         {
             RunReturnCheck(str, expected);
         }
@@ -513,7 +512,7 @@ end
         {
             RunReturnCheck(str, expected);
         }
-        
+
         [Theory]
         [InlineData("fun main() ret optional.hoge(5,4) end", "5,4,10.5")]
         [InlineData("fun main() ret optional.hoge(5,4.3) end", "5,4.3,11.5")]
@@ -598,6 +597,17 @@ fun main()
     ret 1
 end", 1)]
         public void BreakTest(string str, int expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret static_type.ret_func_name() end", "func_name")]
+        [InlineData("fun main() ret static_type.sum(1, 4) end", 5)]
+        [InlineData("fun main() ret static_type.name end", "aaa")]
+        [InlineData("fun main() ret static_type.field end", "Hello field!!")]
+        [InlineData("fun main() static_type.field2 = 1000 ret static_type.field2 end", 1000)]
+        public void StaticTypeTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }

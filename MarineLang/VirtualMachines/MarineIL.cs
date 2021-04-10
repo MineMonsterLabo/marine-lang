@@ -48,6 +48,69 @@ namespace MarineLang.VirtualMachines
         }
     }
 
+    public struct StaticCSharpFuncCallIL : IMarineIL
+    {
+        public readonly Type type;
+        public readonly string funcName;
+        public readonly int argCount;
+        public readonly ILDebugInfo iLDebugInfo;
+
+        public StaticCSharpFuncCallIL(Type type, string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
+        {
+            this.type = type;
+            this.funcName = funcName;
+            this.argCount = argCount;
+            this.iLDebugInfo = iLDebugInfo;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
+            if (type == null)
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"{funcName}",
+                        ErrorCode.Unknown,
+                        iLDebugInfo.position
+                    )
+                );
+
+            var funcNameClone = funcName;
+            var types = args.Select(arg => arg.GetType()).ToArray();
+            var methodInfos =
+                type.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(e => e.Name == funcNameClone)
+                    .ToArray();
+            var methodInfo = MethodInfoResolver.Select(methodInfos, types);
+            if (methodInfo == null)
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"{funcName}",
+                        ErrorCode.RuntimeMemberNotFound,
+                        iLDebugInfo.position
+                    )
+                );
+
+            var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
+                .ToArray();
+
+            if (ClassAccessibilityChecker.CheckMember(methodInfo))
+                vm.Push(methodInfo.Invoke(null, args2));
+            else
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"({funcName})",
+                        ErrorCode.RuntimeMemberAccessPrivate,
+                        iLDebugInfo.position
+                    )
+                );
+        }
+
+        public override string ToString()
+        {
+            return typeof(StaticCSharpFuncCallIL).Name + " '" + type.FullName + "." + funcName + "' " + argCount;
+        }
+    }
+
     public struct InstanceCSharpFuncCallIL : IMarineIL
     {
         public readonly string funcName;
@@ -100,6 +163,78 @@ namespace MarineLang.VirtualMachines
         public override string ToString()
         {
             return typeof(InstanceCSharpFuncCallIL).Name + " '" + funcName + "' " + argCount;
+        }
+    }
+
+    public struct StaticCSharpFieldLoadIL : IMarineIL
+    {
+        public readonly Type type;
+        public readonly string fieldName;
+        public readonly ILDebugInfo iLDebugInfo;
+
+        public StaticCSharpFieldLoadIL(Type type, string fieldName, ILDebugInfo iLDebugInfo = null)
+        {
+            this.type = type;
+            this.fieldName = fieldName;
+            this.iLDebugInfo = iLDebugInfo;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            if (type == null)
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"{fieldName}",
+                        ErrorCode.Unknown,
+                        iLDebugInfo.position
+                    )
+                );
+
+            var fieldInfo = type.GetField(NameUtil.GetLowerCamelName(fieldName),
+                BindingFlags.Public | BindingFlags.Static);
+
+            if (fieldInfo != null)
+            {
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
+                    vm.Push(fieldInfo.GetValue(null));
+                else
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
+            }
+            else
+            {
+                PropertyInfo propertyInfo = type.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                    BindingFlags.Public | BindingFlags.Static);
+                if (propertyInfo == null)
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
+                    vm.Push(propertyInfo.GetValue(type));
+                else
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
+            }
+        }
+
+        public override string ToString()
+        {
+            return typeof(StaticCSharpFieldLoadIL).Name + " '" + type.FullName + "." + fieldName + "'";
         }
     }
 
@@ -283,6 +418,79 @@ namespace MarineLang.VirtualMachines
         public override string ToString()
         {
             return typeof(InstanceCSharpIndexerStoreIL).Name;
+        }
+    }
+
+    public struct StaticCSharpFieldStoreIL : IMarineIL
+    {
+        public readonly Type type;
+        public readonly string fieldName;
+        public readonly ILDebugInfo iLDebugInfo;
+
+        public StaticCSharpFieldStoreIL(Type type, string fieldName, ILDebugInfo iLDebugInfo = null)
+        {
+            this.type = type;
+            this.fieldName = fieldName;
+            this.iLDebugInfo = iLDebugInfo;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var value = vm.Pop();
+            if (type == null)
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(
+                        $"{fieldName}",
+                        ErrorCode.Unknown,
+                        iLDebugInfo.position
+                    )
+                );
+
+            var fieldInfo = type.GetField(NameUtil.GetLowerCamelName(fieldName),
+                BindingFlags.Public | BindingFlags.Static);
+
+            if (fieldInfo != null)
+            {
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
+                    fieldInfo.SetValue(type, value);
+                else
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
+            }
+            else
+            {
+                PropertyInfo propertyInfo = type.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                    BindingFlags.Public | BindingFlags.Static);
+                if (propertyInfo == null)
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"{fieldName}",
+                            ErrorCode.RuntimeMemberNotFound,
+                            iLDebugInfo.position
+                        )
+                    );
+
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
+                    propertyInfo.SetValue(type, value);
+                else
+                    throw new MarineRuntimeException(
+                        new RuntimeErrorInfo(
+                            $"({fieldName})",
+                            ErrorCode.RuntimeMemberAccessPrivate,
+                            iLDebugInfo.position
+                        )
+                    );
+            }
+        }
+
+        public override string ToString()
+        {
+            return typeof(StaticCSharpFieldStoreIL).Name + " '" + type.FullName + "." + fieldName + "'";
         }
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace MarineLangUnitTest.Helper
             var tokenStream = TokenStream.Create(tokens);
             var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
-                throw new System.Exception(parseResult.Error.FullErrorMessage);
+                throw new Exception(parseResult.Error.FullErrorMessage);
             var vm = new HighLevelVirtualMachine();
 
             vm.SetProgram(parseResult.Value);
@@ -48,6 +49,8 @@ namespace MarineLangUnitTest.Helper
                 new string[] {"xxx", "yyy"},
             });
 
+            vm.StaticTypeRegister(typeof(StaticType));
+
             vm.Compile();
 
             return vm;
@@ -57,11 +60,13 @@ namespace MarineLangUnitTest.Helper
         {
             public bool flag;
             public string[] Names { get; } = new string[] {"rrr", "qqq"};
+
             public string this[string index]
             {
                 get => index;
             }
-            public Dictionary<string, string> Dict => new Dictionary<string, string> { { "hoge", "fuga" } };
+
+            public Dictionary<string, string> Dict => new Dictionary<string, string> {{"hoge", "fuga"}};
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
             public Hoge GetThis() => this;
@@ -168,9 +173,27 @@ namespace MarineLangUnitTest.Helper
 
         public class Optional
         {
-            public string Hoge(int a, int b,float c=10.5f) =>$"{a},{b},{c}";
+            public string Hoge(int a, int b, float c = 10.5f) => $"{a},{b},{c}";
             public string Hoge(int a, float b, float c = 11.5f) => $"{a},{b},{c}";
             public string Hoge(object a) => "object";
+        }
+
+        public static class StaticType
+        {
+            public static string Name => "aaa";
+
+            public static string field = "Hello field!!";
+            public static int field2 = 50;
+
+            public static string RetFuncName()
+            {
+                return "func_name";
+            }
+
+            public static int Sum(int a, int b)
+            {
+                return a + b;
+            }
         }
     }
 }
