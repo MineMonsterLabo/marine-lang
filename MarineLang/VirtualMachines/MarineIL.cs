@@ -50,12 +50,14 @@ namespace MarineLang.VirtualMachines
 
     public struct StaticCSharpFuncCallIL : IMarineIL
     {
+        public readonly Type type;
         public readonly string funcName;
         public readonly int argCount;
         public readonly ILDebugInfo iLDebugInfo;
 
-        public StaticCSharpFuncCallIL(string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
+        public StaticCSharpFuncCallIL(Type type, string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
         {
+            this.type = type;
             this.funcName = funcName;
             this.argCount = argCount;
             this.iLDebugInfo = iLDebugInfo;
@@ -64,8 +66,7 @@ namespace MarineLang.VirtualMachines
         public void Run(LowLevelVirtualMachine vm)
         {
             var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
-            var classType = vm.Pop() as Type;
-            if (classType == null)
+            if (type == null)
                 throw new MarineRuntimeException(
                     new RuntimeErrorInfo(
                         $"{funcName}",
@@ -77,7 +78,7 @@ namespace MarineLang.VirtualMachines
             var funcNameClone = funcName;
             var types = args.Select(arg => arg.GetType()).ToArray();
             var methodInfos =
-                classType.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(e => e.Name == funcNameClone)
+                type.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(e => e.Name == funcNameClone)
                     .ToArray();
             var methodInfo = MethodInfoResolver.Select(methodInfos, types);
             if (methodInfo == null)
@@ -106,7 +107,7 @@ namespace MarineLang.VirtualMachines
 
         public override string ToString()
         {
-            return typeof(StaticCSharpFuncCallIL).Name + " '" + funcName + "' " + argCount;
+            return typeof(StaticCSharpFuncCallIL).Name + " '" + type.FullName + "." + funcName + "' " + argCount;
         }
     }
 
@@ -167,19 +168,20 @@ namespace MarineLang.VirtualMachines
 
     public struct StaticCSharpFieldLoadIL : IMarineIL
     {
+        public readonly Type type;
         public readonly string fieldName;
         public readonly ILDebugInfo iLDebugInfo;
 
-        public StaticCSharpFieldLoadIL(string fieldName, ILDebugInfo iLDebugInfo = null)
+        public StaticCSharpFieldLoadIL(Type type, string fieldName, ILDebugInfo iLDebugInfo = null)
         {
+            this.type = type;
             this.fieldName = fieldName;
             this.iLDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
         {
-            var classType = vm.Pop() as Type;
-            if (classType == null)
+            if (type == null)
                 throw new MarineRuntimeException(
                     new RuntimeErrorInfo(
                         $"{fieldName}",
@@ -188,7 +190,7 @@ namespace MarineLang.VirtualMachines
                     )
                 );
 
-            var fieldInfo = classType.GetField(NameUtil.GetLowerCamelName(fieldName),
+            var fieldInfo = type.GetField(NameUtil.GetLowerCamelName(fieldName),
                 BindingFlags.Public | BindingFlags.Static);
 
             if (fieldInfo != null)
@@ -206,7 +208,7 @@ namespace MarineLang.VirtualMachines
             }
             else
             {
-                PropertyInfo propertyInfo = classType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                PropertyInfo propertyInfo = type.GetProperty(NameUtil.GetUpperCamelName(fieldName),
                     BindingFlags.Public | BindingFlags.Static);
                 if (propertyInfo == null)
                     throw new MarineRuntimeException(
@@ -218,7 +220,7 @@ namespace MarineLang.VirtualMachines
                     );
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
-                    vm.Push(propertyInfo.GetValue(classType));
+                    vm.Push(propertyInfo.GetValue(type));
                 else
                     throw new MarineRuntimeException(
                         new RuntimeErrorInfo(
@@ -232,7 +234,7 @@ namespace MarineLang.VirtualMachines
 
         public override string ToString()
         {
-            return typeof(StaticCSharpFieldLoadIL).Name + " '" + fieldName;
+            return typeof(StaticCSharpFieldLoadIL).Name + " '" + type.FullName + "." + fieldName + "'";
         }
     }
 
@@ -421,11 +423,13 @@ namespace MarineLang.VirtualMachines
 
     public struct StaticCSharpFieldStoreIL : IMarineIL
     {
+        public readonly Type type;
         public readonly string fieldName;
         public readonly ILDebugInfo iLDebugInfo;
 
-        public StaticCSharpFieldStoreIL(string fieldName, ILDebugInfo iLDebugInfo = null)
+        public StaticCSharpFieldStoreIL(Type type, string fieldName, ILDebugInfo iLDebugInfo = null)
         {
+            this.type = type;
             this.fieldName = fieldName;
             this.iLDebugInfo = iLDebugInfo;
         }
@@ -433,8 +437,7 @@ namespace MarineLang.VirtualMachines
         public void Run(LowLevelVirtualMachine vm)
         {
             var value = vm.Pop();
-            var classType = vm.Pop() as Type;
-            if (classType == null)
+            if (type == null)
                 throw new MarineRuntimeException(
                     new RuntimeErrorInfo(
                         $"{fieldName}",
@@ -443,13 +446,13 @@ namespace MarineLang.VirtualMachines
                     )
                 );
 
-            var fieldInfo = classType.GetField(NameUtil.GetLowerCamelName(fieldName),
+            var fieldInfo = type.GetField(NameUtil.GetLowerCamelName(fieldName),
                 BindingFlags.Public | BindingFlags.Static);
 
             if (fieldInfo != null)
             {
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo))
-                    fieldInfo.SetValue(classType, value);
+                    fieldInfo.SetValue(type, value);
                 else
                     throw new MarineRuntimeException(
                         new RuntimeErrorInfo(
@@ -461,7 +464,7 @@ namespace MarineLang.VirtualMachines
             }
             else
             {
-                PropertyInfo propertyInfo = classType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                PropertyInfo propertyInfo = type.GetProperty(NameUtil.GetUpperCamelName(fieldName),
                     BindingFlags.Public | BindingFlags.Static);
                 if (propertyInfo == null)
                     throw new MarineRuntimeException(
@@ -473,7 +476,7 @@ namespace MarineLang.VirtualMachines
                     );
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
-                    propertyInfo.SetValue(classType, value);
+                    propertyInfo.SetValue(type, value);
                 else
                     throw new MarineRuntimeException(
                         new RuntimeErrorInfo(
@@ -487,7 +490,7 @@ namespace MarineLang.VirtualMachines
 
         public override string ToString()
         {
-            return typeof(StaticCSharpFieldStoreIL).Name + " '" + fieldName;
+            return typeof(StaticCSharpFieldStoreIL).Name + " '" + type.FullName + "." + fieldName + "'";
         }
     }
 
