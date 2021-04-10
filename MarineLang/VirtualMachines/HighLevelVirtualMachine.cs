@@ -100,15 +100,20 @@ namespace MarineLang.VirtualMachines
             return new MarineValue(lowLevelVirtualMachine.Pop());
         }
 
-        public void CreateDump()
+        public void CreateDumpWithFile()
         {
-            CreateDump($"{Environment.CurrentDirectory}/marine_dump.json");
+            CreateDumpWithFile($"{Environment.CurrentDirectory}/marine_dump.json");
         }
 
-        public void CreateDump(string filePath)
+        public void CreateDumpWithFile(string filePath)
+        {
+            File.WriteAllText(filePath, CreateDumpWithString());
+        }
+
+        public string CreateDumpWithString()
         {
             DumpSerializer serializer = new DumpSerializer();
-            File.WriteAllText(filePath, serializer.Serialize(globalVariableDict));
+            return serializer.Serialize(globalVariableDict);
         }
 
         private IEnumerable<object> YieldRun(LowLevelVirtualMachine lowLevelVirtualMachine)
