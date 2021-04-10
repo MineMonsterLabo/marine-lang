@@ -107,8 +107,13 @@ namespace MarineLang.VirtualMachines
 
         public void CreateDump(string filePath)
         {
+            File.WriteAllText(filePath, CreateDumpString());
+        }
+
+        public string CreateDumpString()
+        {
             DumpSerializer serializer = new DumpSerializer();
-            File.WriteAllText(filePath, serializer.Serialize(globalVariableDict));
+            return serializer.Serialize(globalVariableDict);
         }
 
         private IEnumerable<object> YieldRun(LowLevelVirtualMachine lowLevelVirtualMachine)

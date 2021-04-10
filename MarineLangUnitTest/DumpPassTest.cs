@@ -11,7 +11,7 @@ namespace MarineLangUnitTest
 {
     public class DumpPassTest
     {
-        internal IReadOnlyDictionary<string, ClassDumpModel> CreateDump(string path = null)
+        private IReadOnlyDictionary<string, ClassDumpModel> CreateFileDump(string path = null)
         {
             if (path == null)
                 VmCreateHelper.Create("").CreateDump();
@@ -29,14 +29,9 @@ namespace MarineLangUnitTest
             return deserializer.Deserialize(json);
         }
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData("test.json")]
-        public void CreateDumpTest(string path)
-        {
-            var dumps = CreateDump(path);
-            Assert.True(dumps.Count > 0);
 
+        private void DumpTest(IReadOnlyDictionary<string, ClassDumpModel> dumps)
+        {
             Assert.Equal(11, dumps["hoge"].Members.Length);
             Assert.Equal(nameof(VmCreateHelper.Hoge), dumps["hoge"].Type.Name);
             Assert.Equal(typeof(VmCreateHelper.Hoge).FullName, dumps["hoge"].Type.FullName);
@@ -77,6 +72,28 @@ namespace MarineLangUnitTest
             Assert.True(methodDumper2.Parameters.ElementAt(1).IsOptional);
             Assert.Equal(typeof(int).FullName, methodDumper2.Parameters.ElementAt(1).Type.FullName);
             Assert.Equal(1234, Convert.ToInt32(methodDumper2.Parameters.ElementAt(1).DefaultValue));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("test.json")]
+        public void CreateFileDumpTest(string path)
+        {
+            var dumps = CreateFileDump(path);
+            Assert.True(dumps.Count > 0);
+
+            DumpTest(dumps);
+        }
+
+        [Fact]
+        public void CreateStringDumpTest()
+        {
+            var json = VmCreateHelper.Create("").CreateDumpString();
+            DumpDeserializer deserializer = new DumpDeserializer();
+            var dumps = deserializer.Deserialize(json);
+            Assert.True(dumps.Count > 0);
+
+            DumpTest(dumps);
         }
     }
 }
