@@ -6,6 +6,7 @@ using MarineLang.BuiltInTypes;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Utils;
+using MarineLang.VirtualMachines.MarineILs;
 
 namespace MarineLang.VirtualMachines
 {
