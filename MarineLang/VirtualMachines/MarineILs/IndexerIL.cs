@@ -7,11 +7,12 @@ namespace MarineLang.VirtualMachines.MarineILs
 {
     public struct InstanceCSharpIndexerLoadIL : IMarineIL
     {
-        public readonly ILDebugInfo iLDebugInfo;
+        public ILDebugInfo ILDebugInfo { get; }
+
 
         public InstanceCSharpIndexerLoadIL(ILDebugInfo iLDebugInfo = null)
         {
-            this.iLDebugInfo = iLDebugInfo;
+            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -29,7 +30,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             string.Empty,
                             ErrorCode.RuntimeIndexerNotFound,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
                 }
@@ -42,7 +43,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             string.Empty,
                             ErrorCode.RuntimeIndexerNotFound,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
 
@@ -66,11 +67,11 @@ namespace MarineLang.VirtualMachines.MarineILs
 
     public struct InstanceCSharpIndexerStoreIL : IMarineIL
     {
-        public readonly ILDebugInfo iLDebugInfo;
+        public ILDebugInfo ILDebugInfo { get; }
 
         public InstanceCSharpIndexerStoreIL(ILDebugInfo iLDebugInfo = null)
         {
-            this.iLDebugInfo = iLDebugInfo;
+            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -89,7 +90,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             string.Empty,
                             ErrorCode.RuntimeIndexerNotFound,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
                 }
@@ -102,7 +103,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             string.Empty,
                             ErrorCode.RuntimeIndexerNotFound,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
 

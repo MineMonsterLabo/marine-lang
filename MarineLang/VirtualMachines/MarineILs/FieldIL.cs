@@ -10,13 +10,13 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly Type type;
         public readonly string fieldName;
-        public readonly ILDebugInfo iLDebugInfo;
+        public ILDebugInfo ILDebugInfo { get; }
 
         public StaticCSharpFieldLoadIL(Type type, string fieldName, ILDebugInfo iLDebugInfo = null)
         {
             this.type = type;
             this.fieldName = fieldName;
-            this.iLDebugInfo = iLDebugInfo;
+            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -26,7 +26,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     new RuntimeErrorInfo(
                         $"{fieldName}",
                         ErrorCode.Unknown,
-                        iLDebugInfo.position
+                        ILDebugInfo.position
                     )
                 );
 
@@ -42,7 +42,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"{fieldName}",
                             ErrorCode.RuntimeMemberAccessPrivate,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
             }
@@ -55,7 +55,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"{fieldName}",
                             ErrorCode.RuntimeMemberNotFound,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
 
@@ -66,7 +66,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"({fieldName})",
                             ErrorCode.RuntimeMemberAccessPrivate,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
             }
@@ -81,13 +81,12 @@ namespace MarineLang.VirtualMachines.MarineILs
     public struct InstanceCSharpFieldLoadIL : IMarineIL
     {
         public readonly string fieldName;
-        public readonly ILDebugInfo iLDebugInfo;
-
+        public ILDebugInfo ILDebugInfo { get; }
 
         public InstanceCSharpFieldLoadIL(string fieldName, ILDebugInfo iLDebugInfo = null)
         {
             this.fieldName = fieldName;
-            this.iLDebugInfo = iLDebugInfo;
+            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -106,7 +105,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"{fieldName}",
                             ErrorCode.RuntimeMemberAccessPrivate,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
             }
@@ -119,7 +118,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"{fieldName}",
                             ErrorCode.RuntimeMemberNotFound,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
 
@@ -130,7 +129,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"({fieldName})",
                             ErrorCode.RuntimeMemberAccessPrivate,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
             }
@@ -146,13 +145,13 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly Type type;
         public readonly string fieldName;
-        public readonly ILDebugInfo iLDebugInfo;
+        public ILDebugInfo ILDebugInfo { get; }
 
         public StaticCSharpFieldStoreIL(Type type, string fieldName, ILDebugInfo iLDebugInfo = null)
         {
             this.type = type;
             this.fieldName = fieldName;
-            this.iLDebugInfo = iLDebugInfo;
+            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -163,7 +162,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     new RuntimeErrorInfo(
                         $"{fieldName}",
                         ErrorCode.Unknown,
-                        iLDebugInfo.position
+                        ILDebugInfo.position
                     )
                 );
 
@@ -179,7 +178,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"({fieldName})",
                             ErrorCode.RuntimeMemberAccessPrivate,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
             }
@@ -192,7 +191,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"{fieldName}",
                             ErrorCode.RuntimeMemberNotFound,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
 
@@ -203,7 +202,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"({fieldName})",
                             ErrorCode.RuntimeMemberAccessPrivate,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
             }
@@ -218,12 +217,12 @@ namespace MarineLang.VirtualMachines.MarineILs
     public struct InstanceCSharpFieldStoreIL : IMarineIL
     {
         public readonly string fieldName;
-        public readonly ILDebugInfo iLDebugInfo;
+        public ILDebugInfo ILDebugInfo { get; }
 
         public InstanceCSharpFieldStoreIL(string fieldName, ILDebugInfo iLDebugInfo = null)
         {
             this.fieldName = fieldName;
-            this.iLDebugInfo = iLDebugInfo;
+            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -243,7 +242,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"({fieldName})",
                             ErrorCode.RuntimeMemberAccessPrivate,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
             }
@@ -256,7 +255,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"{fieldName}",
                             ErrorCode.RuntimeMemberNotFound,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
 
@@ -267,7 +266,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                         new RuntimeErrorInfo(
                             $"({fieldName})",
                             ErrorCode.RuntimeMemberAccessPrivate,
-                            iLDebugInfo.position
+                            ILDebugInfo.position
                         )
                     );
             }

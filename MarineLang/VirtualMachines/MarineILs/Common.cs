@@ -14,6 +14,7 @@ namespace MarineLang.VirtualMachines.MarineILs
 
     public interface IMarineIL
     {
+        ILDebugInfo ILDebugInfo { get; }
         void Run(LowLevelVirtualMachine vm);
     }
 }

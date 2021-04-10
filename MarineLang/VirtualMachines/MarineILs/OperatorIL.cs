@@ -6,6 +6,7 @@ namespace MarineLang.VirtualMachines.MarineILs
     public struct BinaryOpIL : IMarineIL
     {
         public readonly TokenType opKind;
+        public ILDebugInfo ILDebugInfo => null;
 
         public BinaryOpIL(TokenType opKind)
         {
@@ -120,6 +121,7 @@ namespace MarineLang.VirtualMachines.MarineILs
     public struct UnaryOpIL : IMarineIL
     {
         public readonly TokenType opKind;
+        public ILDebugInfo ILDebugInfo => null;
 
         public UnaryOpIL(TokenType opKind)
         {

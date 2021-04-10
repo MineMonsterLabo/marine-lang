@@ -11,6 +11,7 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly MethodInfo methodInfo;
         public readonly int argCount;
+        public ILDebugInfo ILDebugInfo => null;
 
         public CSharpFuncCallIL(MethodInfo methodInfo, int argCount)
         {
@@ -35,14 +36,14 @@ namespace MarineLang.VirtualMachines.MarineILs
         public readonly Type type;
         public readonly string funcName;
         public readonly int argCount;
-        public readonly ILDebugInfo iLDebugInfo;
+        public ILDebugInfo ILDebugInfo { get; }
 
         public StaticCSharpFuncCallIL(Type type, string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
         {
             this.type = type;
             this.funcName = funcName;
             this.argCount = argCount;
-            this.iLDebugInfo = iLDebugInfo;
+            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -53,7 +54,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     new RuntimeErrorInfo(
                         $"{funcName}",
                         ErrorCode.Unknown,
-                        iLDebugInfo.position
+                        ILDebugInfo.position
                     )
                 );
 
@@ -68,7 +69,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     new RuntimeErrorInfo(
                         $"{funcName}",
                         ErrorCode.RuntimeMemberNotFound,
-                        iLDebugInfo.position
+                        ILDebugInfo.position
                     )
                 );
 
@@ -82,7 +83,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     new RuntimeErrorInfo(
                         $"({funcName})",
                         ErrorCode.RuntimeMemberAccessPrivate,
-                        iLDebugInfo.position
+                        ILDebugInfo.position
                     )
                 );
         }
@@ -97,13 +98,13 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly string funcName;
         public readonly int argCount;
-        public readonly ILDebugInfo iLDebugInfo;
+        public ILDebugInfo ILDebugInfo { get; }
 
         public InstanceCSharpFuncCallIL(string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
         {
             this.funcName = funcName;
             this.argCount = argCount;
-            this.iLDebugInfo = iLDebugInfo;
+            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -123,7 +124,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     new RuntimeErrorInfo(
                         $"{funcName}",
                         ErrorCode.RuntimeMemberNotFound,
-                        iLDebugInfo.position
+                        ILDebugInfo.position
                     )
                 );
 
@@ -137,7 +138,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     new RuntimeErrorInfo(
                         $"({funcName})",
                         ErrorCode.RuntimeMemberAccessPrivate,
-                        iLDebugInfo.position
+                        ILDebugInfo.position
                     )
                 );
         }
@@ -153,6 +154,7 @@ namespace MarineLang.VirtualMachines.MarineILs
         int nextILIndex;
         public readonly string funcName;
         public readonly int argCount;
+        public ILDebugInfo ILDebugInfo => null;
 
         public MarineFuncCallIL(string funcName, int argCount)
         {
