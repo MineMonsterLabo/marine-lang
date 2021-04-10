@@ -50,13 +50,7 @@ namespace MarineLang.VirtualMachines.MarineILs
         {
             var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
             if (type == null)
-                throw new MarineRuntimeException(
-                    new RuntimeErrorInfo(
-                        $"{funcName}",
-                        ErrorCode.Unknown,
-                        ILDebugInfo.position
-                    )
-                );
+                this.ThrowRuntimeError($"{funcName}", ErrorCode.Unknown);
 
             var funcNameClone = funcName;
             var types = args.Select(arg => arg.GetType()).ToArray();
@@ -65,13 +59,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     .ToArray();
             var methodInfo = MethodInfoResolver.Select(methodInfos, types);
             if (methodInfo == null)
-                throw new MarineRuntimeException(
-                    new RuntimeErrorInfo(
-                        $"{funcName}",
-                        ErrorCode.RuntimeMemberNotFound,
-                        ILDebugInfo.position
-                    )
-                );
+                this.ThrowRuntimeError($"{funcName}", ErrorCode.RuntimeMemberNotFound);
 
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
@@ -79,13 +67,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             if (ClassAccessibilityChecker.CheckMember(methodInfo))
                 vm.Push(methodInfo.Invoke(null, args2));
             else
-                throw new MarineRuntimeException(
-                    new RuntimeErrorInfo(
-                        $"({funcName})",
-                        ErrorCode.RuntimeMemberAccessPrivate,
-                        ILDebugInfo.position
-                    )
-                );
+                this.ThrowRuntimeError($"({funcName})", ErrorCode.RuntimeMemberAccessPrivate);
         }
 
         public override string ToString()
@@ -120,13 +102,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     .ToArray();
             var methodInfo = MethodInfoResolver.Select(methodInfos, types);
             if (methodInfo == null)
-                throw new MarineRuntimeException(
-                    new RuntimeErrorInfo(
-                        $"{funcName}",
-                        ErrorCode.RuntimeMemberNotFound,
-                        ILDebugInfo.position
-                    )
-                );
+                this.ThrowRuntimeError($"{funcName}", ErrorCode.RuntimeMemberNotFound);
 
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
@@ -134,13 +110,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             if (ClassAccessibilityChecker.CheckMember(methodInfo))
                 vm.Push(methodInfo.Invoke(instance, args2));
             else
-                throw new MarineRuntimeException(
-                    new RuntimeErrorInfo(
-                        $"({funcName})",
-                        ErrorCode.RuntimeMemberAccessPrivate,
-                        ILDebugInfo.position
-                    )
-                );
+                this.ThrowRuntimeError($"{funcName}", ErrorCode.RuntimeMemberAccessPrivate);
         }
 
         public override string ToString()

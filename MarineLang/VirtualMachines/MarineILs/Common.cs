@@ -1,4 +1,5 @@
 ﻿using MarineLang.Models;
+using MarineLang.Models.Errors;
 
 namespace MarineLang.VirtualMachines.MarineILs
 {
@@ -16,5 +17,19 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         ILDebugInfo ILDebugInfo { get; }
         void Run(LowLevelVirtualMachine vm);
+    }
+
+    public static class IMarineILExtension
+    {
+        public static void ThrowRuntimeError(this IMarineIL marineIL,  string errorMessage,ErrorCode errorCode)
+        {
+            throw new MarineRuntimeException(
+                  new RuntimeErrorInfo(
+                      errorMessage,
+                      errorCode,
+                      marineIL.ILDebugInfo.position
+                  )
+              );
+        }
     }
 }

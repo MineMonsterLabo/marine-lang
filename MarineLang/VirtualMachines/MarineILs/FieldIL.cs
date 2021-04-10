@@ -22,13 +22,7 @@ namespace MarineLang.VirtualMachines.MarineILs
         public void Run(LowLevelVirtualMachine vm)
         {
             if (type == null)
-                throw new MarineRuntimeException(
-                    new RuntimeErrorInfo(
-                        $"{fieldName}",
-                        ErrorCode.Unknown,
-                        ILDebugInfo.position
-                    )
-                );
+                this.ThrowRuntimeError($"{fieldName}", ErrorCode.Unknown);
 
             var fieldInfo = type.GetField(NameUtil.GetLowerCamelName(fieldName),
                 BindingFlags.Public | BindingFlags.Static);
@@ -38,37 +32,19 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo))
                     vm.Push(fieldInfo.GetValue(null));
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"{fieldName}",
-                            ErrorCode.RuntimeMemberAccessPrivate,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"{fieldName}", ErrorCode.RuntimeMemberAccessPrivate);
             }
             else
             {
                 PropertyInfo propertyInfo = type.GetProperty(NameUtil.GetUpperCamelName(fieldName),
                     BindingFlags.Public | BindingFlags.Static);
                 if (propertyInfo == null)
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"{fieldName}",
-                            ErrorCode.RuntimeMemberNotFound,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"{fieldName}", ErrorCode.RuntimeMemberNotFound);
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     vm.Push(propertyInfo.GetValue(type));
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"({fieldName})",
-                            ErrorCode.RuntimeMemberAccessPrivate,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"{fieldName}", ErrorCode.RuntimeMemberAccessPrivate);
             }
         }
 
@@ -101,37 +77,19 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo))
                     vm.Push(fieldInfo.GetValue(instance));
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"{fieldName}",
-                            ErrorCode.RuntimeMemberAccessPrivate,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
             }
             else
             {
                 PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
                     BindingFlags.Public | BindingFlags.Instance);
                 if (propertyInfo == null)
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"{fieldName}",
-                            ErrorCode.RuntimeMemberNotFound,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberNotFound);
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     vm.Push(propertyInfo.GetValue(instance));
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"({fieldName})",
-                            ErrorCode.RuntimeMemberAccessPrivate,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
             }
         }
 
@@ -158,13 +116,7 @@ namespace MarineLang.VirtualMachines.MarineILs
         {
             var value = vm.Pop();
             if (type == null)
-                throw new MarineRuntimeException(
-                    new RuntimeErrorInfo(
-                        $"{fieldName}",
-                        ErrorCode.Unknown,
-                        ILDebugInfo.position
-                    )
-                );
+                this.ThrowRuntimeError($"({fieldName})", ErrorCode.Unknown);
 
             var fieldInfo = type.GetField(NameUtil.GetLowerCamelName(fieldName),
                 BindingFlags.Public | BindingFlags.Static);
@@ -174,37 +126,19 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo))
                     fieldInfo.SetValue(type, value);
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"({fieldName})",
-                            ErrorCode.RuntimeMemberAccessPrivate,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
             }
             else
             {
                 PropertyInfo propertyInfo = type.GetProperty(NameUtil.GetUpperCamelName(fieldName),
                     BindingFlags.Public | BindingFlags.Static);
                 if (propertyInfo == null)
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"{fieldName}",
-                            ErrorCode.RuntimeMemberNotFound,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberNotFound);
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     propertyInfo.SetValue(type, value);
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"({fieldName})",
-                            ErrorCode.RuntimeMemberAccessPrivate,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
             }
         }
 
@@ -238,37 +172,19 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo))
                     fieldInfo.SetValue(instance, value);
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"({fieldName})",
-                            ErrorCode.RuntimeMemberAccessPrivate,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
             }
             else
             {
                 PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
                     BindingFlags.Public | BindingFlags.Instance);
                 if (propertyInfo == null)
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"{fieldName}",
-                            ErrorCode.RuntimeMemberNotFound,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberNotFound);
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     propertyInfo.SetValue(instance, value);
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            $"({fieldName})",
-                            ErrorCode.RuntimeMemberAccessPrivate,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
             }
         }
 

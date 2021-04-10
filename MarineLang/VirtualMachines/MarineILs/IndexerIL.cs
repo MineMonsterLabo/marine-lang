@@ -26,36 +26,19 @@ namespace MarineLang.VirtualMachines.MarineILs
                     vm.Push((instance as IList)[intIndex]);
                 else
                 {
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            string.Empty,
-                            ErrorCode.RuntimeIndexerNotFound,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError(string.Empty, ErrorCode.RuntimeIndexerNotFound);
                 }
             else
             {
                 PropertyInfo propertyInfo =
                     instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance);
                 if (propertyInfo == null)
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            string.Empty,
-                            ErrorCode.RuntimeIndexerNotFound,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError(string.Empty, ErrorCode.RuntimeIndexerNotFound);
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     vm.Push(propertyInfo.GetValue(instance, new object[] { indexValue }));
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            "(Indexer)",
-                            ErrorCode.RuntimeMemberAccessPrivate
-                        )
-                    );
+                    this.ThrowRuntimeError("(Indexer)", ErrorCode.RuntimeMemberAccessPrivate);
             }
         }
 
@@ -85,37 +68,20 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (indexValue is int intIndex)
                     (instance as IList)[intIndex] = storeValue;
                 else
-                {
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            string.Empty,
-                            ErrorCode.RuntimeIndexerNotFound,
-                            ILDebugInfo.position
-                        )
-                    );
+                { 
+                    this.ThrowRuntimeError(string.Empty, ErrorCode.RuntimeIndexerNotFound);
                 }
             else
             {
                 PropertyInfo propertyInfo =
                     instanceType.GetProperty("Item", BindingFlags.Public | BindingFlags.Instance);
                 if (propertyInfo == null)
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            string.Empty,
-                            ErrorCode.RuntimeIndexerNotFound,
-                            ILDebugInfo.position
-                        )
-                    );
+                    this.ThrowRuntimeError(string.Empty, ErrorCode.RuntimeIndexerNotFound);
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo))
                     propertyInfo.SetValue(instance, storeValue, new object[] { indexValue });
                 else
-                    throw new MarineRuntimeException(
-                        new RuntimeErrorInfo(
-                            "(Indexer)",
-                            ErrorCode.RuntimeMemberAccessPrivate
-                        )
-                    );
+                    this.ThrowRuntimeError("(Indexer)", ErrorCode.RuntimeMemberAccessPrivate);
             }
         }
 
