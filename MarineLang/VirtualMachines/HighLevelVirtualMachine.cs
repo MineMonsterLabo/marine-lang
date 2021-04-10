@@ -7,6 +7,7 @@ using MarineLang.BuildInObjects;
 using MarineLang.Models.Asts;
 using MarineLang.Utils;
 using MarineLang.VirtualMachines.Dumps;
+using MarineLang.VirtualMachines.MarineILs;
 
 namespace MarineLang.VirtualMachines
 {
