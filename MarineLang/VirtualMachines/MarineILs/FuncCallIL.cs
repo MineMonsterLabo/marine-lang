@@ -64,10 +64,10 @@ namespace MarineLang.VirtualMachines.MarineILs
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
 
-            if (ClassAccessibilityChecker.CheckMember(methodInfo))
-                vm.Push(methodInfo.Invoke(null, args2));
-            else
+            if (ClassAccessibilityChecker.CheckMember(methodInfo) == false)
                 this.ThrowRuntimeError($"({funcName})", ErrorCode.RuntimeMemberAccessPrivate);
+
+            vm.Push(methodInfo.Invoke(null, args2));
         }
 
         public override string ToString()
@@ -107,10 +107,10 @@ namespace MarineLang.VirtualMachines.MarineILs
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
 
-            if (ClassAccessibilityChecker.CheckMember(methodInfo))
-                vm.Push(methodInfo.Invoke(instance, args2));
-            else
+            if (ClassAccessibilityChecker.CheckMember(methodInfo) == false)
                 this.ThrowRuntimeError($"{funcName}", ErrorCode.RuntimeMemberAccessPrivate);
+
+            vm.Push(methodInfo.Invoke(instance, args2));
         }
 
         public override string ToString()

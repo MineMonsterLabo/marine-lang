@@ -35,10 +35,10 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (propertyInfo == null)
                     this.ThrowRuntimeError(string.Empty, ErrorCode.RuntimeIndexerNotFound);
 
-                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
-                    vm.Push(propertyInfo.GetValue(instance, new object[] { indexValue }));
-                else
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo) == false)
                     this.ThrowRuntimeError("(Indexer)", ErrorCode.RuntimeMemberAccessPrivate);
+
+                vm.Push(propertyInfo.GetValue(instance, new object[] { indexValue }));
             }
         }
 
@@ -68,7 +68,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (indexValue is int intIndex)
                     (instance as IList)[intIndex] = storeValue;
                 else
-                { 
+                {
                     this.ThrowRuntimeError(string.Empty, ErrorCode.RuntimeIndexerNotFound);
                 }
             else
@@ -78,10 +78,10 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (propertyInfo == null)
                     this.ThrowRuntimeError(string.Empty, ErrorCode.RuntimeIndexerNotFound);
 
-                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
-                    propertyInfo.SetValue(instance, storeValue, new object[] { indexValue });
-                else
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo) == false)
                     this.ThrowRuntimeError("(Indexer)", ErrorCode.RuntimeMemberAccessPrivate);
+
+                propertyInfo.SetValue(instance, storeValue, new object[] { indexValue });
             }
         }
 

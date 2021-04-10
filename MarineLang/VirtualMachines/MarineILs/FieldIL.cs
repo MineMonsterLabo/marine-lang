@@ -29,10 +29,10 @@ namespace MarineLang.VirtualMachines.MarineILs
 
             if (fieldInfo != null)
             {
-                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
-                    vm.Push(fieldInfo.GetValue(null));
-                else
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo) == false)
                     this.ThrowRuntimeError($"{fieldName}", ErrorCode.RuntimeMemberAccessPrivate);
+
+                vm.Push(fieldInfo.GetValue(null));
             }
             else
             {
@@ -41,10 +41,10 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (propertyInfo == null)
                     this.ThrowRuntimeError($"{fieldName}", ErrorCode.RuntimeMemberNotFound);
 
-                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
-                    vm.Push(propertyInfo.GetValue(type));
-                else
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo) == false)
                     this.ThrowRuntimeError($"{fieldName}", ErrorCode.RuntimeMemberAccessPrivate);
+
+                vm.Push(propertyInfo.GetValue(type));
             }
         }
 
@@ -74,10 +74,10 @@ namespace MarineLang.VirtualMachines.MarineILs
 
             if (fieldInfo != null)
             {
-                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
-                    vm.Push(fieldInfo.GetValue(instance));
-                else
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo) == false)
                     this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
+
+                vm.Push(fieldInfo.GetValue(instance));
             }
             else
             {
@@ -86,10 +86,10 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (propertyInfo == null)
                     this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberNotFound);
 
-                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
-                    vm.Push(propertyInfo.GetValue(instance));
-                else
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo) == false)
                     this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
+
+                vm.Push(propertyInfo.GetValue(instance));
             }
         }
 
@@ -123,10 +123,10 @@ namespace MarineLang.VirtualMachines.MarineILs
 
             if (fieldInfo != null)
             {
-                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
-                    fieldInfo.SetValue(type, value);
-                else
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo) == false)
                     this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
+
+                fieldInfo.SetValue(type, value);
             }
             else
             {
@@ -135,10 +135,10 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (propertyInfo == null)
                     this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberNotFound);
 
-                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
-                    propertyInfo.SetValue(type, value);
-                else
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo) == false)
                     this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
+
+                propertyInfo.SetValue(type, value);
             }
         }
 
@@ -169,10 +169,10 @@ namespace MarineLang.VirtualMachines.MarineILs
 
             if (fieldInfo != null)
             {
-                if (ClassAccessibilityChecker.CheckMember(fieldInfo))
-                    fieldInfo.SetValue(instance, value);
-                else
+                if (ClassAccessibilityChecker.CheckMember(fieldInfo) == false)
                     this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
+
+                fieldInfo.SetValue(instance, value);
             }
             else
             {
@@ -181,10 +181,10 @@ namespace MarineLang.VirtualMachines.MarineILs
                 if (propertyInfo == null)
                     this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberNotFound);
 
-                if (ClassAccessibilityChecker.CheckMember(propertyInfo))
-                    propertyInfo.SetValue(instance, value);
-                else
+                if (ClassAccessibilityChecker.CheckMember(propertyInfo) == false)
                     this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
+
+                propertyInfo.SetValue(instance, value);
             }
         }
 
