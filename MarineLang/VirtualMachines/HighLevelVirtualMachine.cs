@@ -100,17 +100,17 @@ namespace MarineLang.VirtualMachines
             return new MarineValue(lowLevelVirtualMachine.Pop());
         }
 
-        public void CreateDump()
+        public void CreateDumpWithFile()
         {
-            CreateDump($"{Environment.CurrentDirectory}/marine_dump.json");
+            CreateDumpWithFile($"{Environment.CurrentDirectory}/marine_dump.json");
         }
 
-        public void CreateDump(string filePath)
+        public void CreateDumpWithFile(string filePath)
         {
-            File.WriteAllText(filePath, CreateDumpString());
+            File.WriteAllText(filePath, CreateDumpWithString());
         }
 
-        public string CreateDumpString()
+        public string CreateDumpWithString()
         {
             DumpSerializer serializer = new DumpSerializer();
             return serializer.Serialize(globalVariableDict);

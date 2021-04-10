@@ -14,9 +14,9 @@ namespace MarineLangUnitTest
         private IReadOnlyDictionary<string, ClassDumpModel> CreateFileDump(string path = null)
         {
             if (path == null)
-                VmCreateHelper.Create("").CreateDump();
+                VmCreateHelper.Create("").CreateDumpWithFile();
             else
-                VmCreateHelper.Create("").CreateDump(path);
+                VmCreateHelper.Create("").CreateDumpWithFile(path);
 
             if (path == null)
                 path = $"{Environment.CurrentDirectory}/marine_dump.json";
@@ -88,7 +88,7 @@ namespace MarineLangUnitTest
         [Fact]
         public void CreateStringDumpTest()
         {
-            var json = VmCreateHelper.Create("").CreateDumpString();
+            var json = VmCreateHelper.Create("").CreateDumpWithString();
             DumpDeserializer deserializer = new DumpDeserializer();
             var dumps = deserializer.Deserialize(json);
             Assert.True(dumps.Count > 0);
