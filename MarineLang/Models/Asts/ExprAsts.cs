@@ -38,9 +38,19 @@ namespace MarineLang.Models.Asts
             return this as InstanceFuncCallAst;
         }
 
+        public StaticFuncCallAst GetStaticFuncCallAst()
+        {
+            return this as StaticFuncCallAst;
+        }
+
         public InstanceFieldAst GetInstanceFieldAst()
         {
             return this as InstanceFieldAst;
+        }
+
+        public StaticFieldAst GetStaticFieldAst()
+        {
+            return this as StaticFieldAst;
         }
 
         public GetIndexerAst GetGetIndexerAst()
@@ -241,6 +251,38 @@ namespace MarineLang.Models.Asts
         }
     }
 
+    public class StaticFuncCallAst : ExprAst
+    {
+        public Token classNameToken;
+        public FuncCallAst funcCallAst;
+        public string ClassName => classNameToken.text;
+
+
+        public override RangePosition Range => new RangePosition(classNameToken.position, funcCallAst.Range.End);
+        public override ExprPriority ExprPriority => ExprPriority.Primary;
+
+        public static StaticFuncCallAst Create(Token classNameToken, FuncCallAst funcCallAst)
+        {
+            return new StaticFuncCallAst
+            {
+                classNameToken = classNameToken,
+                funcCallAst = funcCallAst
+            };
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(funcCallAst.GetChildrenWithThis());
+        }
+    }
+
     public class InstanceFieldAst : ExprAst
     {
         public ExprAst instanceExpr;
@@ -268,6 +310,37 @@ namespace MarineLang.Models.Asts
             return
                 Enumerable.Empty<IAst>().Append(this)
                 .Concat(instanceExpr.GetChildrenWithThis())
+                .Concat(variableAst.GetChildrenWithThis());
+        }
+    }
+
+    public class StaticFieldAst : ExprAst
+    {
+        public VariableAst variableAst;
+        public Token classNameToken;
+        public string ClassName => classNameToken.text;
+
+        public override RangePosition Range => new RangePosition(classNameToken.position, variableAst.Range.End);
+        public override ExprPriority ExprPriority => ExprPriority.Primary;
+
+        public static StaticFieldAst Create(Token classNameToken, VariableAst variableAst)
+        {
+            return new StaticFieldAst
+            {
+                variableAst = variableAst,
+                classNameToken = classNameToken
+            };
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
                 .Concat(variableAst.GetChildrenWithThis());
         }
     }

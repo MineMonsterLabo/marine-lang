@@ -60,6 +60,7 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetCharToken(stream, TokenType.Comma) ??
                     LexerHelper.GetCharToken(stream, TokenType.NotOp) ??
                     LexerHelper.GetIdToken()(stream) ??
+                    LexerHelper.GetClassNameToken()(stream) ??
                     LexerHelper.GetUnknownToken(stream);
 
                 if (stream.IsEnd == false)

@@ -112,6 +112,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParseForEach().Try(),
                     ParseReturn().Try(),
                     ParseAssignmentVariable().Try(),
+                    ParseStaticFieldAssignment().Try(),
                     ParseFieldAssignment().Try(),
                     ParseReAssignmentVariable().Try(),
                     ParseReAssignmentIndexer().Try(),
@@ -305,10 +306,11 @@ namespace MarineLang.SyntaxAnalysis
 
         public Parser<ExprAst> ParseIndexerOpExpr()
         {
-            return
+            var expr =
                 from term in ParseTerm()
                 from indexExprs in ParseIndexers(false)
                 select indexExprs.Aggregate(term, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
+            return ParserCombinator.Or(ParseStaticTerm().Try(), expr);
         }
 
         public Parser<ExprAst> ParseDotTerms(ExprAst instance)
@@ -354,6 +356,26 @@ namespace MarineLang.SyntaxAnalysis
                     token.tokenType >= TokenType.OrOp
                     && token.tokenType <= TokenType.ModOp
                 );
+        }
+
+        public Parser<ExprAst> ParseStaticTerm()
+        {
+            var classNameParser =
+                from className in ParseToken(TokenType.ClassName)
+                from dotOpToken in ParseToken(TokenType.DotOp)
+                select className;
+
+            var funcCallParser =
+                from className in classNameParser
+                from funcCall in ParseFuncCall()
+                select StaticFuncCallAst.Create(className,funcCall);
+
+            var fieldParser =
+              from className in classNameParser
+              from variable in ParseVariable
+              select StaticFieldAst.Create(className, variable);
+
+            return ParserCombinator.Or<ExprAst>(funcCallParser.Try(), fieldParser);
         }
 
         public Parser<ExprAst> ParseTerm()
@@ -515,6 +537,18 @@ namespace MarineLang.SyntaxAnalysis
                     return _ => ParseResult<StatementAst>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                 });
         }
+
+        public Parser<StaticFieldAssignmentAst> ParseStaticFieldAssignment()
+        {
+            return
+                from className in ParseToken(TokenType.ClassName)
+                from dotOp in ParseToken(TokenType.DotOp)
+                from variable in ParseVariable
+                from equalOp in ParseToken(TokenType.AssignmentOp)
+                from expr in ParseExpr()
+                select StaticFieldAssignmentAst.Create(StaticFieldAst.Create(className, variable), expr);
+        }
+
 
         Parser<ValueAst> InternalParseInt()
         {

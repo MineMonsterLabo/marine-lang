@@ -4,6 +4,7 @@
     {
         Func,
         Id,
+        ClassName,
         Await,
         Yield,
         Break,

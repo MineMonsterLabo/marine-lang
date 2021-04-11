@@ -36,6 +36,11 @@ namespace MarineLang.Models.Asts
             return this as FieldAssignmentAst;
         }
 
+        public StaticFieldAssignmentAst GetStaticFieldAssignmentAst()
+        {
+            return this as StaticFieldAssignmentAst;
+        }
+
         public WhileAst GetWhileAst()
         {
             return this as WhileAst;
@@ -230,6 +235,32 @@ namespace MarineLang.Models.Asts
             return
                 Enumerable.Empty<IAst>().Append(this)
                 .Concat(instanceFieldAst.GetChildrenWithThis())
+                .Concat(expr.GetChildrenWithThis());
+        }
+    }
+
+    public class StaticFieldAssignmentAst : StatementAst
+    {
+        public ExprAst expr;
+        public StaticFieldAst staticFieldAst;
+
+        public override RangePosition Range => new RangePosition(staticFieldAst.Range.Start, expr.Range.End);
+
+        public static StaticFieldAssignmentAst Create(StaticFieldAst staticFieldAst, ExprAst expr)
+        {
+            return new StaticFieldAssignmentAst { staticFieldAst = staticFieldAst, expr = expr };
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(staticFieldAst.GetChildrenWithThis())
                 .Concat(expr.GetChildrenWithThis());
         }
     }

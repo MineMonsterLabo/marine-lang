@@ -135,6 +135,20 @@ namespace MarineLang.LexicalAnalysis
              );
         }
 
+        static public Func<IndexedCharStream, Token> GetClassNameToken()
+        {
+            return
+             GetTokenTest(TokenType.ClassName, (count, c) =>
+             {
+                 if (count == 0 && IsUpperLetter(c) == false)
+                     return TestResult.End;
+                 if ((char.IsLetter(c) || char.IsDigit(c)) == false)
+                     return TestResult.End;
+                 return TestResult.Pass;
+             }
+             );
+        }
+
         static public Func<IndexedCharStream, Token> GetIntLiteralToken()
         {
             return
@@ -351,6 +365,11 @@ namespace MarineLang.LexicalAnalysis
         static bool IsLowerLetter(char c)
         {
             return char.IsLetter(c) && char.IsLower(c);
+        }
+
+        static bool IsUpperLetter(char c)
+        {
+            return char.IsLetter(c) && char.IsUpper(c);
         }
 
         static bool IsIdChar(char c)
