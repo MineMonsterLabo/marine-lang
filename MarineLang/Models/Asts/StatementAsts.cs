@@ -31,9 +31,9 @@ namespace MarineLang.Models.Asts
             return this as ReAssignmentIndexerAst;
         }
 
-        public FieldAssignmentAst GetFieldAssignmentAst()
+        public InstanceFieldAssignmentAst GetInstanceFieldAssignmentAst()
         {
-            return this as FieldAssignmentAst;
+            return this as InstanceFieldAssignmentAst;
         }
 
         public StaticFieldAssignmentAst GetStaticFieldAssignmentAst()
@@ -213,16 +213,16 @@ namespace MarineLang.Models.Asts
         }
     }
 
-    public class FieldAssignmentAst : StatementAst
+    public class InstanceFieldAssignmentAst : StatementAst
     {
         public ExprAst expr;
         public InstanceFieldAst instanceFieldAst;
 
         public override RangePosition Range => new RangePosition(instanceFieldAst.Range.Start, expr.Range.End);
 
-        public static FieldAssignmentAst Create(InstanceFieldAst instanceFieldAst, ExprAst expr)
+        public static InstanceFieldAssignmentAst Create(InstanceFieldAst instanceFieldAst, ExprAst expr)
         {
-            return new FieldAssignmentAst { instanceFieldAst = instanceFieldAst, expr = expr };
+            return new InstanceFieldAssignmentAst { instanceFieldAst = instanceFieldAst, expr = expr };
         }
 
         public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)

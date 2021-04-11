@@ -10,7 +10,7 @@
         public virtual T Visit(AssignmentVariableAst ast) { return default; }
         public virtual T Visit(ReAssignmentVariableAst ast) { return default; }
         public virtual T Visit(ReAssignmentIndexerAst ast) { return default; }
-        public virtual T Visit(FieldAssignmentAst ast) { return default; }
+        public virtual T Visit(InstanceFieldAssignmentAst ast) { return default; }
         public virtual T Visit(StaticFieldAssignmentAst ast) { return default; }
         public virtual T Visit(WhileAst ast) { return default; }
         public virtual T Visit(ForAst ast) { return default; }

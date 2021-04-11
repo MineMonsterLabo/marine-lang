@@ -113,7 +113,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParseReturn().Try(),
                     ParseAssignmentVariable().Try(),
                     ParseStaticFieldAssignment().Try(),
-                    ParseFieldAssignment().Try(),
+                    ParseInstanceFieldAssignment().Try(),
                     ParseReAssignmentVariable().Try(),
                     ParseReAssignmentIndexer().Try(),
                     ParseExpr().MapResult(ExprStatementAst.Create).Try()
@@ -511,7 +511,7 @@ namespace MarineLang.SyntaxAnalysis
                );
         }
 
-        public Parser<StatementAst> ParseFieldAssignment()
+        public Parser<StatementAst> ParseInstanceFieldAssignment()
         {
             return
                 ParseIndexerOpExpr()
@@ -527,7 +527,7 @@ namespace MarineLang.SyntaxAnalysis
                         return
                             ParseExpr()
                             .MapResult(expr =>
-                              FieldAssignmentAst.Create(fieldAst, expr)
+                              InstanceFieldAssignmentAst.Create(fieldAst, expr)
                             );
 
                     if (exprAst is GetIndexerAst getIndexerAst)

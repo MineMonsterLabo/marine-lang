@@ -130,8 +130,8 @@ namespace MarineLang.VirtualMachines
                     breakIndex);
             else if (statementAst.GetAssignmentVariableAst() != null)
                 AssignmentILGenerate(statementAst.GetAssignmentVariableAst(), argCount, variables, breakIndex);
-            else if (statementAst.GetFieldAssignmentAst() != null)
-                FieldAssignmentILGenerate(statementAst.GetFieldAssignmentAst(), argCount, variables, breakIndex);
+            else if (statementAst.GetInstanceFieldAssignmentAst() != null)
+                InstanceFieldAssignmentILGenerate(statementAst.GetInstanceFieldAssignmentAst(), argCount, variables, breakIndex);
             else if (statementAst.GetStaticFieldAssignmentAst() != null)
                 StaticFieldAssignmentILGenerate(statementAst.GetStaticFieldAssignmentAst(), argCount, variables, breakIndex);
             else if (statementAst.GetWhileAst() != null)
@@ -439,7 +439,7 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(new StoreIL(variables.GetVariableIdx(assignmentAst.variableAst.VarName)));
         }
 
-        void FieldAssignmentILGenerate(FieldAssignmentAst fieldAssignmentAst, int argCount,
+        void InstanceFieldAssignmentILGenerate(InstanceFieldAssignmentAst fieldAssignmentAst, int argCount,
             FuncScopeVariables variables, BreakIndex breakIndex)
         {
 
