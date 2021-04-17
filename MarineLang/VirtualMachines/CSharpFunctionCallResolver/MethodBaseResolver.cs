@@ -5,25 +5,25 @@ using System.Reflection;
 
 namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
 {
-    class MethodInfoResolver
+    class MethodBaseResolver
     {
         struct Data
         {
-            public MethodInfo methodInfo;
+            public MethodBase methodBase;
             public IEnumerable<TypeDistance> paramsTypeDistances;
         }
 
-        static public MethodInfo Select(IEnumerable<MethodInfo> inputMethodInfos, Type[] types)
+        static public MethodBase Select(IEnumerable<MethodBase> inputMethodBases, Type[] types)
         {
             var typesLength = types.Length;
-            var methodInfos = inputMethodInfos.Where(MatchMethodInfo(typesLength));
+            var methodBases = inputMethodBases.Where(MatchMethodBase(typesLength));
 
-            var dataList = methodInfos.Select(
+            var dataList = methodBases.Select(
                 m =>
                 {
                     var parameters = m.GetParameters();
                     Data data;
-                    data.methodInfo = m;
+                    data.methodBase = m;
                     data.paramsTypeDistances =
                         parameters.Zip(types, (param, type) =>
                             TypeDistanceGenerator.Generate(type, param.ParameterType));
@@ -56,21 +56,21 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
                 }
             }
 
-            if (nearestData.methodInfo == null)
+            if (nearestData.methodBase == null)
                 return null;
-            if (nearestData.methodInfo.IsGenericMethod)
+            if (nearestData.methodBase.IsGenericMethod)
             {
                 throw new NotImplementedException("実装めんどくさい");
             }
 
-            return nearestData.methodInfo;
+            return nearestData.methodBase;
         }
 
-        static Func<MethodInfo, bool> MatchMethodInfo(int typeLength)
+        static Func<MethodBase, bool> MatchMethodBase(int typeLength)
         {
-            return methodInfo =>
+            return methodBase =>
             {
-                var parameterInfoArray = methodInfo.GetParameters();
+                var parameterInfoArray = methodBase.GetParameters();
                 var maxLength = parameterInfoArray.Length;
                 var minLength = parameterInfoArray.Count(x => x.IsOptional == false);
                 return minLength <= typeLength && typeLength <= maxLength;

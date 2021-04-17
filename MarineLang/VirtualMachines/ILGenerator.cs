@@ -291,8 +291,15 @@ namespace MarineLang.VirtualMachines
             var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.FuncName);
             foreach (var arg in funcCallAst.args)
                 ExprILGenerate(arg, argCount, variables, breakIndex);
+
+            var type = staticTypeDict[staticFuncCallAst.ClassName];
+            var methodBases =
+                csharpFuncName == "New" ?
+                    type.GetConstructors().Cast<MethodBase>() :
+                    type.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(e => e.Name == csharpFuncName);
+
             marineILs.Add(
-                new StaticCSharpFuncCallIL(staticTypeDict[staticFuncCallAst.ClassName], csharpFuncName,
+                new StaticCSharpFuncCallIL(type, methodBases.ToArray(), csharpFuncName,
                     funcCallAst.args.Length, new ILDebugInfo(funcCallAst.Range.Start))
             );
         }
