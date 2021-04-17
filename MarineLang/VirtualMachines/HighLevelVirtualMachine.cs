@@ -44,7 +44,7 @@ namespace MarineLang.VirtualMachines
 
         public void StaticTypeRegister(Type type)
         {
-            staticTypeDict.Add(NameUtil.GetSnakeCase(type.Name), type);
+            staticTypeDict.Add(type.Name, type);
         }
 
         public void StaticTypeRegister(string alias, Type type)

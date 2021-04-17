@@ -31,9 +31,14 @@ namespace MarineLang.Models.Asts
             return this as ReAssignmentIndexerAst;
         }
 
-        public FieldAssignmentAst GetFieldAssignmentAst()
+        public InstanceFieldAssignmentAst GetInstanceFieldAssignmentAst()
         {
-            return this as FieldAssignmentAst;
+            return this as InstanceFieldAssignmentAst;
+        }
+
+        public StaticFieldAssignmentAst GetStaticFieldAssignmentAst()
+        {
+            return this as StaticFieldAssignmentAst;
         }
 
         public WhileAst GetWhileAst()
@@ -208,16 +213,16 @@ namespace MarineLang.Models.Asts
         }
     }
 
-    public class FieldAssignmentAst : StatementAst
+    public class InstanceFieldAssignmentAst : StatementAst
     {
         public ExprAst expr;
         public InstanceFieldAst instanceFieldAst;
 
         public override RangePosition Range => new RangePosition(instanceFieldAst.Range.Start, expr.Range.End);
 
-        public static FieldAssignmentAst Create(InstanceFieldAst instanceFieldAst, ExprAst expr)
+        public static InstanceFieldAssignmentAst Create(InstanceFieldAst instanceFieldAst, ExprAst expr)
         {
-            return new FieldAssignmentAst { instanceFieldAst = instanceFieldAst, expr = expr };
+            return new InstanceFieldAssignmentAst { instanceFieldAst = instanceFieldAst, expr = expr };
         }
 
         public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
@@ -230,6 +235,32 @@ namespace MarineLang.Models.Asts
             return
                 Enumerable.Empty<IAst>().Append(this)
                 .Concat(instanceFieldAst.GetChildrenWithThis())
+                .Concat(expr.GetChildrenWithThis());
+        }
+    }
+
+    public class StaticFieldAssignmentAst : StatementAst
+    {
+        public ExprAst expr;
+        public StaticFieldAst staticFieldAst;
+
+        public override RangePosition Range => new RangePosition(staticFieldAst.Range.Start, expr.Range.End);
+
+        public static StaticFieldAssignmentAst Create(StaticFieldAst staticFieldAst, ExprAst expr)
+        {
+            return new StaticFieldAssignmentAst { staticFieldAst = staticFieldAst, expr = expr };
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(staticFieldAst.GetChildrenWithThis())
                 .Concat(expr.GetChildrenWithThis());
         }
     }

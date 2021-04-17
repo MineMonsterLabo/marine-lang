@@ -130,8 +130,10 @@ namespace MarineLang.VirtualMachines
                     breakIndex);
             else if (statementAst.GetAssignmentVariableAst() != null)
                 AssignmentILGenerate(statementAst.GetAssignmentVariableAst(), argCount, variables, breakIndex);
-            else if (statementAst.GetFieldAssignmentAst() != null)
-                FieldAssignmentILGenerate(statementAst.GetFieldAssignmentAst(), argCount, variables, breakIndex);
+            else if (statementAst.GetInstanceFieldAssignmentAst() != null)
+                InstanceFieldAssignmentILGenerate(statementAst.GetInstanceFieldAssignmentAst(), argCount, variables, breakIndex);
+            else if (statementAst.GetStaticFieldAssignmentAst() != null)
+                StaticFieldAssignmentILGenerate(statementAst.GetStaticFieldAssignmentAst(), argCount, variables, breakIndex);
             else if (statementAst.GetWhileAst() != null)
                 WhileILGenerate(statementAst.GetWhileAst(), argCount, variables);
             else if (statementAst.GetForAst() != null)
@@ -166,8 +168,12 @@ namespace MarineLang.VirtualMachines
                 IfILGenerate(exprAst.GetIfExprAst(), argCount, variables, breakIndex);
             else if (exprAst.GetInstanceFuncCallAst() != null)
                 InstanceFuncCallILGenerate(exprAst.GetInstanceFuncCallAst(), argCount, variables, breakIndex);
+            else if (exprAst.GetStaticFuncCallAst() != null)
+                StaticFuncCallILGenerate(exprAst.GetStaticFuncCallAst(), argCount, variables, breakIndex);
             else if (exprAst.GetInstanceFieldAst() != null)
                 InstanceFieldILGenerate(exprAst.GetInstanceFieldAst(), argCount, variables, breakIndex);
+            else if (exprAst.GetStaticFieldAst() != null)
+                StaticFieldILGenerate(exprAst.GetStaticFieldAst(), argCount, variables, breakIndex);
             else if (exprAst.GetGetIndexerAst() != null)
                 GetGetIndexerILGenerate(exprAst.GetGetIndexerAst(), argCount, variables, breakIndex);
             else if (exprAst.GetArrayLiteralAst() != null)
@@ -264,55 +270,53 @@ namespace MarineLang.VirtualMachines
         void InstanceFuncCallILGenerate(InstanceFuncCallAst instanceFuncCallAst, int argCount,
             FuncScopeVariables variables, BreakIndex breakIndex)
         {
-            if (instanceFuncCallAst.instanceExpr is VariableAst variableAst &&
-                staticTypeDict.ContainsKey(variableAst.VarName))
-            {
-                var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
-                var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.FuncName);
-                foreach (var arg in funcCallAst.args)
-                    ExprILGenerate(arg, argCount, variables, breakIndex);
-                marineILs.Add(
-                    new StaticCSharpFuncCallIL(staticTypeDict[variableAst.VarName], csharpFuncName,
-                        funcCallAst.args.Length, new ILDebugInfo(funcCallAst.Range.Start))
-                );
-            }
-            else
-            {
-                ExprILGenerate(instanceFuncCallAst.instanceExpr, argCount, variables, breakIndex);
-                var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
-                var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.FuncName);
 
-                foreach (var arg in funcCallAst.args)
-                    ExprILGenerate(arg, argCount, variables, breakIndex);
-                marineILs.Add(
-                    new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length,
-                        new ILDebugInfo(funcCallAst.Range.Start))
-                );
-            }
+            ExprILGenerate(instanceFuncCallAst.instanceExpr, argCount, variables, breakIndex);
+            var funcCallAst = instanceFuncCallAst.instancefuncCallAst;
+            var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.FuncName);
+
+            foreach (var arg in funcCallAst.args)
+                ExprILGenerate(arg, argCount, variables, breakIndex);
+            marineILs.Add(
+                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length,
+                    new ILDebugInfo(funcCallAst.Range.Start))
+            );
+        }
+
+        void StaticFuncCallILGenerate(StaticFuncCallAst staticFuncCallAst, int argCount,
+            FuncScopeVariables variables, BreakIndex breakIndex)
+        {
+
+            var funcCallAst = staticFuncCallAst.funcCallAst;
+            var csharpFuncName = NameUtil.GetUpperCamelName(funcCallAst.FuncName);
+            foreach (var arg in funcCallAst.args)
+                ExprILGenerate(arg, argCount, variables, breakIndex);
+            marineILs.Add(
+                new StaticCSharpFuncCallIL(staticTypeDict[staticFuncCallAst.ClassName], csharpFuncName,
+                    funcCallAst.args.Length, new ILDebugInfo(funcCallAst.Range.Start))
+            );
         }
 
         void InstanceFieldILGenerate(InstanceFieldAst instanceFieldAst, int argCount, FuncScopeVariables variables,
             BreakIndex breakIndex)
         {
-            if (instanceFieldAst.instanceExpr is VariableAst variableAst &&
-                staticTypeDict.ContainsKey(variableAst.VarName))
-            {
-                marineILs.Add(
-                    new StaticCSharpFieldLoadIL(staticTypeDict[variableAst.VarName],
-                        instanceFieldAst.variableAst.VarName, new ILDebugInfo(instanceFieldAst.variableAst.Range.Start)
-                    )
-                );
-            }
-            else
-            {
-                ExprILGenerate(instanceFieldAst.instanceExpr, argCount, variables, breakIndex);
-                marineILs.Add(
-                    new InstanceCSharpFieldLoadIL(
-                        instanceFieldAst.variableAst.VarName,
-                        new ILDebugInfo(instanceFieldAst.variableAst.Range.Start)
-                    )
-                );
-            }
+            ExprILGenerate(instanceFieldAst.instanceExpr, argCount, variables, breakIndex);
+            marineILs.Add(
+                new InstanceCSharpFieldLoadIL(
+                    instanceFieldAst.variableAst.VarName,
+                    new ILDebugInfo(instanceFieldAst.variableAst.Range.Start)
+                )
+            );
+        }
+
+        void StaticFieldILGenerate(StaticFieldAst staticFieldAst, int argCount, FuncScopeVariables variables,
+           BreakIndex breakIndex)
+        {
+            marineILs.Add(
+                new StaticCSharpFieldLoadIL(staticTypeDict[staticFieldAst.ClassName],
+                    staticFieldAst.variableAst.VarName, new ILDebugInfo(staticFieldAst.Range.Start)
+                )
+            );
         }
 
         void GetGetIndexerILGenerate(GetIndexerAst getIndexerAst, int argCount, FuncScopeVariables variables,
@@ -435,31 +439,30 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(new StoreIL(variables.GetVariableIdx(assignmentAst.variableAst.VarName)));
         }
 
-        void FieldAssignmentILGenerate(FieldAssignmentAst fieldAssignmentAst, int argCount,
+        void InstanceFieldAssignmentILGenerate(InstanceFieldAssignmentAst fieldAssignmentAst, int argCount,
             FuncScopeVariables variables, BreakIndex breakIndex)
         {
-            if (fieldAssignmentAst.instanceFieldAst.instanceExpr is VariableAst variableAst &&
-                staticTypeDict.ContainsKey(variableAst.VarName))
-            {
-                ExprILGenerate(fieldAssignmentAst.expr, argCount, variables, breakIndex);
-                marineILs.Add(
-                    new StaticCSharpFieldStoreIL(staticTypeDict[variableAst.VarName],
-                        fieldAssignmentAst.instanceFieldAst.variableAst.VarName,
-                        new ILDebugInfo(fieldAssignmentAst.instanceFieldAst.variableAst.Range.Start)
-                    )
-                );
-            }
-            else
-            {
-                ExprILGenerate(fieldAssignmentAst.instanceFieldAst.instanceExpr, argCount, variables, breakIndex);
-                ExprILGenerate(fieldAssignmentAst.expr, argCount, variables, breakIndex);
-                marineILs.Add(
-                    new InstanceCSharpFieldStoreIL(
-                        fieldAssignmentAst.instanceFieldAst.variableAst.VarName,
-                        new ILDebugInfo(fieldAssignmentAst.instanceFieldAst.variableAst.Range.Start)
-                    )
-                );
-            }
+
+            ExprILGenerate(fieldAssignmentAst.instanceFieldAst.instanceExpr, argCount, variables, breakIndex);
+            ExprILGenerate(fieldAssignmentAst.expr, argCount, variables, breakIndex);
+            marineILs.Add(
+                new InstanceCSharpFieldStoreIL(
+                    fieldAssignmentAst.instanceFieldAst.variableAst.VarName,
+                    new ILDebugInfo(fieldAssignmentAst.instanceFieldAst.variableAst.Range.Start)
+                )
+            );
+        }
+
+        void StaticFieldAssignmentILGenerate(StaticFieldAssignmentAst staticFieldAssignmentAst, int argCount,
+            FuncScopeVariables variables, BreakIndex breakIndex)
+        {
+            ExprILGenerate(staticFieldAssignmentAst.expr, argCount, variables, breakIndex);
+            marineILs.Add(
+                new StaticCSharpFieldStoreIL(staticTypeDict[staticFieldAssignmentAst.staticFieldAst.ClassName],
+                    staticFieldAssignmentAst.staticFieldAst.variableAst.VarName,
+                    new ILDebugInfo(staticFieldAssignmentAst.Range.Start)
+                )
+            );
         }
 
         void WhileILGenerate(WhileAst whileAst, int argCount, FuncScopeVariables variables)

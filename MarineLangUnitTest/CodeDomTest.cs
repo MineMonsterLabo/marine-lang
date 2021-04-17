@@ -128,7 +128,7 @@ namespace MarineLangUnitTest
                         )),
                         YieldAst.Create(),
                         ReturnAst.Create(VariableAst.Create("hhh")),
-                        FieldAssignmentAst.Create(
+                        InstanceFieldAssignmentAst.Create(
                             InstanceFieldAst.Create(
                                 VariableAst.Create("foo"),
                                 VariableAst.Create("bar")

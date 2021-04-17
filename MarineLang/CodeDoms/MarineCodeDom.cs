@@ -40,8 +40,8 @@ namespace MarineLang.CodeDoms
                 text = CreateYield(statementAst.GetYieldAst());
             else if (statementAst.GetReturnAst() != null)
                 text = CreateReturn(statementAst.GetReturnAst(), indent);
-            else if (statementAst.GetFieldAssignmentAst() != null)
-                text = CreateFieldAssignment(statementAst.GetFieldAssignmentAst(), indent);
+            else if (statementAst.GetInstanceFieldAssignmentAst() != null)
+                text = CreateFieldAssignment(statementAst.GetInstanceFieldAssignmentAst(), indent);
             else if (statementAst.GetReAssignmentIndexerAst() != null)
                 text = CreateReAssignmentIndexer(statementAst.GetReAssignmentIndexerAst(), indent);
             else if (statementAst.GetReAssignmentVariableAst() != null)
@@ -72,7 +72,7 @@ namespace MarineLang.CodeDoms
             return $"ret {expr}";
         }
 
-        public static string CreateFieldAssignment(FieldAssignmentAst fieldAssignmentAst,int indent)
+        public static string CreateFieldAssignment(InstanceFieldAssignmentAst fieldAssignmentAst,int indent)
         {
             var instanceExpr = CreateExpr(fieldAssignmentAst.instanceFieldAst,indent);
             var expr = CreateExpr(fieldAssignmentAst.expr, indent + 1);
