@@ -611,5 +611,14 @@ end", 1)]
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData("fun main() ret Constructor.new().str end", "aaa")]
+        [InlineData("fun main() ret Constructor.new(5).str end", "bbb")]
+        [InlineData("fun main() ret Constructor.new(4,6).str end", "ccc")]
+        public void ConstructorTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }

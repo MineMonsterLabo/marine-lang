@@ -50,6 +50,7 @@ namespace MarineLangUnitTest.Helper
             });
 
             vm.StaticTypeRegister(typeof(StaticType));
+            vm.StaticTypeRegister(typeof(Constructor));
 
             vm.Compile();
 
@@ -193,6 +194,25 @@ namespace MarineLangUnitTest.Helper
             public static int Sum(int a, int b)
             {
                 return a + b;
+            }
+        }
+
+        public class Constructor
+        {
+            public string str;
+            public Constructor()
+            {
+                str = "aaa";
+            }
+
+            public Constructor(int a)
+            {
+                str = "bbb";
+            }
+
+            public Constructor(int a,int b)
+            {
+                str = "ccc";
             }
         }
     }
