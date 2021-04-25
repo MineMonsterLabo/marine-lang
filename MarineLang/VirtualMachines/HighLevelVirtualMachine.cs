@@ -47,9 +47,19 @@ namespace MarineLang.VirtualMachines
             staticTypeDict.Add(type.Name, type);
         }
 
+        public void StaticTypeRegister<T>()
+        {
+            staticTypeDict.Add(typeof(T).Name, typeof(T));
+        }
+
         public void StaticTypeRegister(string alias, Type type)
         {
             staticTypeDict.Add(alias, type);
+        }
+
+        public void StaticTypeRegister<T>(string alias)
+        {
+            staticTypeDict.Add(alias, typeof(T));
         }
 
         public void GlobalVariableRegister(string name, object val)
