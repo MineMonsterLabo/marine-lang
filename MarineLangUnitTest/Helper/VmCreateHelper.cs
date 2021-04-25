@@ -42,7 +42,7 @@ namespace MarineLangUnitTest.Helper
             vm.GlobalVariableRegister("hoge", new Hoge());
             vm.GlobalVariableRegister("fuga", new Fuga());
             vm.GlobalVariableRegister("piyo", new Piyo());
-            vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
+            vm.GlobalVariableRegister("names", new string[] { "aaa", "bbb" });
             vm.GlobalVariableRegister("namess", new string[][]
             {
                 new string[] {"ccc", "ddd"},
@@ -60,14 +60,14 @@ namespace MarineLangUnitTest.Helper
         public class Hoge
         {
             public bool flag;
-            public string[] Names { get; } = new string[] {"rrr", "qqq"};
+            public string[] Names { get; } = new string[] { "rrr", "qqq" };
 
             public string this[string index]
             {
                 get => index;
             }
 
-            public Dictionary<string, string> Dict => new Dictionary<string, string> {{"hoge", "fuga"}};
+            public Dictionary<string, string> Dict => new Dictionary<string, string> { { "hoge", "fuga" } };
             public string Name { get; set; } = "this is the pen";
             public int PlusOne(int x) => x + 1;
             public Hoge GetThis() => this;
@@ -83,7 +83,7 @@ namespace MarineLangUnitTest.Helper
         {
             [MemberPublic] public int member1 = 12;
             [MemberPublic] public string Member2 { get; set; } = "hello";
-            [MemberPublic] public string[] Member3 { get; set; } = {"hello", "hello2"};
+            [MemberPublic] public string[] Member3 { get; set; } = { "hello", "hello2" };
 
             [MemberPublic]
             public int Plus(int a, int b)
@@ -107,7 +107,7 @@ namespace MarineLangUnitTest.Helper
         {
             [MemberPrivate] public int member1 = 12;
             [MemberPrivate] public string Member2 { get; set; } = "hello";
-            [MemberPrivate] public string[] Member3 { get; set; } = {"hello", "hello2"};
+            [MemberPrivate] public string[] Member3 { get; set; } = { "hello", "hello2" };
 
             [MemberPrivate]
             public int Plus(int a, int b)
@@ -210,7 +210,7 @@ namespace MarineLangUnitTest.Helper
                 str = "bbb";
             }
 
-            public Constructor(int a,int b)
+            public Constructor(int a, int b)
             {
                 str = "ccc";
             }
