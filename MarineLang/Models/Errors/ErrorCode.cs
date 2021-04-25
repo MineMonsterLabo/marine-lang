@@ -15,6 +15,7 @@ namespace MarineLang.Models.Errors
         RuntimeMemberNotFound,
         RuntimeIndexerNotFound,
         RuntimeMemberAccessPrivate,
+        RuntimeOperatorNotFound,
         Unknown
     }
 
@@ -46,6 +47,8 @@ namespace MarineLang.Models.Errors
                     return "対応するインデクサーが見つかりません。";
                 case ErrorCode.RuntimeMemberAccessPrivate:
                     return "privateなメンバーにアクセスしようとしました";
+                case ErrorCode.RuntimeOperatorNotFound:
+                    return "演算子が見つかりません";
                 case ErrorCode.Unknown:
                     return "";
             }

@@ -1,4 +1,8 @@
 ﻿using MarineLang.Models;
+using MarineLang.Models.Errors;
+using MarineLang.VirtualMachines.CSharpFunctionCallResolver;
+using System.Linq;
+using System.Reflection;
 
 namespace MarineLang.VirtualMachines.MarineILs
 {
@@ -23,6 +27,35 @@ namespace MarineLang.VirtualMachines.MarineILs
             return typeof(BinaryOpIL).Name + " " + opKind;
         }
 
+        public string GetMethodName(TokenType opKind)
+        {
+            switch (opKind)
+            {
+                case TokenType.PlusOp:
+                    return "op_Addition";
+                case TokenType.MinusOp:
+                    return "op_Subtraction";
+                case TokenType.MulOp:
+                    return "op_Multiply";
+                case TokenType.DivOp:
+                    return "op_Division";
+                case TokenType.ModOp:
+                    return "op_Modulus";
+                case TokenType.EqualOp:
+                    return "op_Equality";
+                case TokenType.NotEqualOp:
+                    return "op_Inequality";
+                case TokenType.GreaterOp:
+                    return "op_GreaterThan";
+                case TokenType.GreaterEqualOp:
+                    return "op_GreaterThanOrEqual";
+                case TokenType.LessOp:
+                    return "op_LessThan";
+                case TokenType.LessEqualOp:
+                    return "op_LessThanOrEqual";
+            }
+            return string.Empty;
+        }
 
         private object GetResult(LowLevelVirtualMachine vm)
         {
@@ -114,7 +147,27 @@ namespace MarineLang.VirtualMachines.MarineILs
                     break;
             }
 
-            return null;
+            var opMethodName = GetMethodName(opKind);
+            var leftValueType = leftValue.GetType();
+
+            var methodInfos =
+             leftValueType
+              .GetMethods(BindingFlags.Public | BindingFlags.Static)
+              .Where(e => e.Name == opMethodName)
+              .ToArray();
+
+            var methodInfo =
+                MethodBaseResolver.Select(
+                    methodInfos,
+                    new[] { leftValueType, rightValue.GetType() }
+                );
+
+            if (methodInfo == null)
+            {
+                this.ThrowRuntimeError($"演算子{opKind}:", ErrorCode.RuntimeOperatorNotFound);
+            }
+
+            return methodInfo.Invoke(null, new[] { leftValue, rightValue });
         }
     }
 

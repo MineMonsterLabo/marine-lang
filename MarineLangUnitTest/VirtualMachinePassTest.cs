@@ -620,5 +620,16 @@ end", 1)]
         {
             RunReturnCheck(str, expected);
         }
+
+        [Theory]
+        [InlineData("fun main() ret (OpSample1.new(5) + 1).v end", 6)]
+        [InlineData("fun main() ret (OpSample1.new(5) - 1).v end", 4)]
+        [InlineData("fun main() ret (OpSample1.new(5) * 2).v end", 10)]
+        [InlineData("fun main() ret (OpSample1.new(5) / 5).v end", 1)]
+        [InlineData("fun main() ret (OpSample1.new(5) + OpSample1.new(4)).v end", 9)]
+        public void OperatorOverLoadTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
