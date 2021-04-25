@@ -51,6 +51,7 @@ namespace MarineLangUnitTest.Helper
 
             vm.StaticTypeRegister(typeof(StaticType));
             vm.StaticTypeRegister(typeof(Constructor));
+            vm.StaticTypeRegister<OpSample1>();
 
             vm.Compile();
 
@@ -213,6 +214,41 @@ namespace MarineLangUnitTest.Helper
             public Constructor(int a, int b)
             {
                 str = "ccc";
+            }
+        }
+
+        public class OpSample1
+        {
+            public int v;
+
+            public OpSample1(int v)
+            {
+                this.v = v;
+            }
+
+            public static OpSample1 operator +(OpSample1 a, OpSample1 b)
+            {
+                return new OpSample1(a.v + b.v);
+            }
+
+            public static OpSample1 operator +(OpSample1 a, int b)
+            {
+                return new OpSample1(a.v + b);
+            }
+
+            public static OpSample1 operator -(OpSample1 a, int b)
+            {
+                return new OpSample1(a.v - b);
+            }
+
+            public static OpSample1 operator *(OpSample1 a, int b)
+            {
+                return new OpSample1(a.v * b);
+            }
+
+            public static OpSample1 operator /(OpSample1 a, int b)
+            {
+                return new OpSample1(a.v / b);
             }
         }
     }
