@@ -63,7 +63,7 @@ namespace MarineLangUnitTest
 
         [Theory]
         [InlineData("fun main() ret (OpSample1.new(30) % 2).v end", 0)]
-        public void OpThrowTest<T>(string str, T expected, int line = 0, int column = 0)
+        public void OpThrowTest<T>(string str, T expected)
         {
             var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, expected));
             Assert.Equal(ErrorCode.RuntimeOperatorNotFound, exception.RuntimeErrorInfo.ErrorCode);
