@@ -27,7 +27,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                   new RuntimeErrorInfo(
                       errorMessage,
                       errorCode,
-                      marineIL.ILDebugInfo.position
+                      marineIL.ILDebugInfo?.position
                   )
               );
         }
