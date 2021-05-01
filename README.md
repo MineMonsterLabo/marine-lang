@@ -40,7 +40,7 @@ end
 ## EBNF
 
 ```ebnf
-program        = {func_definition} ;
+program        = {func_definition | macro} ;
 func_definition
                = 'func' , id , variable_list , func_body , 'end' ;
 func_body      = {statement} ;
@@ -103,7 +103,7 @@ param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
 variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;
 action_variable_list  = '|' , [ variable , { ',' , variable } ] , '|' ;
 array_literal  = '[' [ expr , { ',' , expr } ] , [ ';' , int_literal ] , ']'
-
+macro          = macro_name , ? トークン文字列群 ? ;
 
 トークン
 
@@ -120,7 +120,8 @@ lower_letter   = ? 省略 ?;
 upper_letter   = ? 省略 ?;
 digit          = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
 binary_op      = '<' | '<=' | '>' | '>=' | '&&' | '||' | '==' | '!=' | '+' | '-' | '*' | '/' | '%' ;
-unary_op      = '-' | '!' ;
+unary_op       = '-' | '!' ;
+macro_name     = '#' , {lower_letter | upper_letter | digit} ;
 
 
 スキップ

@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using MarineLang.BuildInObjects;
 using MarineLang.LexicalAnalysis;
+using MarineLang.MacroPlugins;
+using MarineLang.PresetMacroPlugins;
 using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
@@ -16,7 +18,11 @@ namespace MarineLangUnitTest.Helper
         public static HighLevelVirtualMachine Create(string str)
         {
             var lexer = new LexicalAnalyzer();
-            var parser = new SyntaxAnalyzer();
+
+            var pluginContainer = new PluginContainer();
+            pluginContainer.AddFuncDefinitionPlugin("include", new IncludePlugin());
+
+            var parser = new SyntaxAnalyzer(pluginContainer);
 
             var tokens = lexer.GetTokens(str).ToArray();
             var tokenStream = TokenStream.Create(tokens);

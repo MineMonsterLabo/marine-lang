@@ -1,4 +1,5 @@
-﻿using MarineLang.Models;
+﻿using MarineLang.MacroPlugins;
+using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Streams;
 using System.Collections.Generic;
@@ -8,7 +9,15 @@ namespace MarineLang.SyntaxAnalysis
 {
     public class SyntaxAnalyzer
     {
-        public readonly MarineParser marineParser = new MarineParser();
+        public readonly MarineParser marineParser;
+
+        public SyntaxAnalyzer(PluginContainer pluginContainer = null)
+        {
+            if (pluginContainer == null)
+                pluginContainer = new PluginContainer();
+
+            marineParser = new MarineParser(pluginContainer);
+        }
 
         public IParseResult<ProgramAst> Parse(IEnumerable<Token> tokens)
         {

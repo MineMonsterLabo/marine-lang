@@ -1,4 +1,5 @@
-﻿using MarineLang.Models;
+﻿using MarineLang.MacroPlugins;
+using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ namespace MarineLang.SyntaxAnalysis
 {
     public class MarineParser
     {
+
         public class Block
         {
             public StatementAst[] statementAsts;
@@ -27,7 +29,9 @@ namespace MarineLang.SyntaxAnalysis
         public Parser<FuncDefinitionAst> ParseFuncDefinition { get; }
         public Parser<StatementAst> ParseStatement { get; }
 
-        public MarineParser()
+        private readonly PluginContainer pluginContainer;
+
+        public MarineParser(PluginContainer pluginContainer)
         {
             ParseInt = InternalParseInt();
             ParseFloat = InternalParseFloat();
@@ -40,15 +44,20 @@ namespace MarineLang.SyntaxAnalysis
             ParseStatement = InternalParseStatement();
             ParseFuncDefinition = InternalParseFuncDefinition();
             ParseProgram = InternalParseProgram();
+
+            this.pluginContainer = pluginContainer;
         }
 
         Parser<ProgramAst> InternalParseProgram()
         {
             return
                 ParserCombinator.Many(
-                    ParseFuncDefinition.Try()
+                   ParserCombinator.Or(
+                       ParseMacroFuncDefinitions(),
+                       ParseFuncDefinition.Try().MapResult(funcDefinition => new[] { funcDefinition })
+                   )
                 )
-                .MapResult(Enumerable.ToArray)
+                .MapResult(funcDefinitions => funcDefinitions.SelectMany(x => x).ToArray())
                 .MapResult(ProgramAst.Create);
         }
 
@@ -59,23 +68,43 @@ namespace MarineLang.SyntaxAnalysis
                 var headToken = stream.Current;
                 return
                     ParseToken(TokenType.Func)
-                    .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonFuncWord, ErrorKind.None, $"\"{stream.Current.text}\"")
+                    .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonFuncWord, ErrorKind.ForceError, $"\"{stream.Current.text}\"")
                     .Right(ParseToken(TokenType.Id))
-                    .InCompleteError(ErrorCode.SyntaxNonFuncName, new RangePosition(headToken.position, headToken.PositionEnd))
+                    .InCompleteError(ErrorCode.SyntaxNonFuncName, new RangePosition(headToken.position, headToken.PositionEnd), ErrorKind.ForceError)
                     .ExpectCanMoveNext()
-                    .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonFuncParen)
+                    .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonFuncParen, ErrorKind.ForceError)
                     .Bind(funcNameToken =>
                          ParseVariableList().Try()
-                         .InCompleteError(ErrorCode.SyntaxNonFuncParen, funcNameToken.rangePosition)
+                         .InCompleteError(ErrorCode.SyntaxNonFuncParen, funcNameToken.rangePosition, ErrorKind.ForceError)
                          .Bind(varList =>
                             ParserExtension.Try(ParseFuncBody(TokenType.End))
                             .MapResult(pair => FuncDefinitionAst.Create(headToken, funcNameToken.text, varList, pair.statementAsts, pair.endToken))
                          )
                      )
                     .Left(ParseToken(TokenType.End))
-                    .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonEndWord)
+                    .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonEndWord, ErrorKind.ForceError)
                     (stream);
             };
+        }
+
+        public Parser<IEnumerable<FuncDefinitionAst>> ParseMacroFuncDefinitions()
+        {
+            return
+                ParseToken(TokenType.MacroName).Left(ParseToken(TokenType.LeftCurlyBracket))
+                .Bind<Token, IEnumerable<FuncDefinitionAst>>(macroName =>
+                    stream=>
+                    {
+                        var tokens = new List<Token>();
+                        while (stream.Current.tokenType != TokenType.RightCurlyBracket)
+                        {
+                            tokens.Add(stream.Current);
+                            if (stream.MoveNext() == false)
+                                return ParseResult<IEnumerable<FuncDefinitionAst>>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                        }
+                        stream.MoveNext();
+                        return pluginContainer.GetFuncDefinitionPlugin(macroName.text.Substring(1)).Replace(this, tokens);
+                    }
+                );
         }
 
         public Parser<Block> ParseFuncBody(TokenType endToken)
