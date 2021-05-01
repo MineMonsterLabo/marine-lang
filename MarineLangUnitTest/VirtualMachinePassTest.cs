@@ -1,5 +1,6 @@
 using MarineLang.BuiltInTypes;
 using MarineLangUnitTest.Helper;
+using System.IO;
 using Xunit;
 
 namespace MarineLangUnitTest
@@ -629,6 +630,19 @@ end", 1)]
         [InlineData("fun main() ret (OpSample1.new(5) + OpSample1.new(4)).v end", 9)]
         public void OperatorOverLoadTest<T>(string str, T expected)
         {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("#include{ \"hoge.mrn\" \"fuga.mrn\" } fun main() ret hoge() + fuga() end", 11)]
+        public void MacroTest<T>(string str, T expected)
+        {
+            using (var sw = new StreamWriter("hoge.mrn"))
+                sw.Write(@"fun hoge() ret 10 end");
+
+            using (var sw = new StreamWriter("fuga.mrn"))
+                sw.Write(@"fun fuga() ret 1 end");
+
             RunReturnCheck(str, expected);
         }
     }
