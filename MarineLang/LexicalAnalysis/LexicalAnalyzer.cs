@@ -61,6 +61,7 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetCharToken(stream, TokenType.NotOp) ??
                     LexerHelper.GetIdToken()(stream) ??
                     LexerHelper.GetClassNameToken()(stream) ??
+                    LexerHelper.GetMacroNameToken()(stream) ??
                     LexerHelper.GetUnknownToken(stream);
 
                 if (stream.IsEnd == false)

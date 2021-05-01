@@ -5,6 +5,7 @@
         Func,
         Id,
         ClassName,
+        MacroName,
         Await,
         Yield,
         Break,

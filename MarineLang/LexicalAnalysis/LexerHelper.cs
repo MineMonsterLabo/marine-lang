@@ -149,6 +149,20 @@ namespace MarineLang.LexicalAnalysis
              );
         }
 
+        static public Func<IndexedCharStream, Token> GetMacroNameToken()
+        {
+            return
+             GetTokenTest(TokenType.MacroName, (count, c) =>
+             {
+                 if (count == 0)
+                     return c == '#' ? TestResult.Pass : TestResult.End;
+                 if ((char.IsLetter(c) || char.IsDigit(c)) == false)
+                     return TestResult.End;
+                 return TestResult.Pass;
+             }
+             );
+        }
+
         static public Func<IndexedCharStream, Token> GetIntLiteralToken()
         {
             return
