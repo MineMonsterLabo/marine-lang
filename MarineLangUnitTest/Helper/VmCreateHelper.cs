@@ -21,6 +21,7 @@ namespace MarineLangUnitTest.Helper
 
             var pluginContainer = new PluginContainer();
             pluginContainer.AddFuncDefinitionPlugin("include", new IncludePlugin());
+            pluginContainer.AddExprPlugin("constEval", new ConstExprPlugin());
 
             var parser = new SyntaxAnalyzer(pluginContainer);
 
