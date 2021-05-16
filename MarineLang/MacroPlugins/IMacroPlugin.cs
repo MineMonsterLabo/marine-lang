@@ -11,4 +11,5 @@ namespace MarineLang.MacroPlugins
     }
 
     public interface IFuncDefinitionMacroPlugin : IMacroPlugin<IEnumerable<FuncDefinitionAst>> { }
+    public interface IExprMacroPlugin : IMacroPlugin<ExprAst> { }
 }
