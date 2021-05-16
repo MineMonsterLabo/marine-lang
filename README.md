@@ -74,7 +74,7 @@ yield_statement
                = 'yield' ; 
 break_statement
                = 'break' ;
-expr           = if_expr | binary_op_expr ;
+expr           = if_expr | macro | binary_op_expr ;
 if_expr        = 'if' , expr , block , [ 'else' , block ] ;
 block          = '{' , {statement} , '}'
 binary_op_expr = unary_op_expr , [binary_op , binary_op_expr] ;
