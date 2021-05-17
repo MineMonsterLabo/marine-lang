@@ -8,6 +8,8 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
         {
             //型一致
             TypeMatch = 0,
+            //Null許容型一致
+            NullableTypeMatch = 0,
             //ジェネリック型一致
             GenericTypeMatch,
             //暗黙的キャストによる一致
