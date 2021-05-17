@@ -636,7 +636,7 @@ end", 1)]
         [Theory]
         [InlineData("#include{ \"hoge.mrn\" \"fuga.mrn\" } fun main() ret hoge() + fuga() end", 11)]
         [InlineData("#include{ \"foobar.mrn\" } fun main() ret foo() + bar() end", 1100)]
-        public void MacroTest<T>(string str, T expected)
+        public void FuncDefinitionMacroTest<T>(string str, T expected)
         {
             using (var sw = new StreamWriter("hoge.mrn"))
                 sw.Write("fun hoge() ret 10 end");
@@ -650,7 +650,14 @@ end", 1)]
             using (var sw = new StreamWriter("foobar.mrn"))
                 sw.Write("#include{ \"foo.mrn\" } fun bar() ret 1000 end");
 
+            RunReturnCheck(str, expected);
+        }
 
+
+        [Theory]
+        [InlineData("fun main() ret #constEval{ 1+2+3+4+5 } end", 15)]
+        public void ExprMacroTest<T>(string str, T expected)
+        {
             RunReturnCheck(str, expected);
         }
     }

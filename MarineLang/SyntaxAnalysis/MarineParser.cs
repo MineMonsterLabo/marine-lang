@@ -16,6 +16,12 @@ namespace MarineLang.SyntaxAnalysis
             public Token endToken;
         }
 
+        public class MacroBlock
+        {
+            public string macroName;
+            public List<Token>tokens;
+        }
+
         //相互依存の無いパーサは使いまわすことで、高速化
         public Parser<ValueAst> ParseInt { get; }
         public Parser<ValueAst> ParseFloat { get; }
@@ -90,19 +96,43 @@ namespace MarineLang.SyntaxAnalysis
         public Parser<IEnumerable<FuncDefinitionAst>> ParseMacroFuncDefinitions()
         {
             return
+                ParseMacro()
+                .BindResult(macroBlock => 
+                    pluginContainer.GetFuncDefinitionPlugin(macroBlock.macroName).Replace(this, macroBlock.tokens)
+                );
+        }
+
+        public Parser<ExprAst> ParseMacroExpr()
+        {
+            return
+                ParseMacro()
+                .BindResult(macroBlock =>
+                    pluginContainer.GetExprPlugin(macroBlock.macroName).Replace(this, macroBlock.tokens)
+                );
+        }
+
+        public Parser<MacroBlock> ParseMacro()
+        {
+            return
                 ParseToken(TokenType.MacroName).Left(ParseToken(TokenType.LeftCurlyBracket))
-                .Bind<Token, IEnumerable<FuncDefinitionAst>>(macroName =>
-                    stream=>
+                .Bind<Token, MacroBlock>(macroName =>
+                    stream =>
                     {
                         var tokens = new List<Token>();
                         while (stream.Current.tokenType != TokenType.RightCurlyBracket)
                         {
                             tokens.Add(stream.Current);
                             if (stream.MoveNext() == false)
-                                return ParseResult<IEnumerable<FuncDefinitionAst>>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                                return ParseResult<MacroBlock>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
                         }
                         stream.MoveNext();
-                        return pluginContainer.GetFuncDefinitionPlugin(macroName.text.Substring(1)).Replace(this, tokens);
+                        return ParseResult<MacroBlock>.CreateSuccess(
+                            new MacroBlock
+                            {
+                                macroName = macroName.text.Substring(1),
+                                tokens = tokens
+                            }
+                        );
                     }
                 );
         }
@@ -217,6 +247,7 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParserCombinator.Or(
                     ParseIfExpr(),
+                    ParseMacroExpr(),
                     ParseBinaryOpExpr()
                 );
         }
