@@ -173,6 +173,7 @@ namespace MarineLangUnitTest.Helper
         public class OverLoad
         {
             public string Hoge(int a, int b) => "int_int";
+            public string Hoge(int a, int? b) => "int_nullable";
             public string Hoge(int a, float b) => "int_float";
             public string Hoge(float a, int b) => "float_int";
             public string Hoge(object a) => "object";
