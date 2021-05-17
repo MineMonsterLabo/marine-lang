@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using MarineLang.BuildInObjects;
 using MarineLang.Models.Asts;
-using MarineLang.Utils;
 using MarineLang.VirtualMachines.Dumps;
 using MarineLang.VirtualMachines.MarineILs;
 
@@ -26,6 +25,9 @@ namespace MarineLang.VirtualMachines
         public IReadOnlyDictionary<string, object> GlobalVariableDict => globalVariableDict;
 
         public IReadOnlyList<IMarineIL> MarineILs => ILGeneratedData?.marineILs;
+
+        public Action<int, IMarineIL> OnStepIL { private get; set; }
+        public Action<bool, bool> OnStopIL { private get; set; }
 
         public HighLevelVirtualMachine()
         {
@@ -95,6 +97,8 @@ namespace MarineLang.VirtualMachines
         public MarineValue Run(string marineFuncName, IEnumerable<object> args)
         {
             var lowLevelVirtualMachine = new LowLevelVirtualMachine();
+            lowLevelVirtualMachine.onStepILCallback = OnStepIL;
+            lowLevelVirtualMachine.onStopILCallback = OnStopIL;
             lowLevelVirtualMachine.Init();
             lowLevelVirtualMachine.nextILIndex = ILGeneratedData.funcILIndexDict[marineFuncName];
             foreach (var val in globalVariableDict.Values)

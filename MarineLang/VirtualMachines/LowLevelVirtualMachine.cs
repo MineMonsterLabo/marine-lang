@@ -1,4 +1,7 @@
-﻿namespace MarineLang.VirtualMachines
+﻿using System;
+using MarineLang.VirtualMachines.MarineILs;
+
+namespace MarineLang.VirtualMachines
 {
     public class LowLevelVirtualMachine
     {
@@ -11,6 +14,9 @@
         public bool endFlag;
         public bool yieldFlag;
 
+        public Action<int, IMarineIL> onStepILCallback;
+        public Action<bool, bool> onStopILCallback;
+
         public object Pop() => iLStack.Pop();
         public void Push(object v) => iLStack.Push(v);
         public int GetStackCurrent() => iLStack.currentIndex;
@@ -19,14 +25,19 @@
         public object Load(int index) => iLStack.Load(index);
 
         public int MarineFuncIndex(string funcName) => iLGeneratedData.funcILIndexDict[funcName];
+
         public void Run(ILGeneratedData iLGeneratedData)
         {
             this.iLGeneratedData = iLGeneratedData;
             while (endFlag == false && yieldFlag == false)
             {
-                iLGeneratedData.marineILs[nextILIndex].Run(this);
+                var il = iLGeneratedData.marineILs[nextILIndex];
+                il.Run(this);
+                onStepILCallback?.Invoke(nextILIndex, il);
                 nextILIndex++;
             }
+
+            onStopILCallback?.Invoke(endFlag, yieldFlag);
         }
 
         public void Resume()
@@ -34,9 +45,13 @@
             yieldFlag = false;
             while (endFlag == false && yieldFlag == false)
             {
-                iLGeneratedData.marineILs[nextILIndex].Run(this);
+                var il = iLGeneratedData.marineILs[nextILIndex];
+                il.Run(this);
+                onStepILCallback?.Invoke(nextILIndex, il);
                 nextILIndex++;
             }
+
+            onStopILCallback?.Invoke(endFlag, yieldFlag);
         }
 
         public void Init()
@@ -63,11 +78,13 @@
                 currentIndex--;
                 return stack[currentIndex + 1];
             }
+
             public void Push(object v)
             {
                 currentIndex++;
                 stack[currentIndex] = v;
             }
+
             public void Store(object v, int index) => stack[index] = v;
             public object Load(int index) => stack[index];
         }
