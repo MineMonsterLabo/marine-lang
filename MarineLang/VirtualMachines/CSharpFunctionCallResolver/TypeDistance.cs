@@ -9,7 +9,7 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
             //型一致
             TypeMatch = 0,
             //Null許容型一致
-            NullableTypeMatch = 0,
+            NullableTypeMatch,
             //ジェネリック型一致
             GenericTypeMatch,
             //暗黙的キャストによる一致
@@ -43,11 +43,11 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
             else if (matchkind > y.matchkind)
                 return -1;
             switch (matchkind)
-            {
-
+            {   
                 case MatchKind.TypeMatch:
+                case MatchKind.NullableTypeMatch:
                     return 0;
-
+                
                 case MatchKind.GenericTypeMatch:
                     if (concreteness > y.concreteness)
                         return 1;
