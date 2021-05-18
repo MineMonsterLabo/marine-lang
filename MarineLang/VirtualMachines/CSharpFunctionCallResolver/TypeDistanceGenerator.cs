@@ -12,6 +12,12 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
                     matchkind = TypeDistance.MatchKind.TypeMatch
                 };
 
+            if (IsNullableComplete(t1, t2))
+                return new TypeDistance
+                {
+                    matchkind = TypeDistance.MatchKind.NullableTypeMatch
+                };
+
             var implicitCastPriority = IsPrimitiveImplicitCast(t1, t2);
             if (implicitCastPriority.HasValue)
                 return new TypeDistance
@@ -59,11 +65,20 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
             return t1 == t2;
         }
 
+        //Nullable内部の型が等しかったらtrue
+        static bool IsNullableComplete(Type t1, Type t2)
+        {
+            Type underlyingType = Nullable.GetUnderlyingType(t2);
+            if (underlyingType != null)
+                return t1 == underlyingType;
+
+            return false;
+        }
+
         //アップキャストができるなら親の最小の深さを返す
         //ちがうなら-1
         static int? IsUpCast(Type t1, Type t2)
         {
-
             if (t1.BaseType != null)
             {
                 if (t1.BaseType == t2)
@@ -89,7 +104,6 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
         //型の具体性を返す
         static int? IsGeneric(Type t1, Type t2)
         {
-
             if (t2.IsGenericParameter)
                 return 1;
 
@@ -119,8 +133,10 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
                         return null;
                     sum += hoge.Value;
                 }
+
                 return sum;
             }
+
             return null;
         }
 
@@ -281,6 +297,7 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
                         }
                 }
             }
+
             return null;
         }
     }
