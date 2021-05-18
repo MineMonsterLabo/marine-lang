@@ -581,7 +581,8 @@ namespace MarineLang.Models.Asts
         public Token rightParen;
 
         public string FuncName => funcNameToken.text;
-        public override RangePosition Range => new RangePosition(funcNameToken.position, rightParen.PositionEnd);
+        public override RangePosition Range
+            => rightParen == null ? new RangePosition() : new RangePosition(funcNameToken.position, rightParen.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public static FuncCallAst Create(Token funcNameToken, ExprAst[] args, Token rightParen)
