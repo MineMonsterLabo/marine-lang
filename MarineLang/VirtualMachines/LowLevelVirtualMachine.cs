@@ -1,5 +1,4 @@
 ﻿using System;
-using MarineLang.VirtualMachines.MarineILs;
 
 namespace MarineLang.VirtualMachines
 {
@@ -14,8 +13,7 @@ namespace MarineLang.VirtualMachines
         public bool endFlag;
         public bool yieldFlag;
 
-        public Action<int, IMarineIL> onStepILCallback;
-        public Action<bool, bool> onStopILCallback;
+        public EventHandler<VirtualMachineStepEventArgs> onStepILCallback;
 
         public object Pop() => iLStack.Pop();
         public void Push(object v) => iLStack.Push(v);
@@ -33,11 +31,13 @@ namespace MarineLang.VirtualMachines
             {
                 var il = iLGeneratedData.marineILs[nextILIndex];
                 il.Run(this);
-                onStepILCallback?.Invoke(nextILIndex, il);
+                onStepILCallback?.Invoke(this, new VirtualMachineStepEventArgs(nextILIndex, il));
                 nextILIndex++;
             }
 
-            onStopILCallback?.Invoke(endFlag, yieldFlag);
+            onStepILCallback?.Invoke(this,
+                new VirtualMachineStepEventArgs(nextILIndex,
+                    yieldFlag ? VirtualMachineStepState.Yield : VirtualMachineStepState.End));
         }
 
         public void Resume()
@@ -47,11 +47,13 @@ namespace MarineLang.VirtualMachines
             {
                 var il = iLGeneratedData.marineILs[nextILIndex];
                 il.Run(this);
-                onStepILCallback?.Invoke(nextILIndex, il);
+                onStepILCallback?.Invoke(this, new VirtualMachineStepEventArgs(nextILIndex, il));
                 nextILIndex++;
             }
 
-            onStopILCallback?.Invoke(endFlag, yieldFlag);
+            onStepILCallback?.Invoke(this,
+                new VirtualMachineStepEventArgs(nextILIndex,
+                    yieldFlag ? VirtualMachineStepState.Yield : VirtualMachineStepState.End));
         }
 
         public void Init()
