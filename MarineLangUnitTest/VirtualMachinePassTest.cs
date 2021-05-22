@@ -1,6 +1,6 @@
+using System.IO;
 using MarineLang.BuiltInTypes;
 using MarineLangUnitTest.Helper;
-using System.IO;
 using Xunit;
 
 namespace MarineLangUnitTest
@@ -502,6 +502,8 @@ end
         [InlineData("fun main() ret over_load.hoge('v') end", "int")]
         [InlineData("fun main() ret over_load.hoge(5.3) end", "double")]
         [InlineData("fun main() ret over_load.hoge(\"aaa\") end", "object")]
+        [InlineData("fun main() ret over_load.hoge(\"aaa\",\"bbb\") end", "object_object_default_object")]
+        [InlineData("fun main() ret over_load.hoge(5,4,3,2) end", "int_int_int_nullable_int")]
         public void OverLoadTest(string str, string expected)
         {
             RunReturnCheck(str, expected);
