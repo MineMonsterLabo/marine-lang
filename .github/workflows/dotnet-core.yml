@@ -20,8 +20,6 @@ jobs:
 
     - name: Submodule Init
       run: git submodule update -i
-    - name: Submodule nuget restore
-      run: cd MineUtil && dotnet restore && dotnet build --configuration Release --no-restore && cd ../
 
     - name: Install dependencies
       run: dotnet restore
