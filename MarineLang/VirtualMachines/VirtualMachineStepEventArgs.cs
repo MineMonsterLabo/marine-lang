@@ -13,14 +13,12 @@ namespace MarineLang.VirtualMachines
         {
             Index = index;
             MarineIL = il;
-
             State = VirtualMachineStepState.Step;
         }
 
         public VirtualMachineStepEventArgs(int index, VirtualMachineStepState state)
         {
             Index = index;
-
             State = state;
         }
     }

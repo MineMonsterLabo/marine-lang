@@ -26,7 +26,7 @@ namespace MarineLang.VirtualMachines
 
         public IReadOnlyList<IMarineIL> MarineILs => ILGeneratedData?.marineILs;
 
-        public event EventHandler<VirtualMachineStepEventArgs> StepIL;
+        public event EventHandler<VirtualMachineStepEventArgs> StepEvent;
 
         public HighLevelVirtualMachine()
         {
@@ -96,7 +96,7 @@ namespace MarineLang.VirtualMachines
         public MarineValue Run(string marineFuncName, IEnumerable<object> args)
         {
             var lowLevelVirtualMachine = new LowLevelVirtualMachine();
-            lowLevelVirtualMachine.onStepILCallback = StepIL;
+            lowLevelVirtualMachine.onStepILCallback = StepEvent;
             lowLevelVirtualMachine.Init();
             lowLevelVirtualMachine.nextILIndex = ILGeneratedData.funcILIndexDict[marineFuncName];
             foreach (var val in globalVariableDict.Values)
