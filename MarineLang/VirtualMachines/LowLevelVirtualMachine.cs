@@ -1,4 +1,7 @@
-﻿namespace MarineLang.VirtualMachines
+﻿using System;
+using MarineLang.VirtualMachines.MarineILs;
+
+namespace MarineLang.VirtualMachines
 {
     public class LowLevelVirtualMachine
     {
@@ -11,6 +14,8 @@
         public bool endFlag;
         public bool yieldFlag;
 
+        public EventHandler<VirtualMachineStepEventArgs> onStepILCallback;
+
         public object Pop() => iLStack.Pop();
         public void Push(object v) => iLStack.Push(v);
         public int GetStackCurrent() => iLStack.currentIndex;
@@ -19,14 +24,19 @@
         public object Load(int index) => iLStack.Load(index);
 
         public int MarineFuncIndex(string funcName) => iLGeneratedData.funcILIndexDict[funcName];
+
         public void Run(ILGeneratedData iLGeneratedData)
         {
             this.iLGeneratedData = iLGeneratedData;
             while (endFlag == false && yieldFlag == false)
             {
-                iLGeneratedData.marineILs[nextILIndex].Run(this);
+                var il = iLGeneratedData.marineILs[nextILIndex];
+                il.Run(this);
+                OnStepEvent(il);
                 nextILIndex++;
             }
+
+            OnStopEvent();
         }
 
         public void Resume()
@@ -34,9 +44,13 @@
             yieldFlag = false;
             while (endFlag == false && yieldFlag == false)
             {
-                iLGeneratedData.marineILs[nextILIndex].Run(this);
+                var il = iLGeneratedData.marineILs[nextILIndex];
+                il.Run(this);
+                OnStepEvent(il);
                 nextILIndex++;
             }
+
+            OnStopEvent();
         }
 
         public void Init()
@@ -46,6 +60,18 @@
             callNestCount = 0;
             stackBaseCount = -1;
             endFlag = false;
+        }
+
+        void OnStepEvent(IMarineIL il)
+        {
+            onStepILCallback?.Invoke(this, new VirtualMachineStepEventArgs(nextILIndex, il));
+        }
+
+        void OnStopEvent()
+        {
+            var state = yieldFlag ? VirtualMachineStepState.Yield : VirtualMachineStepState.End;
+            var args = new VirtualMachineStepEventArgs(nextILIndex, state);
+            onStepILCallback?.Invoke(this, args);
         }
 
         class ILStack
@@ -63,11 +89,13 @@
                 currentIndex--;
                 return stack[currentIndex + 1];
             }
+
             public void Push(object v)
             {
                 currentIndex++;
                 stack[currentIndex] = v;
             }
+
             public void Store(object v, int index) => stack[index] = v;
             public object Load(int index) => stack[index];
         }
