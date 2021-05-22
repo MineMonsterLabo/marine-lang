@@ -10,6 +10,7 @@ using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
 using MarineLang.VirtualMachines.Attributes;
+using MineUtil;
 
 namespace MarineLangUnitTest.Helper
 {
@@ -29,10 +30,10 @@ namespace MarineLangUnitTest.Helper
             var tokenStream = TokenStream.Create(tokens);
             var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
-                throw new Exception(parseResult.Error.FullErrorMessage);
+                throw new Exception(parseResult.UnwrapError().FullErrorMessage);
             var vm = new HighLevelVirtualMachine();
 
-            vm.SetProgram(parseResult.Value);
+            vm.SetProgram(parseResult.Unwrap());
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Ret123)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Hello)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Plus)));

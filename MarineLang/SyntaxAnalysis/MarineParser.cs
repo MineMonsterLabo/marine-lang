@@ -2,6 +2,7 @@
 using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
+using MineUtil;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -123,10 +124,10 @@ namespace MarineLang.SyntaxAnalysis
                         {
                             tokens.Add(stream.Current);
                             if (stream.MoveNext() == false)
-                                return ParseResult<MacroBlock>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                                return ParseResult.Error<MacroBlock>(new ParseErrorInfo(ErrorKind.InComplete));
                         }
                         stream.MoveNext();
-                        return ParseResult<MacroBlock>.CreateSuccess(
+                        return ParseResult.Ok(
                             new MacroBlock
                             {
                                 macroName = macroName.text.Substring(1),
@@ -147,12 +148,12 @@ namespace MarineLang.SyntaxAnalysis
                     var parseResult = ParseStatement(stream);
 
                     if (parseResult.IsError)
-                        return parseResult.CastError<Block>();
+                        return ParseResult.Error<Block>(parseResult.RawError);
 
-                    statementAsts.Add(parseResult.Value);
+                    statementAsts.Add(parseResult.RawValue);
                 }
 
-                return ParseResult<Block>.CreateSuccess(new Block
+                return ParseResult.Ok(new Block
                 {
                     statementAsts = statementAsts.ToArray(),
                     endToken = stream.LastCurrent
@@ -274,7 +275,7 @@ namespace MarineLang.SyntaxAnalysis
             return stream =>
             {
                 if (ParseToken(TokenType.LeftCurlyBracket)(stream).IsError || stream.IsEnd)
-                    return ParseResult<Block>.CreateError(new ParseErrorInfo("", ErrorKind.InComplete));
+                    return ParseResult.Error<Block>(new ParseErrorInfo("", ErrorKind.InComplete));
 
                 var statementAsts = new List<StatementAst>();
                 while (stream.IsEnd == false && stream.Current.tokenType != TokenType.RightCurlyBracket)
@@ -282,23 +283,23 @@ namespace MarineLang.SyntaxAnalysis
                     var parseResult = ParseStatement(stream);
 
                     if (parseResult.IsError)
-                        return parseResult.CastError<Block>();
+                        return ParseResult.Error<Block>(parseResult.RawError);
 
-                    statementAsts.Add(parseResult.Value);
+                    statementAsts.Add(parseResult.RawValue);
                 }
 
                 if (stream.IsEnd)
-                    return ParseResult<Block>.CreateError(new ParseErrorInfo("", ErrorKind.InComplete));
+                    return ParseResult.Error<Block>(new ParseErrorInfo("", ErrorKind.InComplete));
 
                 var endRightCurlyBracketResult = ParseToken(TokenType.RightCurlyBracket)(stream);
 
                 if (endRightCurlyBracketResult.IsError)
-                    return ParseResult<Block>.CreateError(new ParseErrorInfo("", ErrorKind.InComplete));
+                    return ParseResult.Error<Block>(new ParseErrorInfo("", ErrorKind.InComplete));
 
-                return ParseResult<Block>.CreateSuccess(new Block
+                return ParseResult.Ok(new Block
                 {
                     statementAsts = statementAsts.ToArray(),
-                    endToken = endRightCurlyBracketResult.Value
+                    endToken = endRightCurlyBracketResult.RawValue
                 });
             };
         }
@@ -394,18 +395,18 @@ namespace MarineLang.SyntaxAnalysis
                 {
                     var result = dotTermParser(stream);
                     if (result.IsError)
-                        if (result.Error.ErrorKind != ErrorKind.InComplete)
+                        if (result.RawError.ErrorKind != ErrorKind.InComplete)
                             return result;
                         else break;
-                    instance = result.Value;
+                    instance = result.RawValue;
                     if (stream.IsEnd)
                         break;
                     var result2 = ParseIndexers(false)(stream);
                     if (result2.IsError)
-                        return result2.CastError<ExprAst>();
-                    instance = result2.Value.Aggregate(instance, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
+                        return ParseResult.Error<ExprAst>(result2.RawError);
+                    instance = result2.RawValue.Aggregate(instance, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
                 }
-                return ParseResult<ExprAst>.CreateSuccess(instance);
+                return ParseResult.Ok(instance);
             };
         }
 
@@ -594,7 +595,7 @@ namespace MarineLang.SyntaxAnalysis
                         return
                             ParseExpr()
                             .MapResult(expr => ReAssignmentIndexerAst.Create(getIndexerAst, expr));
-                    return _ => ParseResult<StatementAst>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                    return _ => ParseResult.Error<StatementAst>(new ParseErrorInfo(ErrorKind.InComplete));
                 });
         }
 
@@ -615,8 +616,8 @@ namespace MarineLang.SyntaxAnalysis
             return ParseToken(TokenType.Int)
                 .BindResult(token =>
                  (int.TryParse(token.text, out int value)) ?
-                     ParseResult<ValueAst>.CreateSuccess(ValueAst.Create(value, token)) :
-                     ParseResult<ValueAst>.CreateError(new ParseErrorInfo())
+                     ParseResult.Ok(ValueAst.Create(value, token)) :
+                     ParseResult.Error<ValueAst>(new ParseErrorInfo())
              );
         }
 
@@ -625,8 +626,8 @@ namespace MarineLang.SyntaxAnalysis
             return ParseToken(TokenType.Float)
                .BindResult(token =>
                     (float.TryParse(token.text, out float value)) ?
-                        ParseResult<ValueAst>.CreateSuccess(ValueAst.Create(value, token)) :
-                        ParseResult<ValueAst>.CreateError(new ParseErrorInfo())
+                        ParseResult.Ok(ValueAst.Create(value, token)) :
+                        ParseResult.Error<ValueAst>(new ParseErrorInfo())
                 );
         }
 
@@ -697,15 +698,14 @@ namespace MarineLang.SyntaxAnalysis
                      {
                          var semicolonResult = ParseToken(TokenType.Semicolon)(stream);
                          if (semicolonResult.IsError)
-                             return ParseResult<ArrayLiteralAst.ArrayLiteralExprs>.CreateSuccess(
+                             return ParseResult.Ok(
                                 new ArrayLiteralAst.ArrayLiteralExprs { exprAsts = exprs, size = exprs.Length }
                              );
+
                          var sizeResult = ParseInt(stream);
-                         if (sizeResult.IsError)
-                             return sizeResult.CastError<ArrayLiteralAst.ArrayLiteralExprs>();
-                         return ParseResult<ArrayLiteralAst.ArrayLiteralExprs>.CreateSuccess(
-                             new ArrayLiteralAst.ArrayLiteralExprs { exprAsts = exprs, size = (int)sizeResult.Value.value }
-                         );
+                         return
+                            from size in sizeResult
+                            select new ArrayLiteralAst.ArrayLiteralExprs { exprAsts = exprs, size = (int)size.value };
                      }
                     ),
                     ParseToken(TokenType.RightBracket)
@@ -736,7 +736,7 @@ namespace MarineLang.SyntaxAnalysis
 
         public Parser<T> Return<T>(T t)
         {
-            return stream => ParseResult<T>.CreateSuccess(t);
+            return stream => ParseResult.Ok<T>(t);
         }
     }
 }

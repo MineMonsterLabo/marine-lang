@@ -1,6 +1,7 @@
 ﻿using MarineLang.LexicalAnalysis;
 using MarineLang.Models.Asts;
 using MarineLang.SyntaxAnalysis;
+using MineUtil;
 using System.Linq;
 using Xunit;
 
@@ -22,7 +23,7 @@ fun sub()
 end
 ";
             var tokens = new LexicalAnalyzer().GetTokens(source);
-            var ast = new SyntaxAnalyzer().Parse(tokens).Value;
+            var ast = new SyntaxAnalyzer().Parse(tokens).Unwrap();
 
             Assert.Single(ast.LookUp<ProgramAst>());
             Assert.Equal(2, ast.LookUp<FuncDefinitionAst>().Count());

@@ -1,6 +1,8 @@
-﻿using MarineLang.Streams;
+﻿using MarineLang.Models.Errors;
+using MarineLang.Streams;
+using MineUtil;
 
 namespace MarineLang.SyntaxAnalysis
 {
-    public delegate IParseResult<T> Parser<out T>(TokenStream stream);
+    public delegate IResult<T, ParseErrorInfo> Parser<out T>(TokenStream stream);
 }
