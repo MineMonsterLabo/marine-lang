@@ -1,6 +1,7 @@
 ﻿using MarineLang.Models;
 using MarineLang.Models.Errors;
 using MarineLang.Streams;
+using MineUtil;
 using System;
 
 namespace MarineLang.SyntaxAnalysis
@@ -14,8 +15,8 @@ namespace MarineLang.SyntaxAnalysis
             return stream =>
             {
                 var result = parser(stream);
-                if (result.IsError && result.Error.ErrorKind == ErrorKind.InComplete)
-                    return ParseResult<T>.CreateError(func(stream));
+                if (result.IsError && result.RawError.ErrorKind == ErrorKind.InComplete)
+                    return ParseResult.Error<T>(func(stream));
                 return result;
             };
         }
@@ -50,9 +51,9 @@ namespace MarineLang.SyntaxAnalysis
             {
                 var result = parser(stream);
                 if (result.IsError)
-                    return result.CastError<TT>();
+                    return ParseResult.Error<TT>(result.RawError);
                 if (stream.IsEnd)
-                    return ParseResult<TT>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                    return ParseResult.Error<TT>(new ParseErrorInfo(ErrorKind.InComplete));
                 return parser2(stream);
             };
         }
@@ -65,10 +66,10 @@ namespace MarineLang.SyntaxAnalysis
                 if (result.IsError == false)
                 {
                     if (stream.IsEnd)
-                        return ParseResult<T>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                        return ParseResult.Error<T>(new ParseErrorInfo(ErrorKind.InComplete));
                     var result2 = parser2(stream);
                     if (result2.IsError)
-                        return result2.CastError<T>();
+                        return ParseResult.Error<T>(result2.RawError);
                 }
                 return result;
             };
@@ -80,7 +81,7 @@ namespace MarineLang.SyntaxAnalysis
             {
                 var result = parser(stream);
                 if (result.IsError == false && stream.IsEnd)
-                    return ParseResult<T>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                    return ParseResult.Error<T>(new ParseErrorInfo(ErrorKind.InComplete));
                 return result;
             };
         }
@@ -91,8 +92,8 @@ namespace MarineLang.SyntaxAnalysis
             {
                 var result = parser(stream);
                 if (result.IsError)
-                    return result.CastError<TT>();
-                return func(result.Value)(stream);
+                    return ParseResult.Error<TT>(result.RawError);
+                return func(result.RawValue)(stream);
             };
         }
 
@@ -104,20 +105,20 @@ namespace MarineLang.SyntaxAnalysis
             return parser.Bind(t => selector(t).Select(u => projector(t, u)));
         }
 
-        public static Parser<TT> BindResult<T, TT>(this Parser<T> parser, Func<T, IParseResult<TT>> func)
+        public static Parser<TT> BindResult<T, TT>(this Parser<T> parser, Func<T, IResult<TT, ParseErrorInfo>> func)
         {
             return stream =>
             {
                 var result = parser(stream);
                 if (result.IsError)
-                    return result.CastError<TT>();
-                return func(result.Value);
+                    return ParseResult.Error<TT>(result.RawError);
+                return func(result.RawValue);
             };
         }
 
         public static Parser<TT> MapResult<T, TT>(this Parser<T> parser, Func<T, TT> func)
         {
-            return parser.BindResult(t => ParseResult<TT>.CreateSuccess(func(t)));
+            return parser.BindResult(t => ParseResult.Ok(func(t)));
         }
 
         public static Parser<TT> Select<T, TT>(this Parser<T> parser, Func<T, TT> selector)
@@ -147,7 +148,7 @@ namespace MarineLang.SyntaxAnalysis
                 var parseResult = parser(stream);
                 if (parseResult.IsError)
                 {
-                    return ParseResult<T>.CreateSuccess(defaultValue);
+                    return ParseResult.Ok(defaultValue);
                 }
                 return parseResult;
             };

@@ -1,0 +1,3 @@
+[submodule "MineUtil"]
+	path = MineUtil
+	url = https://github.com/MineMonsterLabo/MineUtil.git

@@ -16,13 +16,13 @@ namespace MarineLang.SyntaxAnalysis
                     while (stream.IsEnd == false)
                     {
                         var parseResult = parser(stream);
-                        if (parseResult.IsError && parseResult.Error.ErrorKind != ErrorKind.InComplete)
-                            return parseResult.CastError<List<T>>();
+                        if (parseResult.IsError && parseResult.RawError.ErrorKind != ErrorKind.InComplete)
+                            return ParseResult.Error<List<T>>(parseResult.RawError);
                         if (parseResult.IsError)
                             break;
-                        list.Add(parseResult.Value);
+                        list.Add(parseResult.RawValue);
                     }
-                    return ParseResult<List<T>>.CreateSuccess(list);
+                    return ParseResult.Ok(list);
                 };
         }
 
@@ -32,8 +32,8 @@ namespace MarineLang.SyntaxAnalysis
                 stream =>
                 {
                     var result = Many(parser)(stream);
-                    if (result.IsError == false && result.Value.Count == 0)
-                        return ParseResult<List<T>>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                    if (result.IsError == false && result.RawValue.Count == 0)
+                        return ParseResult.Error<List<T>>(new ParseErrorInfo(ErrorKind.InComplete));
                     return result;
                 };
         }
@@ -49,12 +49,12 @@ namespace MarineLang.SyntaxAnalysis
                     {
                         var result = parsers[i](stream);
                         if (result.IsError)
-                            return result.CastError<object[]>();
+                            return ParseResult.Error<object[]>(result.RawError);
                         if (stream.IsEnd && i + 1 != parsers.Length)
-                            return ParseResult<object[]>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
-                        values[i] = result.Value;
+                            return ParseResult.Error<object[]>(new ParseErrorInfo(ErrorKind.InComplete));
+                        values[i] = result.RawValue;
                     }
-                    return ParseResult<object[]>.CreateSuccess(values);
+                    return ParseResult.Ok(values);
                 };
         }
 
@@ -98,10 +98,10 @@ namespace MarineLang.SyntaxAnalysis
                     foreach (var parser in parsers)
                     {
                         var parseResult = parser(stream);
-                        if (parseResult.IsError == false || parseResult.Error.ErrorKind == ErrorKind.ForceError)
+                        if (parseResult.IsError == false || parseResult.RawError.ErrorKind == ErrorKind.ForceError)
                             return parseResult;
                     }
-                    return ParseResult<T>.CreateError(new ParseErrorInfo(ErrorKind.InComplete)); ;
+                    return ParseResult.Error<T>(new ParseErrorInfo(ErrorKind.InComplete)); ;
                 };
         }
 
@@ -118,13 +118,13 @@ namespace MarineLang.SyntaxAnalysis
                         break;
                     var result = parser(stream);
                     if (result.IsError && isFirst == false)
-                        return ParseResult<T[]>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                        return ParseResult.Error<T[]>(new ParseErrorInfo(ErrorKind.InComplete));
                     isFirst = false;
                     if (result.IsError)
                         break;
-                    list.Add(result.Value);
+                    list.Add(result.RawValue);
                 }
-                return ParseResult<T[]>.CreateSuccess(list.ToArray());
+                return ParseResult.Ok(list.ToArray());
             };
         }
 
@@ -134,16 +134,16 @@ namespace MarineLang.SyntaxAnalysis
             {
                 if (stream.IsEnd)
                 {
-                    return ParseResult<Token>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                    return ParseResult.Error<Token>(new ParseErrorInfo(ErrorKind.InComplete));
                 }
 
                 var token = stream.Current;
                 if (test(token))
                 {
                     stream.MoveNext();
-                    return ParseResult<Token>.CreateSuccess(token);
+                    return ParseResult.Ok(token);
                 }
-                return ParseResult<Token>.CreateError(new ParseErrorInfo(ErrorKind.InComplete));
+                return ParseResult.Error<Token>(new ParseErrorInfo(ErrorKind.InComplete));
             };
         }
     }

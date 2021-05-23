@@ -3,13 +3,14 @@ using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
 using MarineLang.SyntaxAnalysis;
+using MineUtil;
 using Xunit;
 
 namespace MarineLangUnitTest
 {
     public class ParseErrorTest
     {
-        public IParseResult<ProgramAst> ParseHelper(string str)
+        public IResult<ProgramAst, ParseErrorInfo> ParseHelper(string str)
         {
             var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
@@ -22,8 +23,8 @@ namespace MarineLangUnitTest
             var result = ParseHelper(str);
 
             Assert.True(result.IsError);
-            Assert.Equal(expectedErrorCode, result.Error.ErrorCode);
-            Assert.Equal(new RangePosition( new Position(startLine, startColumn),new Position(endLine, endColumn)), result.Error.ErrorRangePosition);
+            Assert.Equal(expectedErrorCode, result.UnwrapError().ErrorCode);
+            Assert.Equal(new RangePosition( new Position(startLine, startColumn),new Position(endLine, endColumn)), result.UnwrapError().ErrorRangePosition);
         }
 
         [Theory]

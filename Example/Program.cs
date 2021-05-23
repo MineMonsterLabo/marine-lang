@@ -55,11 +55,11 @@ namespace Example
             if (parserResult.IsError)
             {
                 Console.WriteLine("パースエラー");
-                Console.WriteLine(parserResult.Error.FullErrorMessage);
+                Console.WriteLine(parserResult.RawError.FullErrorMessage);
                 return;
             }
 
-            vm.SetProgram(parserResult.Value);
+            vm.SetProgram(parserResult.RawValue);
             vm.Compile();
         }
 
