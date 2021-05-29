@@ -173,7 +173,7 @@ namespace MarineLang.VirtualMachines
             else if (exprAst.GetInstanceFieldAst() != null)
                 InstanceFieldILGenerate(exprAst.GetInstanceFieldAst(), argCount, variables, breakIndex);
             else if (exprAst.GetStaticFieldAst() != null)
-                StaticFieldILGenerate(exprAst.GetStaticFieldAst(), argCount, variables, breakIndex);
+                StaticFieldILGenerate(exprAst.GetStaticFieldAst());
             else if (exprAst.GetGetIndexerAst() != null)
                 GetGetIndexerILGenerate(exprAst.GetGetIndexerAst(), argCount, variables, breakIndex);
             else if (exprAst.GetArrayLiteralAst() != null)
@@ -316,14 +316,27 @@ namespace MarineLang.VirtualMachines
             );
         }
 
-        void StaticFieldILGenerate(StaticFieldAst staticFieldAst, int argCount, FuncScopeVariables variables,
-           BreakIndex breakIndex)
+        void StaticFieldILGenerate(StaticFieldAst staticFieldAst)
         {
-            marineILs.Add(
-                new StaticCSharpFieldLoadIL(staticTypeDict[staticFieldAst.ClassName],
-                    staticFieldAst.variableAst.VarName, new ILDebugInfo(staticFieldAst.Range.Start)
-                )
-            );
+            var type = staticTypeDict[staticFieldAst.ClassName];
+            if (type.IsEnum)
+            {
+                marineILs.Add(
+                    new PushValueIL(
+                        Enum.Parse(type, NameUtil.GetUpperCamelName(staticFieldAst.variableAst.VarName))
+                    )
+                );
+            }
+            else
+            {
+                marineILs.Add(
+                    new StaticCSharpFieldLoadIL(
+                        type,
+                        staticFieldAst.variableAst.VarName, 
+                        new ILDebugInfo(staticFieldAst.Range.Start)
+                    )
+                );
+            }
         }
 
         void GetGetIndexerILGenerate(GetIndexerAst getIndexerAst, int argCount, FuncScopeVariables variables,
