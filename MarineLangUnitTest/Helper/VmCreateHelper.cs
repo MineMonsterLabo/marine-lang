@@ -60,6 +60,7 @@ namespace MarineLangUnitTest.Helper
             vm.StaticTypeRegister(typeof(StaticType));
             vm.StaticTypeRegister(typeof(Constructor));
             vm.StaticTypeRegister<OpSample1>();
+            vm.StaticTypeRegister<TestColor>();
 
             vm.Compile();
 
@@ -262,6 +263,13 @@ namespace MarineLangUnitTest.Helper
             {
                 return new OpSample1(a.v / b);
             }
+        }
+
+        public enum TestColor
+        {
+            Red,
+            Green,
+            Blue
         }
     }
 }
