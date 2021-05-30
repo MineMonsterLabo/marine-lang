@@ -2,6 +2,7 @@ using System.IO;
 using MarineLang.BuiltInTypes;
 using MarineLangUnitTest.Helper;
 using Xunit;
+using static MarineLangUnitTest.Helper.VmCreateHelper;
 
 namespace MarineLangUnitTest
 {
@@ -328,9 +329,9 @@ end", 18)]
         }
 
         [Theory]
-        [InlineData("fun main() ret [0,1,3] end", new object[] {0, 1, 3})]
-        [InlineData("fun main() ret [7;3] end", new object[] {7, null, null})]
-        [InlineData("fun main() ret [;3] end", new object[] {null, null, null})]
+        [InlineData("fun main() ret [0,1,3] end", new object[] { 0, 1, 3 })]
+        [InlineData("fun main() ret [7;3] end", new object[] { 7, null, null })]
+        [InlineData("fun main() ret [;3] end", new object[] { null, null, null })]
         public void ArrayLiteral<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -659,6 +660,15 @@ end", 1)]
         [Theory]
         [InlineData("fun main() ret #constEval{ 1+2+3+4+5 } end", 15)]
         public void ExprMacroTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret TestColor.blue end", TestColor.Blue)]
+        [InlineData("fun main() ret TestColor.blue == TestColor.green end", false)]
+        [InlineData("fun main() ret TestColor.red == TestColor.red end", true)]
+        public void EnumTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }
