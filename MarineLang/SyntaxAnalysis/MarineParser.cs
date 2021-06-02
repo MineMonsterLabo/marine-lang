@@ -699,13 +699,13 @@ namespace MarineLang.SyntaxAnalysis
                          var semicolonResult = ParseToken(TokenType.Semicolon)(stream);
                          if (semicolonResult.IsError)
                              return ParseResult.Ok(
-                                new ArrayLiteralAst.ArrayLiteralExprs { exprAsts = exprs, size = exprs.Length }
+                                 ArrayLiteralAst.ArrayLiteralExprs.Create( exprs, exprs.Length)
                              );
 
                          var sizeResult = ParseInt(stream);
                          return
                             from size in sizeResult
-                            select new ArrayLiteralAst.ArrayLiteralExprs { exprAsts = exprs, size = (int)size.value };
+                            select  ArrayLiteralAst.ArrayLiteralExprs.Create( exprs, (int)size.value );
                      }
                     ),
                     ParseToken(TokenType.RightBracket)

@@ -382,7 +382,7 @@ namespace MarineLang.VirtualMachines
                             ValueAst.Create(actionFuncName, default),
                             ArrayLiteralAst.Create(
                                 default,
-                                new ArrayLiteralAst.ArrayLiteralExprs {exprAsts = captures, size = captures.Length},
+                                ArrayLiteralAst.ArrayLiteralExprs.Create(captures, captures.Length),
                                 default
                             )
                         },

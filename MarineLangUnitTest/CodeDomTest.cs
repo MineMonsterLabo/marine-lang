@@ -91,15 +91,15 @@ namespace MarineLangUnitTest
                             VariableAst.Create("hoge")
                         )),
                         ExprStatementAst.Create(ArrayLiteralAst.Create(
-                            new ArrayLiteralAst.ArrayLiteralExprs{
-                                exprAsts = new ExprAst[]{ ValueAst.Create(1), ValueAst.Create(2) }
-                            }
+                            ArrayLiteralAst.ArrayLiteralExprs.Create(
+                               new ExprAst[]{ ValueAst.Create(1), ValueAst.Create(2) }
+                            )
                         )),
                         ExprStatementAst.Create(ArrayLiteralAst.Create(
-                            new ArrayLiteralAst.ArrayLiteralExprs{
-                                exprAsts = new ExprAst[]{ ValueAst.Create(1)},
-                                size = 5
-                            }
+                            ArrayLiteralAst.ArrayLiteralExprs.Create(
+                                new ExprAst[]{ ValueAst.Create(1)},
+                                5
+                            )
                         )),
                         ExprStatementAst.Create(GetIndexerAst.Create(
                             BinaryOpAst.Create(

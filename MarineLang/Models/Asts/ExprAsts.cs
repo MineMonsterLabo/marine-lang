@@ -497,6 +497,16 @@ namespace MarineLang.Models.Asts
         {
             public ExprAst[] exprAsts;
             public int? size;
+
+            public static ArrayLiteralExprs Create(ExprAst[] exprAsts)
+            {
+                return new ArrayLiteralExprs { exprAsts = exprAsts };
+            }
+
+            public static ArrayLiteralExprs Create(ExprAst[] exprAsts, int? size)
+            {
+                return new ArrayLiteralExprs { exprAsts = exprAsts, size = size };
+            }
         }
 
         public static ArrayLiteralAst Create(Token leftBracketToken, ArrayLiteralExprs arrayLiteralExprs, Token rightBracketToken)
