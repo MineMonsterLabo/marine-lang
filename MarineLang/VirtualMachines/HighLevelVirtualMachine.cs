@@ -98,7 +98,7 @@ namespace MarineLang.VirtualMachines
             var lowLevelVirtualMachine = new LowLevelVirtualMachine();
             lowLevelVirtualMachine.onStepILCallback = StepEvent;
             lowLevelVirtualMachine.Init();
-            lowLevelVirtualMachine.nextILIndex = ILGeneratedData.funcILIndexDict[marineFuncName];
+            lowLevelVirtualMachine.nextILIndex = ILGeneratedData.funcILIndexDict[marineFuncName].Index;
             foreach (var val in globalVariableDict.Values)
                 lowLevelVirtualMachine.Push(val);
             lowLevelVirtualMachine.stackBaseCount = lowLevelVirtualMachine.GetStackCurrent();

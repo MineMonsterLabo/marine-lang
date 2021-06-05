@@ -12,10 +12,10 @@ namespace MarineLang.VirtualMachines
 {
     public class ILGeneratedData
     {
-        public readonly IReadOnlyDictionary<string, int> funcILIndexDict;
+        public readonly IReadOnlyDictionary<string, FuncILIndex> funcILIndexDict;
         public readonly IReadOnlyList<IMarineIL> marineILs;
 
-        public ILGeneratedData(IReadOnlyDictionary<string, int> funcILIndexDict, IReadOnlyList<IMarineIL> marineILs)
+        public ILGeneratedData(IReadOnlyDictionary<string, FuncILIndex> funcILIndexDict, IReadOnlyList<IMarineIL> marineILs)
         {
             this.funcILIndexDict = funcILIndexDict;
             this.marineILs = marineILs;
@@ -41,9 +41,14 @@ namespace MarineLang.VirtualMachines
         public int Index { get; set; }
     }
 
+    public class FuncILIndex
+    {
+        public int Index { get; set; } = -1;
+    }
+
     public class ILGenerator
     {
-        Dictionary<string, int> funcILIndexDict = new Dictionary<string, int>();
+        Dictionary<string, FuncILIndex> funcILIndexDict = new Dictionary<string, FuncILIndex>();
         IReadOnlyDictionary<string, MethodInfo> csharpFuncDict;
         IReadOnlyDictionary<string, Type> staticTypeDict;
         readonly List<IMarineIL> marineILs = new List<IMarineIL>();
@@ -60,7 +65,7 @@ namespace MarineLang.VirtualMachines
         {
             this.csharpFuncDict = csharpFuncDict;
             this.staticTypeDict = staticTypeDict;
-            funcILIndexDict = programAst.funcDefinitionAsts.ToDictionary(x => x.funcName, x => -1);
+            funcILIndexDict = programAst.funcDefinitionAsts.ToDictionary(x => x.funcName, x => new FuncILIndex());
             ProgramILGenerate(programAst, globalVariableNames);
             return new ILGeneratedData(funcILIndexDict, marineILs);
         }
@@ -76,7 +81,15 @@ namespace MarineLang.VirtualMachines
 
         void FuncDefinitionILGenerate(FuncDefinitionAst funcDefinitionAst, FuncScopeVariables variables)
         {
-            funcILIndexDict[funcDefinitionAst.funcName] = marineILs.Count;
+            if (funcILIndexDict.TryGetValue(funcDefinitionAst.funcName, out FuncILIndex funcILIndex))
+            {
+                funcILIndex.Index = marineILs.Count;
+            }
+            else
+            {
+                funcILIndexDict[funcDefinitionAst.funcName] = new FuncILIndex { Index = marineILs.Count };
+            }
+
             bool retFlag = false;
             var stackAllockIndex = marineILs.Count;
             marineILs.Add(new NoOpIL());
@@ -192,7 +205,7 @@ namespace MarineLang.VirtualMachines
                 ExprILGenerate(exprAst, argCount, args, breakIndex);
 
             if (funcILIndexDict.ContainsKey(funcCallAst.FuncName))
-                marineILs.Add(new MarineFuncCallIL(funcCallAst.FuncName, funcCallAst.args.Length));
+                marineILs.Add(new MarineFuncCallIL(funcCallAst.FuncName,funcILIndexDict[funcCallAst.FuncName], funcCallAst.args.Length));
             else
                 marineILs.Add(new CSharpFuncCallIL(csharpFuncDict[NameUtil.GetUpperCamelName(funcCallAst.FuncName)],
                     funcCallAst.args.Length));

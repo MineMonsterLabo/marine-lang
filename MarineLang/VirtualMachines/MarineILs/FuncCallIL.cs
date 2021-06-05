@@ -122,25 +122,23 @@ namespace MarineLang.VirtualMachines.MarineILs
 
     public struct MarineFuncCallIL : IMarineIL
     {
-        int nextILIndex;
         public readonly string funcName;
         public readonly int argCount;
+        public readonly FuncILIndex funcILIndex;
         public ILDebugInfo ILDebugInfo => null;
 
-        public MarineFuncCallIL(string funcName, int argCount)
+        public MarineFuncCallIL(string funcName, FuncILIndex funcILIndex, int argCount)
         {
-            nextILIndex = -1;
             this.funcName = funcName;
             this.argCount = argCount;
+            this.funcILIndex = funcILIndex;
         }
 
         public void Run(LowLevelVirtualMachine vm)
         {
-            if (nextILIndex == -1)
-                nextILIndex = vm.MarineFuncIndex(funcName);
             vm.Push(vm.stackBaseCount);
             vm.Push(vm.nextILIndex + 1);
-            vm.nextILIndex = nextILIndex - 1;
+            vm.nextILIndex = funcILIndex.Index - 1;
             vm.stackBaseCount =
                 vm.GetStackCurrent() - argCount - VirtualMachineConstants.CALL_RESTORE_STACK_FRAME;
             vm.callNestCount++;
