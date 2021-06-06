@@ -35,7 +35,7 @@ namespace MarineLang.VirtualMachines
 
         public bool ContainsMarineFunc(string funcName)
         {
-            return ILGeneratedData?.funcILIndexDict?.ContainsKey(funcName) ?? false;
+            return ILGeneratedData?.namespaceTable?.ContainFunc(funcName) ?? false;
         }
 
         public void GlobalFuncRegister(MethodInfo methodInfo)
@@ -98,7 +98,7 @@ namespace MarineLang.VirtualMachines
             var lowLevelVirtualMachine = new LowLevelVirtualMachine();
             lowLevelVirtualMachine.onStepILCallback = StepEvent;
             lowLevelVirtualMachine.Init();
-            lowLevelVirtualMachine.nextILIndex = ILGeneratedData.funcILIndexDict[marineFuncName].Index;
+            lowLevelVirtualMachine.nextILIndex = ILGeneratedData.namespaceTable.GetFuncIlIndex(marineFuncName).Index;
             foreach (var val in globalVariableDict.Values)
                 lowLevelVirtualMachine.Push(val);
             lowLevelVirtualMachine.stackBaseCount = lowLevelVirtualMachine.GetStackCurrent();
