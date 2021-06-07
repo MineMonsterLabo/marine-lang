@@ -78,6 +78,12 @@ namespace MarineLang.VirtualMachines
             ILGeneratedData = new ILGenerator(marineProgramUnitList).Generate(methodInfoDict, staticTypeDict, globalVariableDict.Keys.ToArray());
         }
 
+        public void ClearAllPrograms()
+        {
+            ILGeneratedData = null;
+            marineProgramUnitList.Clear();
+        }
+
         public MarineValue<RET> Run<RET>(string marineFuncName, params object[] args)
         {
             return Run<RET>(marineFuncName, args.AsEnumerable());
