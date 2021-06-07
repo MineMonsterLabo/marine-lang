@@ -692,6 +692,13 @@ end", 1)]
 
             Assert.Equal(5, vm.Run<int>("hoge").Eval());
             Assert.Equal(3, vm.Run<int>("fuga").Eval());
+
+            vm.ClearAllPrograms();
+            parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 30 end"));
+            vm.LoadProgram(parseResult.Unwrap());
+            vm.Compile();
+
+            Assert.Equal(30, vm.Run<int>("fuga").Eval());
         }
     }
 }
