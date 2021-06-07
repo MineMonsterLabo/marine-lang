@@ -53,11 +53,11 @@ namespace MarineLang.VirtualMachines
         IReadOnlyDictionary<string, Type> staticTypeDict;
         readonly List<IMarineIL> marineILs = new List<IMarineIL>();
         readonly List<ActionFuncData> actionFuncDataList = new List<ActionFuncData>();
-        readonly ProgramAst programAst;
+        readonly IEnumerable<MarineProgramUnit> marineProgramUnits;
 
-        public ILGenerator(ProgramAst programAst)
+        public ILGenerator(IEnumerable<MarineProgramUnit> marineProgramUnits)
         {
-            this.programAst = programAst;
+            this.marineProgramUnits = marineProgramUnits;
         }
 
         public ILGeneratedData Generate(IReadOnlyDictionary<string, MethodInfo> csharpFuncDict,
@@ -66,8 +66,14 @@ namespace MarineLang.VirtualMachines
             this.csharpFuncDict = csharpFuncDict;
             this.staticTypeDict = staticTypeDict;
             namespaceTable
-                = new NamespaceTable(programAst.funcDefinitionAsts.ToDictionary(x => x.funcName, x => new FuncILIndex()));
-            ProgramILGenerate(programAst, globalVariableNames);
+                = new NamespaceTable(
+                    marineProgramUnits.SelectMany(x=>x.programAst.funcDefinitionAsts)
+                        .ToDictionary(x => x.funcName, x => new FuncILIndex())
+                  );
+            foreach (var marineProgramUnit in marineProgramUnits)
+            {
+                ProgramILGenerate(marineProgramUnit.programAst, globalVariableNames);
+            }
             return new ILGeneratedData(namespaceTable, marineILs);
         }
 

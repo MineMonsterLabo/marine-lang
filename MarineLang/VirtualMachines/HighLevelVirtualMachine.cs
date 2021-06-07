@@ -15,7 +15,7 @@ namespace MarineLang.VirtualMachines
         readonly Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
         readonly Dictionary<string, Type> staticTypeDict = new Dictionary<string, Type>();
         readonly SortedDictionary<string, object> globalVariableDict = new SortedDictionary<string, object>();
-        ILGenerator iLGenerator;
+        readonly List<MarineProgramUnit> marineProgramUnitList = new List<MarineProgramUnit>();
 
         public ILGeneratedData ILGeneratedData { get; private set; }
         public IReadOnlyDictionary<string, MethodInfo> GlobalFuncDict => methodInfoDict;
@@ -68,14 +68,14 @@ namespace MarineLang.VirtualMachines
             globalVariableDict.Add(name, val);
         }
 
-        public void SetProgram(ProgramAst programAst)
+        public void LoadProgram(ProgramAst programAst)
         {
-            iLGenerator = new ILGenerator(programAst);
+            marineProgramUnitList.Add(new MarineProgramUnit("", programAst));
         }
 
         public void Compile()
         {
-            ILGeneratedData = iLGenerator.Generate(methodInfoDict, staticTypeDict, globalVariableDict.Keys.ToArray());
+            ILGeneratedData = new ILGenerator(marineProgramUnitList).Generate(methodInfoDict, staticTypeDict, globalVariableDict.Keys.ToArray());
         }
 
         public MarineValue<RET> Run<RET>(string marineFuncName, params object[] args)

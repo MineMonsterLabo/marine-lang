@@ -31,7 +31,7 @@ namespace MarineLangUnitTest.Helper
                 throw new Exception(parseResult.UnwrapError().FullErrorMessage);
             var vm = new HighLevelVirtualMachine();
 
-            vm.SetProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.Unwrap());
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Ret123)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Hello)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Plus)));

@@ -59,7 +59,7 @@ namespace Example
                 return;
             }
 
-            vm.SetProgram(parserResult.RawValue);
+            vm.LoadProgram(parserResult.RawValue);
             vm.Compile();
         }
 
