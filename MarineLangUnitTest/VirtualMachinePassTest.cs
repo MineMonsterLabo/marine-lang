@@ -700,5 +700,30 @@ end", 1)]
 
             Assert.Equal(30, vm.Run<int>("fuga").Eval());
         }
+
+        [Fact]
+        public void MultipleLoadProgramNamespaceTest()
+        {
+            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
+
+            var parser = new SyntaxAnalyzer();
+
+            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
+
+            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 25 end"));
+            vm.LoadProgram(parseResult.Unwrap());
+
+            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
+            vm.LoadProgram(new[] { "hoge" }, parseResult.Unwrap());
+
+            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
+            vm.LoadProgram(new[] { "hoge", "fuga" }, parseResult.Unwrap());
+
+            vm.Compile();
+
+            Assert.Equal(25, vm.Run<int>("aaa").Eval());
+            Assert.Equal(88, vm.Run<int>(new[] { "hoge" }, "aaa").Eval());
+            Assert.Equal(100, vm.Run<int>(new[] { "hoge", "fuga" }, "aaa").Eval());
+        }
     }
 }
