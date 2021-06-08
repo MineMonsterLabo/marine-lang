@@ -68,9 +68,14 @@ namespace MarineLang.VirtualMachines
             globalVariableDict.Add(name, val);
         }
 
+        public void LoadProgram(string[] namespaceStrings, ProgramAst programAst)
+        {
+            marineProgramUnitList.Add(new MarineProgramUnit(namespaceStrings, programAst));
+        }
+
         public void LoadProgram(ProgramAst programAst)
         {
-            marineProgramUnitList.Add(new MarineProgramUnit("", programAst));
+            marineProgramUnitList.Add(new MarineProgramUnit(new string[] { }, programAst));
         }
 
         public void Compile()
@@ -89,22 +94,43 @@ namespace MarineLang.VirtualMachines
             return Run<RET>(marineFuncName, args.AsEnumerable());
         }
 
+        public MarineValue<RET> Run<RET>(IEnumerable<string> namespaceStrings, string marineFuncName, params object[] args)
+        {
+            return Run<RET>(namespaceStrings, marineFuncName, args.AsEnumerable());
+        }
+
         public MarineValue Run(string marineFuncName, params object[] args)
         {
-            return Run(marineFuncName, args.AsEnumerable());
+            return Run(Enumerable.Empty<string>(), marineFuncName, args.AsEnumerable());
+        }
+
+        public MarineValue Run(IEnumerable<string> namespaceStrings, string marineFuncName, params object[] args)
+        {
+            return Run(namespaceStrings, marineFuncName, args.AsEnumerable());
         }
 
         public MarineValue<RET> Run<RET>(string marineFuncName, IEnumerable<object> args)
         {
-            return new MarineValue<RET>(Run(marineFuncName, args));
+            return new MarineValue<RET>(Run(Enumerable.Empty<string>(), marineFuncName, args));
+        }
+
+        public MarineValue<RET> Run<RET>(IEnumerable<string> namespaceStrings, string marineFuncName, IEnumerable<object> args)
+        {
+            return new MarineValue<RET>(Run(namespaceStrings, marineFuncName, args));
         }
 
         public MarineValue Run(string marineFuncName, IEnumerable<object> args)
         {
+            return Run(Enumerable.Empty<string>(), marineFuncName, args);
+        }
+
+        public MarineValue Run(IEnumerable<string> namespaceStrings, string marineFuncName, IEnumerable<object> args)
+        {
             var lowLevelVirtualMachine = new LowLevelVirtualMachine();
             lowLevelVirtualMachine.onStepILCallback = StepEvent;
             lowLevelVirtualMachine.Init();
-            lowLevelVirtualMachine.nextILIndex = ILGeneratedData.namespaceTable.GetFuncIlIndex(marineFuncName).Index;
+            lowLevelVirtualMachine.nextILIndex
+                = ILGeneratedData.namespaceTable.GetFuncIlIndex(namespaceStrings, marineFuncName).Index;
             foreach (var val in globalVariableDict.Values)
                 lowLevelVirtualMachine.Push(val);
             lowLevelVirtualMachine.stackBaseCount = lowLevelVirtualMachine.GetStackCurrent();

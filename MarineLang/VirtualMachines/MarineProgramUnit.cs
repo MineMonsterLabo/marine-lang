@@ -4,12 +4,12 @@ namespace MarineLang.VirtualMachines
 {
     public class MarineProgramUnit
     {
-        public readonly string namespaceString;
+        public readonly string[] namespaceStrings;
         public readonly ProgramAst programAst;
 
-        public MarineProgramUnit(string namespaceString, ProgramAst programAst)
+        public MarineProgramUnit(string[] namespaceStrings, ProgramAst programAst)
         {
-            this.namespaceString = namespaceString;
+            this.namespaceStrings = namespaceStrings;
             this.programAst = programAst;
         }
     }
