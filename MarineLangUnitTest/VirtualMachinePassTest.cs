@@ -1,6 +1,8 @@
 using System.IO;
 using MarineLang.BuiltInTypes;
+using MarineLang.SyntaxAnalysis;
 using MarineLangUnitTest.Helper;
+using MineUtil;
 using Xunit;
 using static MarineLangUnitTest.Helper.VmCreateHelper;
 
@@ -671,6 +673,57 @@ end", 1)]
         public void EnumTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
+        }
+
+        [Fact]
+        public void MultipleLoadProgramTest()
+        {
+            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
+
+            var parser = new SyntaxAnalyzer();
+
+            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
+            var parseResult = parser.Parse(lexer.GetTokens("fun hoge() ret 5 end"));
+
+            vm.LoadProgram(parseResult.Unwrap());
+            parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 3 end"));
+            vm.LoadProgram(parseResult.Unwrap());
+            vm.Compile();
+
+            Assert.Equal(5, vm.Run<int>("hoge").Eval());
+            Assert.Equal(3, vm.Run<int>("fuga").Eval());
+
+            vm.ClearAllPrograms();
+            parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 30 end"));
+            vm.LoadProgram(parseResult.Unwrap());
+            vm.Compile();
+
+            Assert.Equal(30, vm.Run<int>("fuga").Eval());
+        }
+
+        [Fact]
+        public void MultipleLoadProgramNamespaceTest()
+        {
+            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
+
+            var parser = new SyntaxAnalyzer();
+
+            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
+
+            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 25 end"));
+            vm.LoadProgram(parseResult.Unwrap());
+
+            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
+            vm.LoadProgram(new[] { "hoge" }, parseResult.Unwrap());
+
+            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
+            vm.LoadProgram(new[] { "hoge", "fuga" }, parseResult.Unwrap());
+
+            vm.Compile();
+
+            Assert.Equal(25, vm.Run<int>("aaa").Eval());
+            Assert.Equal(88, vm.Run<int>(new[] { "hoge" }, "aaa").Eval());
+            Assert.Equal(100, vm.Run<int>(new[] { "hoge", "fuga" }, "aaa").Eval());
         }
     }
 }

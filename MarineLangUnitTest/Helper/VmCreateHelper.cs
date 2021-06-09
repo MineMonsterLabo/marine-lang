@@ -6,7 +6,6 @@ using MarineLang.BuildInObjects;
 using MarineLang.LexicalAnalysis;
 using MarineLang.MacroPlugins;
 using MarineLang.PresetMacroPlugins;
-using MarineLang.Streams;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
 using MarineLang.VirtualMachines.Attributes;
@@ -27,13 +26,12 @@ namespace MarineLangUnitTest.Helper
             var parser = new SyntaxAnalyzer(pluginContainer);
 
             var tokens = lexer.GetTokens(str).ToArray();
-            var tokenStream = TokenStream.Create(tokens);
             var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
                 throw new Exception(parseResult.UnwrapError().FullErrorMessage);
             var vm = new HighLevelVirtualMachine();
 
-            vm.SetProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.Unwrap());
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Ret123)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Hello)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Plus)));

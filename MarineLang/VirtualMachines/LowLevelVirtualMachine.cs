@@ -23,8 +23,6 @@ namespace MarineLang.VirtualMachines
         public void Store(object v, int index) => iLStack.Store(v, index);
         public object Load(int index) => iLStack.Load(index);
 
-        public int MarineFuncIndex(string funcName) => iLGeneratedData.funcILIndexDict[funcName];
-
         public void Run(ILGeneratedData iLGeneratedData)
         {
             this.iLGeneratedData = iLGeneratedData;

@@ -19,7 +19,7 @@ namespace MarineLang.PresetMacroPlugins
                 marineParser.ParseExpr()(TokenStream.Create(tokens.ToArray()))
                 .Select(exprAst =>
                 {
-                    vm.SetProgram(
+                    vm.LoadProgram(
                         ProgramAst.Create(
                             new[]{
                                 FuncDefinitionAst.Create(

@@ -15,7 +15,7 @@ namespace MarineLang.VirtualMachines
         readonly Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
         readonly Dictionary<string, Type> staticTypeDict = new Dictionary<string, Type>();
         readonly SortedDictionary<string, object> globalVariableDict = new SortedDictionary<string, object>();
-        ILGenerator iLGenerator;
+        readonly List<MarineProgramUnit> marineProgramUnitList = new List<MarineProgramUnit>();
 
         public ILGeneratedData ILGeneratedData { get; private set; }
         public IReadOnlyDictionary<string, MethodInfo> GlobalFuncDict => methodInfoDict;
@@ -35,7 +35,7 @@ namespace MarineLang.VirtualMachines
 
         public bool ContainsMarineFunc(string funcName)
         {
-            return ILGeneratedData?.funcILIndexDict?.ContainsKey(funcName) ?? false;
+            return ILGeneratedData?.namespaceTable?.ContainFunc(funcName) ?? false;
         }
 
         public void GlobalFuncRegister(MethodInfo methodInfo)
@@ -68,14 +68,25 @@ namespace MarineLang.VirtualMachines
             globalVariableDict.Add(name, val);
         }
 
-        public void SetProgram(ProgramAst programAst)
+        public void LoadProgram(string[] namespaceStrings, ProgramAst programAst)
         {
-            iLGenerator = new ILGenerator(programAst);
+            marineProgramUnitList.Add(new MarineProgramUnit(namespaceStrings, programAst));
+        }
+
+        public void LoadProgram(ProgramAst programAst)
+        {
+            marineProgramUnitList.Add(new MarineProgramUnit(new string[] { }, programAst));
         }
 
         public void Compile()
         {
-            ILGeneratedData = iLGenerator.Generate(methodInfoDict, staticTypeDict, globalVariableDict.Keys.ToArray());
+            ILGeneratedData = new ILGenerator(marineProgramUnitList).Generate(methodInfoDict, staticTypeDict, globalVariableDict.Keys.ToArray());
+        }
+
+        public void ClearAllPrograms()
+        {
+            ILGeneratedData = null;
+            marineProgramUnitList.Clear();
         }
 
         public MarineValue<RET> Run<RET>(string marineFuncName, params object[] args)
@@ -83,22 +94,43 @@ namespace MarineLang.VirtualMachines
             return Run<RET>(marineFuncName, args.AsEnumerable());
         }
 
+        public MarineValue<RET> Run<RET>(IEnumerable<string> namespaceStrings, string marineFuncName, params object[] args)
+        {
+            return Run<RET>(namespaceStrings, marineFuncName, args.AsEnumerable());
+        }
+
         public MarineValue Run(string marineFuncName, params object[] args)
         {
-            return Run(marineFuncName, args.AsEnumerable());
+            return Run(Enumerable.Empty<string>(), marineFuncName, args.AsEnumerable());
+        }
+
+        public MarineValue Run(IEnumerable<string> namespaceStrings, string marineFuncName, params object[] args)
+        {
+            return Run(namespaceStrings, marineFuncName, args.AsEnumerable());
         }
 
         public MarineValue<RET> Run<RET>(string marineFuncName, IEnumerable<object> args)
         {
-            return new MarineValue<RET>(Run(marineFuncName, args));
+            return new MarineValue<RET>(Run(Enumerable.Empty<string>(), marineFuncName, args));
+        }
+
+        public MarineValue<RET> Run<RET>(IEnumerable<string> namespaceStrings, string marineFuncName, IEnumerable<object> args)
+        {
+            return new MarineValue<RET>(Run(namespaceStrings, marineFuncName, args));
         }
 
         public MarineValue Run(string marineFuncName, IEnumerable<object> args)
         {
+            return Run(Enumerable.Empty<string>(), marineFuncName, args);
+        }
+
+        public MarineValue Run(IEnumerable<string> namespaceStrings, string marineFuncName, IEnumerable<object> args)
+        {
             var lowLevelVirtualMachine = new LowLevelVirtualMachine();
             lowLevelVirtualMachine.onStepILCallback = StepEvent;
             lowLevelVirtualMachine.Init();
-            lowLevelVirtualMachine.nextILIndex = ILGeneratedData.funcILIndexDict[marineFuncName];
+            lowLevelVirtualMachine.nextILIndex
+                = ILGeneratedData.namespaceTable.GetFuncIlIndex(namespaceStrings, marineFuncName).Index;
             foreach (var val in globalVariableDict.Values)
                 lowLevelVirtualMachine.Push(val);
             lowLevelVirtualMachine.stackBaseCount = lowLevelVirtualMachine.GetStackCurrent();
