@@ -48,6 +48,7 @@
         For,
         ForEach,
         In,
+        TwoColon,
         UnKnown,
     }
 
@@ -133,6 +134,8 @@
                     return "foreach";
                 case TokenType.In:
                     return "in";
+                case TokenType.TwoColon:
+                    return "::";
             }
             return null;
         }

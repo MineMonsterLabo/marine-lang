@@ -21,6 +21,7 @@ namespace MarineLang.LexicalAnalysis
                     LexerHelper.GetStringToken(TokenType.GreaterEqualOp)(stream) ??
                     LexerHelper.GetStringToken(TokenType.LessEqualOp)(stream) ??
                     LexerHelper.GetStringToken(TokenType.NotEqualOp)(stream) ??
+                    LexerHelper.GetStringToken(TokenType.TwoColon)(stream) ??
                     LexerHelper.GetStringTokenTailDelimiter(TokenType.Await, stream) ??
                     LexerHelper.GetStringTokenTailDelimiter(TokenType.Yield, stream) ??
                     LexerHelper.GetStringTokenTailDelimiter(TokenType.Break, stream) ??
