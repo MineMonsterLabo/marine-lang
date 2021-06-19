@@ -84,10 +84,12 @@ indexer_op_expr
                = static_term | ( term , [indexers] ) ;
 dot_terms      = { '.' , field_term , [indexers] } ;
 static_term    = class_name , '.' , func_call | variable ;
+top_level_func_call  
+               =  { id , two_colon } , func_call;
 field_term     = 'await' | func_call | variable ;
 term           =
                  '(' , expr , ')' |
-                 func_call | 
+                 top_level_func_call | 
                  float_literal | 
                  int_literal | 
                  bool_literal | 
@@ -122,7 +124,7 @@ digit          = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
 binary_op      = '<' | '<=' | '>' | '>=' | '&&' | '||' | '==' | '!=' | '+' | '-' | '*' | '/' | '%' ;
 unary_op       = '-' | '!' ;
 macro_name     = '#' , {lower_letter | upper_letter | digit} ;
-
+two_colon      = '::' ;
 
 スキップ
 
