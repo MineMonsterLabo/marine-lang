@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using MarineLang.BuiltInTypes;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Utils;
 using MarineLang.VirtualMachines.MarineILs;
+using MineUtil;
 
 namespace MarineLang.VirtualMachines
 {
@@ -154,7 +154,7 @@ namespace MarineLang.VirtualMachines
                 marineILs.Add(new NoOpIL());
             if (retFlag == false)
             {
-                marineILs.Add(new PushValueIL(new UnitType()));
+                marineILs.Add(new PushValueIL(Unit.Value));
                 marineILs.Add(new RetIL(funcDefinitionAst.args.Length));
             }
 
@@ -319,7 +319,7 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(null);
             marineILs[jumpFalseInsertIndex] = new JumpFalseIL(marineILs.Count);
             if (ifExprAst.elseStatements.Length == 0)
-                marineILs.Add(new PushValueIL(new UnitType()));
+                marineILs.Add(new PushValueIL(Unit.Value));
             else
                 BlockExprGenerate(ifExprAst.elseStatements, generateArgs);
             marineILs[jumpInsertIndex] = new JumpIL(marineILs.Count);
@@ -345,7 +345,7 @@ namespace MarineLang.VirtualMachines
                 StatementILGenerate(lastStatementAst, generateArgs);
             }
 
-            marineILs.Add(new PushValueIL(new UnitType()));
+            marineILs.Add(new PushValueIL(Unit.Value));
             generateArgs.variables.OutScope();
         }
 
