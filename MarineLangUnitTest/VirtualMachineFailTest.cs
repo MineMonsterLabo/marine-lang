@@ -1,7 +1,7 @@
-using MarineLang.BuiltInTypes;
 using MarineLang.Models;
 using MarineLang.Models.Errors;
 using MarineLangUnitTest.Helper;
+using MineUtil;
 using Xunit;
 
 namespace MarineLangUnitTest
@@ -27,7 +27,7 @@ namespace MarineLangUnitTest
         [InlineData("fun main() let hoge = create_hoge() hoge.test[0] = 10 end", 1, 42)]
         public void MemberNotFoundThrowTest(string str, int line = 0, int column = 0)
         {
-            var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, new UnitType()));
+            var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, Unit.Value));
             Assert.Equal(ErrorCode.RuntimeMemberNotFound, exception.RuntimeErrorInfo.ErrorCode);
             Assert.Equal(new Position(line, column), exception.RuntimeErrorInfo.errorPosition);
         }
@@ -39,7 +39,7 @@ namespace MarineLangUnitTest
         [InlineData("fun main() let hoge = create_hoge() hoge.names['0'] = 10 end", 1, 47)]
         public void IndexerNotFoundThrowTest(string str, int line = 0, int column = 0)
         {
-            var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, new UnitType()));
+            var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, Unit.Value));
             Assert.Equal(ErrorCode.RuntimeIndexerNotFound, exception.RuntimeErrorInfo.ErrorCode);
             Assert.Equal(new Position(line, column), exception.RuntimeErrorInfo.errorPosition);
         }

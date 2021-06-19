@@ -1,5 +1,4 @@
 using System.IO;
-using MarineLang.BuiltInTypes;
 using MarineLang.SyntaxAnalysis;
 using MarineLangUnitTest.Helper;
 using MineUtil;
@@ -29,7 +28,7 @@ fun foo_bar() hello() end"
         )]
         public void CallMarineLangFunc(string str)
         {
-            RunReturnCheck(str, new UnitType());
+            RunReturnCheck(str, Unit.Value);
         }
 
         [Theory]
@@ -344,7 +343,7 @@ end", 18)]
         [InlineData("fun main() for i=0,10000,1{ret_123()} end")]
         public void NoUseExpr(string str)
         {
-            RunReturnCheck(str, new UnitType());
+            RunReturnCheck(str, Unit.Value);
         }
 
         [Theory]
@@ -353,7 +352,7 @@ end", 18)]
         [InlineData("fun main() ret if(false) {4}else{} end ")]
         public void UnitIf(string str)
         {
-            RunReturnCheck(str, new UnitType());
+            RunReturnCheck(str, Unit.Value);
         }
 
         [Theory]
