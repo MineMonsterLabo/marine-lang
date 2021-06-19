@@ -713,6 +713,9 @@ end", 1)]
             var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 25 end"));
             vm.LoadProgram(parseResult.Unwrap());
 
+            parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret 2525 end"));
+            vm.LoadProgram(parseResult.Unwrap());
+
             parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
             vm.LoadProgram(new[] { "hoge" }, parseResult.Unwrap());
 
@@ -722,8 +725,54 @@ end", 1)]
             vm.Compile();
 
             Assert.Equal(25, vm.Run<int>("aaa").Eval());
+            Assert.Equal(2525, vm.Run<int>("bbb").Eval());
             Assert.Equal(88, vm.Run<int>(new[] { "hoge" }, "aaa").Eval());
             Assert.Equal(100, vm.Run<int>(new[] { "hoge", "fuga" }, "aaa").Eval());
+        }
+
+        [Fact]
+        public void NamespaceAccessTest1()
+        {
+            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
+
+            var parser = new SyntaxAnalyzer();
+
+            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
+            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end"));
+            vm.LoadProgram(parseResult.Unwrap());
+
+            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
+            vm.LoadProgram(new[] { "hoge" }, parseResult.Unwrap());
+
+            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
+            vm.LoadProgram(new[] { "aaa","ppp" }, parseResult.Unwrap());
+
+            vm.Compile();
+
+            Assert.Equal(188, vm.Run<int>("aaa").Eval());
+        }
+
+        [Fact]
+        public void NamespaceAccessTest2()
+        {
+            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
+
+            var parser = new SyntaxAnalyzer();
+
+            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
+
+            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
+            vm.LoadProgram(new[] { "hoge" }, parseResult.Unwrap());
+
+            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
+            vm.LoadProgram(new[] { "aaa", "ppp" }, parseResult.Unwrap());
+
+            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end"));
+            vm.LoadProgram(parseResult.Unwrap());
+
+            vm.Compile();
+
+            Assert.Equal(188, vm.Run<int>("aaa").Eval());
         }
     }
 }
