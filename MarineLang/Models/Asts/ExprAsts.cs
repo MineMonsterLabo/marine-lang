@@ -594,8 +594,10 @@ namespace MarineLang.Models.Asts
         public string FuncName => funcNameToken.text;
         public IEnumerable<string> NamespaceSettings => namespaceTokens.Select(token => token.text);
         public override RangePosition Range
-            => rightParen == null ? new RangePosition() : new RangePosition(funcNameToken.position, rightParen.PositionEnd);
+            => rightParen == null ? new RangePosition() : new RangePosition(StartPosition, rightParen.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
+
+        private Position StartPosition => namespaceTokens.DefaultIfEmpty(funcNameToken).First().position;
 
         public static FuncCallAst Create(Token[] namespaceTokens, Token funcNameToken, ExprAst[] args, Token rightParen)
         {
