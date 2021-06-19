@@ -444,7 +444,7 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParserCombinator.Or(
                     ParseParenExpr().Try(),
-                    ParseFuncCall().Try(),
+                    ParseTopLevelFuncCall().Try(),
                     ParseFloat.Try(),
                     ParseInt.Try(),
                     ParseBool.Try(),
@@ -464,6 +464,14 @@ namespace MarineLang.SyntaxAnalysis
              .Left(ParseToken(TokenType.RightParen));
         }
 
+        public Parser<FuncCallAst> ParseTopLevelFuncCall()
+        {
+            return
+                from namespaceTokens in ParserCombinator.Many(ParseToken(TokenType.Id).Left(ParseToken(TokenType.TwoColon)).Try())
+                from funcNameToken in ParseToken(TokenType.Id)
+                from tuple in ParseParamList().Try()
+                select FuncCallAst.Create(namespaceTokens.ToArray(), funcNameToken, tuple.Item2, tuple.Item3);
+        }
 
         public Parser<FuncCallAst> ParseFuncCall()
         {

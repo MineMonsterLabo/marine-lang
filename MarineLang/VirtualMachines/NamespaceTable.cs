@@ -37,58 +37,72 @@ namespace MarineLang.VirtualMachines
             return this;
         }
 
-        public void AddFuncIlIndex(IEnumerable<string> namespaceStrings, IEnumerable<string> funcNames)
-        {
-            AddFuncIlIndex(namespaceStrings.GetEnumerator(), funcNames);
-        }
-
-        public void AddFuncIlIndex(IEnumerator<string> namespaceStrings, IEnumerable<string> funcNames)
+        public NamespaceTable GetOrCreateChildNamespace(IEnumerator<string> namespaceStrings)
         {
             if (namespaceStrings.MoveNext())
             {
-                if (childrenNamespaceTableDict.ContainsKey(namespaceStrings.Current) == false)
+                if (childrenNamespaceTableDict.TryGetValue(namespaceStrings.Current, out NamespaceTable child))
                 {
-                    childrenNamespaceTableDict[namespaceStrings.Current] = new NamespaceTable();
+                    return child.GetOrCreateChildNamespace(namespaceStrings);
                 }
-
-                childrenNamespaceTableDict[namespaceStrings.Current].AddFuncIlIndex(namespaceStrings, funcNames);
+                else
+                {
+                    var child2= new NamespaceTable();
+                    childrenNamespaceTableDict[namespaceStrings.Current] = child2;
+                    return child2.GetOrCreateChildNamespace(namespaceStrings);
+                }
             }
-            else
+
+            return this;
+        }
+
+        public void AddFuncILIndex(IEnumerable<string> namespaceStrings, IEnumerable<string> funcNames)
+        {
+            var child = GetOrCreateChildNamespace(namespaceStrings.GetEnumerator());
+
+            foreach (var funcName in funcNames)
             {
-                foreach (var funcName in funcNames)
-                {
-                    SetFuncIlIndex(funcName, -1);
-                }
+                child.SetFuncILIndex(funcName, -1);
             }
         }
 
-        public void SetFuncIlIndex(string funcName, int index)
+        public FuncILIndex AddFuncILIndex(IEnumerable<string> namespaceStrings, string funcName)
+        {
+            var child = GetOrCreateChildNamespace(namespaceStrings.GetEnumerator());
+            return child.SetFuncILIndex(funcName, -1);
+        }
+
+        public FuncILIndex SetFuncILIndex(string funcName, int index)
         {
             if (funcILIndexDict.TryGetValue(funcName, out FuncILIndex funcILIndex))
             {
-                funcILIndex.Index = index;
+                if (index != -1)
+                    funcILIndex.Index = index;
+                return funcILIndex;
             }
             else
             {
-                funcILIndexDict[funcName] = new FuncILIndex { Index = index };
+                var funcILIndex2 = new FuncILIndex { Index = index };
+                funcILIndexDict[funcName] = funcILIndex2;
+                return funcILIndex2;
             }
         }
 
-        public FuncILIndex GetFuncIlIndex(string funcName)
+        public FuncILIndex GetFuncILIndex(string funcName)
         {
             return funcILIndexDict[funcName];
         }
 
-        public FuncILIndex GetFuncIlIndex(IEnumerable<string> namespaceStrings, string funcName)
+        public FuncILIndex GetFuncILIndex(IEnumerable<string> namespaceStrings, string funcName)
         {
-            return GetFuncIlIndex(namespaceStrings.GetEnumerator(), funcName);
+            return GetFuncILIndex(namespaceStrings.GetEnumerator(), funcName);
         }
 
-        public FuncILIndex GetFuncIlIndex(IEnumerator<string> namespaceStrings, string funcName)
+        public FuncILIndex GetFuncILIndex(IEnumerator<string> namespaceStrings, string funcName)
         {
             if (namespaceStrings.MoveNext())
             {
-                return childrenNamespaceTableDict[namespaceStrings.Current].GetFuncIlIndex(namespaceStrings, funcName);
+                return childrenNamespaceTableDict[namespaceStrings.Current].GetFuncILIndex(namespaceStrings, funcName);
             }
 
             return funcILIndexDict[funcName];

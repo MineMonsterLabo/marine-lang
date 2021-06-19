@@ -586,23 +586,48 @@ namespace MarineLang.Models.Asts
 
     public class FuncCallAst : ExprAst
     {
+        public Token[] namespaceTokens;
         public Token funcNameToken;
         public ExprAst[] args;
         public Token rightParen;
 
         public string FuncName => funcNameToken.text;
+        public IEnumerable<string> NamespaceSettings => namespaceTokens.Select(token => token.text);
         public override RangePosition Range
-            => rightParen == null ? new RangePosition() : new RangePosition(funcNameToken.position, rightParen.PositionEnd);
+            => rightParen == null ? new RangePosition() : new RangePosition(StartPosition, rightParen.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
-        public static FuncCallAst Create(Token funcNameToken, ExprAst[] args, Token rightParen)
+        private Position StartPosition => namespaceTokens.DefaultIfEmpty(funcNameToken).First().position;
+
+        public static FuncCallAst Create(Token[] namespaceTokens, Token funcNameToken, ExprAst[] args, Token rightParen)
         {
-            return new FuncCallAst { funcNameToken = funcNameToken, args = args, rightParen = rightParen };
+            return new FuncCallAst
+            {
+                namespaceTokens = namespaceTokens,
+                funcNameToken = funcNameToken,
+                args = args,
+                rightParen = rightParen
+            };
+        }
+
+        public static FuncCallAst Create(Token[] namespaceTokens, string funcName, ExprAst[] args)
+        {
+            return new FuncCallAst
+            {
+                namespaceTokens = namespaceTokens,
+                funcNameToken = new Token(TokenType.Id, funcName),
+                args = args
+            };
         }
 
         public static FuncCallAst Create(string funcName, ExprAst[] args)
         {
-            return new FuncCallAst { funcNameToken = new Token(TokenType.Id, funcName), args = args };
+            return Create(new Token[] { }, funcName, args);
+        }
+
+        public static FuncCallAst Create(Token funcNameToken, ExprAst[] args, Token rightParen)
+        {
+            return Create(new Token[] { }, funcNameToken, args,rightParen);
         }
 
         public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)

@@ -80,7 +80,8 @@ namespace MarineLang.VirtualMachines
 
         public void Compile()
         {
-            ILGeneratedData = new ILGenerator(marineProgramUnitList).Generate(methodInfoDict, staticTypeDict, globalVariableDict.Keys.ToArray());
+            ILGeneratedData 
+                = new ILGenerator(marineProgramUnitList).Generate(methodInfoDict, staticTypeDict, globalVariableDict.Keys.ToArray());
         }
 
         public void ClearAllPrograms()
@@ -130,7 +131,7 @@ namespace MarineLang.VirtualMachines
             lowLevelVirtualMachine.onStepILCallback = StepEvent;
             lowLevelVirtualMachine.Init();
             lowLevelVirtualMachine.nextILIndex
-                = ILGeneratedData.namespaceTable.GetFuncIlIndex(namespaceStrings, marineFuncName).Index;
+                = ILGeneratedData.namespaceTable.GetFuncILIndex(namespaceStrings, marineFuncName).Index;
             foreach (var val in globalVariableDict.Values)
                 lowLevelVirtualMachine.Push(val);
             lowLevelVirtualMachine.stackBaseCount = lowLevelVirtualMachine.GetStackCurrent();
