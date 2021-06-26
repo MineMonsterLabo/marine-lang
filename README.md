@@ -42,7 +42,7 @@ end
 ```ebnf
 program        = {func_definition | macro} ;
 func_definition
-               = 'func' , id , variable_list , func_body , 'end' ;
+               = 'fun' , id , variable_list , func_body , 'end' ;
 func_body      = {statement} ;
 statement      =  
                   break_statement |
