@@ -3,7 +3,7 @@ using MarineLang.Models.Errors;
 using System;
 using System.Collections.Generic;
 
-namespace MarineLang.SyntaxAnalysis
+namespace MarineLang.ParserCore
 {
     public static class ParserCombinator
     {

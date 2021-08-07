@@ -1,10 +1,8 @@
 ﻿using MarineLang.Models.Errors;
 using MineUtil;
 
-namespace MarineLang.SyntaxAnalysis
+namespace MarineLang.ParserCore
 {
-
-
     public class ParseResult
     {
         public static IResult<T, ParseErrorInfo> Ok<T>(T value)

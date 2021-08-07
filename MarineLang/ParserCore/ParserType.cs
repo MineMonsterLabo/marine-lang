@@ -2,7 +2,7 @@
 using MarineLang.Streams;
 using MineUtil;
 
-namespace MarineLang.SyntaxAnalysis
+namespace MarineLang.ParserCore
 {
     public delegate IResult<T, ParseErrorInfo> Parser<out T>(TokenStream stream);
 }

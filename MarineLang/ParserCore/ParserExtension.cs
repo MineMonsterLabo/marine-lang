@@ -4,10 +4,8 @@ using MarineLang.Streams;
 using MineUtil;
 using System;
 
-namespace MarineLang.SyntaxAnalysis
+namespace MarineLang.ParserCore
 {
-
-
     public static class ParserExtension
     {
         public static Parser<T> InCompleteError<T>(this Parser<T> parser, Func<TokenStream, ParseErrorInfo> func)
