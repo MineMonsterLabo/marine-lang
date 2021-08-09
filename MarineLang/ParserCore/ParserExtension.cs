@@ -12,33 +12,33 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                if (result.TryGetError(out var parseErrorInfo) && parseErrorInfo.ErrorKind == ErrorKind.InComplete)
+                if (result.TryGetError(out var parseErrorInfo))
                     return result.Error<T>(func(result.Remain));
                 return result;
             };
         }
 
         public static Parser<T, I> InCompleteError<T, I>
-            (this Parser<T, I> parser, ErrorCode errorCode, RangePosition rangePosition, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
+            (this Parser<T, I> parser, ErrorCode errorCode, RangePosition rangePosition, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(input =>
-               new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, rangePosition)
+               new ParseErrorInfo(prefixErrorMessage, errorCode, rangePosition)
            );
         }
 
         public static Parser<T, I> InCompleteErrorWithPositionEnd<T, I>
-            (this Parser<T, I> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
+            (this Parser<T, I> parser, ErrorCode errorCode, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(input =>
-                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, input.RangePosition)
+                new ParseErrorInfo(prefixErrorMessage, errorCode, input.RangePosition)
             );
         }
 
         public static Parser<T, I> InCompleteErrorWithPositionHead<T, I>
-            (this Parser<T, I> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
+            (this Parser<T, I> parser, ErrorCode errorCode, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(input =>
-                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, input.RangePosition)
+                new ParseErrorInfo(prefixErrorMessage, errorCode, input.RangePosition)
             );
         }
 
@@ -50,8 +50,6 @@ namespace MarineLang.ParserCore
                 input = result.Remain;
                 if (result.TryGetError(out var parseErrorInfo))
                     return result.Error<TT>(parseErrorInfo);
-                if (result.Remain.IsEnd)
-                    return result.Error<TT>(new ParseErrorInfo(ErrorKind.InComplete));
                 return parser2(input);
             };
         }
@@ -62,27 +60,14 @@ namespace MarineLang.ParserCore
             {
                 var result = parser(input);
                 input = result.Remain;
-                if (result.Result.IsError == false)
+                if (result.Result.IsOk)
                 {
-                    if (result.Remain.IsEnd)
-                        return result.Error<T>(new ParseErrorInfo(ErrorKind.InComplete));
                     var result2 = parser2(result.Remain);
                     input = result2.Remain;
                     if (result2.Result.IsError)
                         return result2.Error<T>(result2.Result.RawError);
                 }
                 return new ParseResult<T, I>(result.Result, input);
-            };
-        }
-
-        public static Parser<T, I> ExpectCanMoveNext<T, I>(this Parser<T, I> parser)
-        {
-            return input =>
-            {
-                var result = parser(input);
-                if (result.Result.IsError == false && result.Remain.IsEnd)
-                    return result.Error<T>(new ParseErrorInfo(ErrorKind.InComplete));
-                return result;
             };
         }
 
@@ -152,5 +137,6 @@ namespace MarineLang.ParserCore
                 return parseResult;
             };
         }
+      
     }
 }

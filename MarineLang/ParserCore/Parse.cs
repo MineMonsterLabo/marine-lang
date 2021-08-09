@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace MarineLang.ParserCore
 {
-    public static class ParserCombinator
+    public static class Parse
     {
         public static Parser<List<T>, I> Many<T, I>(Parser<T, I> parser)
         {
@@ -17,10 +17,27 @@ namespace MarineLang.ParserCore
                     {
                         var parseResult = parser(input);
                         input = parseResult.Remain;
-                        if (parseResult.TryGetError(out var parseErrorInfo) && parseErrorInfo.ErrorKind != ErrorKind.InComplete)
-                            return parseResult.Error<List<T>>(parseErrorInfo);
+
                         if (parseResult.Result.IsError)
                             break;
+                        list.Add(parseResult.Result.Unwrap());
+                    }
+                    return ParseResult.Ok(list, input);
+                };
+        }
+
+        public static Parser<List<T>, I> ManyUntilEnd<T, I>(Parser<T, I> parser)
+        {
+            return
+                input =>
+                {
+                    var list = new List<T>();
+                    while (input.IsEnd == false)
+                    {
+                        var parseResult = parser(input);
+                        input = parseResult.Remain;
+                        if (parseResult.TryGetError(out var parseErrorInfo))
+                            return parseResult.Error<List<T>>(parseErrorInfo);
                         list.Add(parseResult.Result.Unwrap());
                     }
                     return ParseResult.Ok(list, input);
@@ -34,7 +51,7 @@ namespace MarineLang.ParserCore
                 {
                     var result = Many(parser)(input);
                     if (result.Result.IsError == false && result.Result.RawValue.Count == 0)
-                        return result.Error<List<T>>(new ParseErrorInfo(ErrorKind.InComplete));
+                        return result.Error<List<T>>(new ParseErrorInfo());
                     return result;
                 };
         }
@@ -53,7 +70,7 @@ namespace MarineLang.ParserCore
                         if (result.Result.IsError)
                             return result.Error<object[]>(result.Result.RawError);
                         if (input.IsEnd && i + 1 != parsers.Length)
-                            return result.Error<object[]>(new ParseErrorInfo(ErrorKind.InComplete));
+                            return result.Error<object[]>(new ParseErrorInfo());
                         values[i] = result.Result.RawValue;
                     }
                     return ParseResult.Ok(values, input);
@@ -97,14 +114,35 @@ namespace MarineLang.ParserCore
             return
                 input =>
                 {
+                    IParseResult<T, I> lastParseResult = null;
                     foreach (var parser in parsers)
                     {
-                        var parseResult = parser(input);
-                        input = parseResult.Remain;
-                        if (parseResult.Result.IsError == false || parseResult.Result.RawError.ErrorKind == ErrorKind.ForceError)
-                            return parseResult;
+                        lastParseResult = parser(input);
+                        input = lastParseResult.Remain;
+                        if (lastParseResult.Result.IsError == false)
+                            return lastParseResult;
                     }
-                    return ParseResult.Error<T, I>(new ParseErrorInfo(ErrorKind.InComplete), input);
+                    return lastParseResult;
+                };
+        }
+
+        //入力を消費するエラーが発生したら、即座に終了するOr
+        public static Parser<T, I> OrConsumedError<T, I>(params Parser<T, I>[] parsers)
+        {
+            return
+                input =>
+                {
+                    IParseResult<T, I> lastParseResult = null;
+                    foreach (var parser in parsers)
+                    {
+                        lastParseResult = parser(input);
+                        if (lastParseResult.Remain.Index != input.Index && lastParseResult.Result.IsError)
+                            return lastParseResult;
+                        input = lastParseResult.Remain;
+                        if (lastParseResult.Result.IsOk)
+                            return lastParseResult;
+                    }
+                    return lastParseResult;
                 };
         }
 
@@ -124,7 +162,7 @@ namespace MarineLang.ParserCore
                     var result = parser(input);
                     input = result.Remain;
                     if (result.Result.IsError && isFirst == false)
-                        return result.Error<T[]>(new ParseErrorInfo(ErrorKind.InComplete));
+                        return result.Error<T[]>(new ParseErrorInfo());
                     isFirst = false;
                     if (result.Result.IsError)
                         break;
@@ -140,7 +178,7 @@ namespace MarineLang.ParserCore
             {
                 if (input.IsEnd)
                 {
-                    return ParseResult.Error<I, I>(new ParseErrorInfo(ErrorKind.InComplete), input);
+                    return ParseResult.Error<I, I>(new ParseErrorInfo(), input);
                 }
 
                 var token = input.Current;
@@ -148,7 +186,31 @@ namespace MarineLang.ParserCore
                 {
                     return ParseResult.Ok(token, input.Advance());
                 }
-                return ParseResult.Error<I, I>(new ParseErrorInfo(ErrorKind.InComplete), input);
+                return ParseResult.Error<I, I>(new ParseErrorInfo(), input);
+            };
+        }
+
+        public static Parser<Unit, I> UnitReturn<I>()
+        {
+            return input => ParseResult.Ok(Unit.Value, input);
+        }
+
+        public static Parser<Unit, I> End<I>()
+        {
+            return input =>
+                     input.IsEnd ? 
+                        UnitReturn<I>()(input) : 
+                        ParseResult.Error<Unit, I>(new ParseErrorInfo(), input);
+        }
+
+        public static Parser<Unit, I> Except<T, I>(Parser<T, I> except)
+        {
+            return input =>
+            {
+                var result = except(input);
+                if (result.Result.IsOk)
+                    return result.Error<Unit>(new ParseErrorInfo());
+                return result.Ok(Unit.Value);
             };
         }
     }
