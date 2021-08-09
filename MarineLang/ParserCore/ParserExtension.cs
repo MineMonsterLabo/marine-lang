@@ -1,6 +1,5 @@
 ﻿using MarineLang.Models;
 using MarineLang.Models.Errors;
-using MarineLang.Streams;
 using MineUtil;
 using System;
 
@@ -8,145 +7,147 @@ namespace MarineLang.ParserCore
 {
     public static class ParserExtension
     {
-        public static Parser<T> InCompleteError<T>(this Parser<T> parser, Func<TokenStream, ParseErrorInfo> func)
+        public static Parser<T, I> InCompleteError<T, I>(this Parser<T, I> parser, Func<IInput<I>, ParseErrorInfo> func)
         {
-            return stream =>
+            return input =>
             {
-                var result = parser(stream);
-                if (result.IsError && result.RawError.ErrorKind == ErrorKind.InComplete)
-                    return ParseResult.Error<T>(func(stream));
+                var result = parser(input);
+                if (result.TryGetError(out var parseErrorInfo) && parseErrorInfo.ErrorKind == ErrorKind.InComplete)
+                    return ParseResult.Error<T, I>(func(result.Remain), result.Remain);
                 return result;
             };
         }
 
-        public static Parser<T> InCompleteError<T>
-            (this Parser<T> parser, ErrorCode errorCode, RangePosition rangePosition, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
+        public static Parser<T, I> InCompleteError<T, I>
+            (this Parser<T, I> parser, ErrorCode errorCode, RangePosition rangePosition, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
         {
-            return parser.InCompleteError(stream =>
+            return parser.InCompleteError(input =>
                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, rangePosition)
            );
         }
 
-        public static Parser<T> InCompleteErrorWithPositionEnd<T>
-            (this Parser<T> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
+        public static Parser<T, I> InCompleteErrorWithPositionEnd<T, I>
+            (this Parser<T, I> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
         {
-            return parser.InCompleteError(stream =>
-                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, stream.LastCurrent.rangePosition)
+            return parser.InCompleteError(input =>
+                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, input.RangePosition)
             );
         }
 
-        public static Parser<T> InCompleteErrorWithPositionHead<T>
-            (this Parser<T> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
+        public static Parser<T, I> InCompleteErrorWithPositionHead<T, I>
+            (this Parser<T, I> parser, ErrorCode errorCode, ErrorKind errorKind = ErrorKind.None, string prefixErrorMessage = "")
         {
-            return parser.InCompleteError(stream =>
-                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, stream.LastCurrent.rangePosition)
+            return parser.InCompleteError(input =>
+                new ParseErrorInfo(prefixErrorMessage, errorCode, errorKind, input.RangePosition)
             );
         }
 
-        public static Parser<TT> Right<T, TT>(this Parser<T> parser, Parser<TT> parser2)
+        public static Parser<TT, I> Right<T, TT, I>(this Parser<T, I> parser, Parser<TT, I> parser2)
         {
-            return stream =>
+            return input =>
             {
-                var result = parser(stream);
-                if (result.IsError)
-                    return ParseResult.Error<TT>(result.RawError);
-                if (stream.IsEnd)
-                    return ParseResult.Error<TT>(new ParseErrorInfo(ErrorKind.InComplete));
-                return parser2(stream);
+                var result = parser(input);
+                input = result.Remain;
+                if (result.TryGetError(out var parseErrorInfo))
+                    return ParseResult.Error<TT, I>(parseErrorInfo, input);
+                if (result.Remain.IsEnd)
+                    return ParseResult.Error<TT, I>(new ParseErrorInfo(ErrorKind.InComplete), input);
+                return parser2(input);
             };
         }
 
-        public static Parser<T> Left<T, TT>(this Parser<T> parser, Parser<TT> parser2)
+        public static Parser<T, I> Left<T, TT, I>(this Parser<T, I> parser, Parser<TT, I> parser2)
         {
-            return stream =>
+            return input =>
             {
-                var result = parser(stream);
-                if (result.IsError == false)
+                var result = parser(input);
+                input = result.Remain;
+                if (result.Result.IsError == false)
                 {
-                    if (stream.IsEnd)
-                        return ParseResult.Error<T>(new ParseErrorInfo(ErrorKind.InComplete));
-                    var result2 = parser2(stream);
-                    if (result2.IsError)
-                        return ParseResult.Error<T>(result2.RawError);
+                    if (result.Remain.IsEnd)
+                        return ParseResult.Error<T, I>(new ParseErrorInfo(ErrorKind.InComplete), input);
+                    var result2 = parser2(result.Remain);
+                    input = result2.Remain;
+                    if (result2.Result.IsError)
+                        return ParseResult.Error<T, I>(result2.Result.RawError, input);
                 }
+                return new ParseResult<T, I>(result.Result, input);
+            };
+        }
+
+        public static Parser<T, I> ExpectCanMoveNext<T, I>(this Parser<T, I> parser)
+        {
+            return input =>
+            {
+                var result = parser(input);
+                if (result.Result.IsError == false && result.Remain.IsEnd)
+                    return ParseResult.Error<T, I>(new ParseErrorInfo(ErrorKind.InComplete), result.Remain);
                 return result;
             };
         }
 
-        public static Parser<T> ExpectCanMoveNext<T>(this Parser<T> parser)
+        public static Parser<TT, I> Bind<T, TT, I>(this Parser<T, I> parser, Func<T, Parser<TT, I>> func)
         {
-            return stream =>
+            return input =>
             {
-                var result = parser(stream);
-                if (result.IsError == false && stream.IsEnd)
-                    return ParseResult.Error<T>(new ParseErrorInfo(ErrorKind.InComplete));
-                return result;
+                var result = parser(input);
+                if (result.TryGetError(out var parseErrorInfo))
+                    return ParseResult.Error<TT, I>(parseErrorInfo, result.Remain);
+                return func(result.Result.RawValue)(result.Remain);
             };
         }
 
-        public static Parser<TT> Bind<T, TT>(this Parser<T> parser, Func<T, Parser<TT>> func)
-        {
-            return stream =>
-            {
-                var result = parser(stream);
-                if (result.IsError)
-                    return ParseResult.Error<TT>(result.RawError);
-                return func(result.RawValue)(stream);
-            };
-        }
-
-        public static Parser<V> SelectMany<T, U, V>(
-                 this Parser<T> parser,
-                 Func<T, Parser<U>> selector,
+        public static Parser<V, I> SelectMany<T, U, V, I>(
+                 this Parser<T, I> parser,
+                 Func<T, Parser<U, I>> selector,
                  Func<T, U, V> projector)
         {
             return parser.Bind(t => selector(t).Select(u => projector(t, u)));
         }
 
-        public static Parser<TT> BindResult<T, TT>(this Parser<T> parser, Func<T, IResult<TT, ParseErrorInfo>> func)
+        public static Parser<TT, I> BindResult<T, TT, I>(this Parser<T, I> parser, Func<T, IResult<TT, ParseErrorInfo>> func)
         {
-            return stream =>
+            return input =>
             {
-                var result = parser(stream);
-                if (result.IsError)
-                    return ParseResult.Error<TT>(result.RawError);
-                return func(result.RawValue);
+                var result = parser(input);
+                if (result.TryGetError(out var parseErrorInfo))
+                    return ParseResult.Error<TT, I>(parseErrorInfo, result.Remain);
+                return new ParseResult<TT, I>(func(result.Result.RawValue), result.Remain);
             };
         }
 
-        public static Parser<TT> MapResult<T, TT>(this Parser<T> parser, Func<T, TT> func)
+        public static Parser<TT, I> MapResult<T, TT, I>(this Parser<T, I> parser, Func<T, TT> func)
         {
-            return parser.BindResult(t => ParseResult.Ok(func(t)));
+            return parser.BindResult(t => Result.Ok<TT, ParseErrorInfo>(func(t)));
         }
 
-        public static Parser<TT> Select<T, TT>(this Parser<T> parser, Func<T, TT> selector)
+        public static Parser<TT, I> Select<T, TT, I>(this Parser<T, I> parser, Func<T, TT> selector)
         {
-            return MapResult<T, TT>(parser, selector);
+            return MapResult(parser, selector);
         }
 
-        public static Parser<T> Try<T>(this Parser<T> parser)
+        public static Parser<T, I> Try<T, I>(this Parser<T, I> parser)
         {
             return
-                stream =>
+                input =>
                 {
-                    var backUpIndex = stream.Index;
-                    var parseResult = parser(stream);
+                    var parseResult = parser(input);
 
-                    if (parseResult.IsError)
-                        stream.SetIndex(backUpIndex);
+                    if (parseResult.TryGetError(out var parseErrorInfo))
+                        return ParseResult.Error<T, I>(parseErrorInfo, input);
 
                     return parseResult;
                 };
         }
 
-        public static Parser<T> Default<T>(this Parser<T> parser, T defaultValue)
+        public static Parser<T, I> Default<T, I>(this Parser<T, I> parser, T defaultValue)
         {
-            return stream =>
+            return input =>
             {
-                var parseResult = parser(stream);
-                if (parseResult.IsError)
+                var parseResult = parser(input);
+                if (parseResult.Result.IsError)
                 {
-                    return ParseResult.Ok(defaultValue);
+                    return ParseResult.Ok(defaultValue, parseResult.Remain);
                 }
                 return parseResult;
             };

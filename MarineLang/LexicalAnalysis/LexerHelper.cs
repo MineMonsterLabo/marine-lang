@@ -1,4 +1,5 @@
 ﻿using MarineLang.Models;
+using MarineLang.ParserCore;
 using MarineLang.Streams;
 using System;
 
@@ -343,24 +344,24 @@ namespace MarineLang.LexicalAnalysis
         static Func<IndexedCharStream, Token> GetTokenTest(TokenType tokenType, Func<int, char, TestResult> test)
         {
 
-            return stream =>
+            return input =>
             {
-                var backUpIndex = stream.Index;
-                var firstIndexedChar = stream.Current;
+                var backUpIndex = input.Index;
+                var firstIndexedChar = input.Current;
                 var buf = "";
                 var isContinue = false;
 
-                while (stream.IsEnd == false)
+                while (input.IsEnd == false)
                 {
-                    var indexedChar = stream.Current;
-                    var testResult = test(stream.Index - backUpIndex, indexedChar.c);
+                    var indexedChar = input.Current;
+                    var testResult = test(input.Index - backUpIndex, indexedChar.c);
                     if (testResult == TestResult.End)
                         break;
 
                     isContinue = testResult == TestResult.Continue;
 
                     buf += indexedChar.c;
-                    stream.MoveNext();
+                    input.MoveNext();
                 }
 
                 if (string.IsNullOrEmpty(buf))
@@ -368,7 +369,7 @@ namespace MarineLang.LexicalAnalysis
 
                 if (isContinue)
                 {
-                    stream.SetIndex(backUpIndex);
+                    input.SetIndex(backUpIndex);
                     return null;
                 }
 

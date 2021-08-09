@@ -13,6 +13,12 @@ namespace MarineLang.Models
             End = new Position();
         }
 
+        public RangePosition(Position position)
+        {
+            Start = position;
+            End = position;
+        }
+
         public RangePosition(Position start, Position end)
         {
             Start = start;

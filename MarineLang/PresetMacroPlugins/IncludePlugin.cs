@@ -29,7 +29,7 @@ namespace MarineLang.PresetMacroPlugins
 
             return
                 marineParser.ParseProgram(TokenStream.Create(tokens2.ToArray()))
-                .Select(programAst => programAst.funcDefinitionAsts);
+                .Result.Select(programAst => programAst.funcDefinitionAsts);
         }
     }
 }

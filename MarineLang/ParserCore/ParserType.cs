@@ -1,8 +1,4 @@
-﻿using MarineLang.Models.Errors;
-using MarineLang.Streams;
-using MineUtil;
-
-namespace MarineLang.ParserCore
+﻿namespace MarineLang.ParserCore
 {
-    public delegate IResult<T, ParseErrorInfo> Parser<out T>(TokenStream stream);
+    public delegate IParseResult<T,I> Parser<out T, I>(IInput<I> input);
 }

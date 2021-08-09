@@ -1,20 +1,25 @@
-﻿using System;
+﻿using MarineLang.Models;
+using MarineLang.ParserCore;
+using System;
 
 namespace MarineLang.Streams
 {
-    public class Stream<T>
+    public abstract class Stream<T> : IInput<T>
     {
-        readonly T[] items;
-        public int Index { get; private set; } = -1;
-        public bool IsEnd { get; private set; } = false;
+        protected readonly T[] items;
+
+        public int Index { get; private set; }
+        public bool IsEnd => items.Length <= Index;
 
         public T Current => items[Index];
         public T LastCurrent => items[Math.Min(Index, items.Length - 1)];
 
-        public Stream(T[] items)
+        public abstract RangePosition RangePosition { get; }
+
+        public Stream(T[] items, int index)
         {
             this.items = items;
-            MoveNext();
+            Index = index;
         }
 
         public bool MoveNext()
@@ -22,17 +27,14 @@ namespace MarineLang.Streams
             Index++;
             if (items.Length > Index)
                 return true;
-            IsEnd = true;
             return false;
         }
 
         public void SetIndex(int index)
         {
             Index = index;
-            if (items.Length <= Index)
-                IsEnd = true;
-            else
-                IsEnd = false;
         }
+
+        public abstract IInput<T> Advance();
     }
 }

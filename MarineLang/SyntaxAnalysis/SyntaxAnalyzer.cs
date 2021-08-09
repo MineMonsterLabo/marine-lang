@@ -24,7 +24,7 @@ namespace MarineLang.SyntaxAnalysis
         public IResult<ProgramAst, ParseErrorInfo> Parse(IEnumerable<Token> tokens)
         {
             var stream = TokenStream.Create(tokens.ToArray());
-            return marineParser.ParseProgram(stream);
+            return marineParser.ParseProgram(stream).Result;
         }
     }
 }

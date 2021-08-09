@@ -12,6 +12,9 @@ namespace MarineLang.Streams
 
     public class IndexedCharStream : Stream<IndexedChar>
     {
+        public override RangePosition RangePosition
+            => new RangePosition(LastCurrent.position);
+
         public static IndexedCharStream Create(string str)
         {
             var linesStr
@@ -33,7 +36,12 @@ namespace MarineLang.Streams
             return new IndexedCharStream(indexedChars.ToArray());
         }
 
-        IndexedCharStream(IndexedChar[] indexedChars) : base(indexedChars)
+        public override ParserCore.IInput<IndexedChar> Advance()
+        {
+            return new IndexedCharStream(items, Index + 1);
+        }
+
+        IndexedCharStream(IndexedChar[] indexedChars, int index = 0) : base(indexedChars, index)
         {
         }
     }
