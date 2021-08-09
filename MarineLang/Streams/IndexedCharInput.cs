@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace MarineLang.Streams
+namespace MarineLang.Inputs
 {
     public struct IndexedChar
     {
@@ -10,12 +10,12 @@ namespace MarineLang.Streams
         public char c;
     }
 
-    public class IndexedCharStream : Stream<IndexedChar>
+    public class IndexedCharInput : Input<IndexedChar>
     {
         public override RangePosition RangePosition
             => new RangePosition(LastCurrent.position);
 
-        public static IndexedCharStream Create(string str)
+        public static IndexedCharInput Create(string str)
         {
             var linesStr
                 = str.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Select(line => line + Environment.NewLine).ToArray();
@@ -33,15 +33,15 @@ namespace MarineLang.Streams
                     ).Concat(new[] { new IndexedChar { c = ' ' } })
                 );
 
-            return new IndexedCharStream(indexedChars.ToArray());
+            return new IndexedCharInput(indexedChars.ToArray());
         }
 
         public override ParserCore.IInput<IndexedChar> Advance()
         {
-            return new IndexedCharStream(items, Index + 1);
+            return new IndexedCharInput(items, Index + 1);
         }
 
-        IndexedCharStream(IndexedChar[] indexedChars, int index = 0) : base(indexedChars, index)
+        IndexedCharInput(IndexedChar[] indexedChars, int index = 0) : base(indexedChars, index)
         {
         }
     }

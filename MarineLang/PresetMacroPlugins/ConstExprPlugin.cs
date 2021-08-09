@@ -3,7 +3,7 @@ using MarineLang.MacroPlugins;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
-using MarineLang.Streams;
+using MarineLang.Inputs;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
 using MineUtil;
@@ -16,7 +16,7 @@ namespace MarineLang.PresetMacroPlugins
         {
             var vm = new HighLevelVirtualMachine();
             return
-                marineParser.ParseExpr()(TokenStream.Create(tokens.ToArray()))
+                marineParser.ParseExpr()(TokenInput.Create(tokens.ToArray()))
                 .Result.Select(exprAst =>
                 {
                     vm.LoadProgram(

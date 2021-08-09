@@ -1,96 +1,95 @@
 ﻿using MarineLang.Models;
-using MarineLang.ParserCore;
-using MarineLang.Streams;
+using MarineLang.Inputs;
 using System;
 
 namespace MarineLang.LexicalAnalysis
 {
     public static class LexerHelper
     {
-        static public bool Delimiter(IndexedCharStream stream)
+        static public bool Delimiter(IndexedCharInput input)
         {
-            if (Skip(stream))
+            if (Skip(input))
                 return true;
-            if (char.IsLetterOrDigit(stream.Current.c) == false && stream.Current.c != '_')
+            if (char.IsLetterOrDigit(input.Current.c) == false && input.Current.c != '_')
                 return true;
             return false;
         }
-        static public bool Skip(IndexedCharStream stream)
+        static public bool Skip(IndexedCharInput input)
         {
-            if (CommentOut(stream))
+            if (CommentOut(input))
             {
                 return true;
             }
 
             if (
-                stream.Current.c == ' ' ||
-                stream.Current.c == '\n' ||
-                stream.Current.c == '\r' ||
-                stream.Current.c == '\t'
+                input.Current.c == ' ' ||
+                input.Current.c == '\n' ||
+                input.Current.c == '\r' ||
+                input.Current.c == '\t'
                 )
             {
-                stream.MoveNext();
+                input.MoveNext();
                 return true;
             }
             return false;
         }
 
-        static public bool CommentOut(IndexedCharStream stream)
+        static public bool CommentOut(IndexedCharInput input)
         {
-            var backUpIndex = stream.Index;
-            if (stream.Current.c == '/' && stream.MoveNext())
+            var backUpIndex = input.Index;
+            if (input.Current.c == '/' && input.MoveNext())
             {
-                if (stream.Current.c == '/')
+                if (input.Current.c == '/')
                 {
-                    while (stream.MoveNext() && stream.Current.c != '\n') ;
-                    stream.MoveNext();
+                    while (input.MoveNext() && input.Current.c != '\n') ;
+                    input.MoveNext();
                     return true;
                 }
-                else if (stream.Current.c == '*')
+                else if (input.Current.c == '*')
                 {
-                    while (stream.MoveNext())
-                        if (stream.Current.c == '*' && stream.MoveNext() && stream.Current.c == '/')
+                    while (input.MoveNext())
+                        if (input.Current.c == '*' && input.MoveNext() && input.Current.c == '/')
                             break;
-                    stream.MoveNext();
+                    input.MoveNext();
                     return true;
                 }
             }
 
-            stream.SetIndex(backUpIndex);
+            input.SetIndex(backUpIndex);
             return false;
         }
 
-        static public bool ManySkip(IndexedCharStream stream)
+        static public bool ManySkip(IndexedCharInput input)
         {
-            if (Skip(stream) == false)
+            if (Skip(input) == false)
                 return false;
 
-            while (stream.IsEnd == false && Skip(stream)) ;
+            while (input.IsEnd == false && Skip(input)) ;
             return true;
         }
 
-        static public Token GetCharToken(IndexedCharStream stream, TokenType tokenType)
+        static public Token GetCharToken(IndexedCharInput input, TokenType tokenType)
         {
-            return GetCharToken(stream, tokenType.GetText()[0], tokenType);
+            return GetCharToken(input, tokenType.GetText()[0], tokenType);
         }
 
-            static public Token GetCharToken(IndexedCharStream stream, char c, TokenType tokenType)
+            static public Token GetCharToken(IndexedCharInput input, char c, TokenType tokenType)
         {
-            var indexedChar = stream.Current;
+            var indexedChar = input.Current;
             if (indexedChar.c == c)
             {
-                stream.MoveNext();
+                input.MoveNext();
                 return new Token(tokenType, indexedChar.c.ToString(), indexedChar.position);
             }
             return null;
         }
 
-        static public Func<IndexedCharStream, Token> GetStringToken(TokenType tokenType)
+        static public Func<IndexedCharInput, Token> GetStringToken(TokenType tokenType)
         {
             return GetStringToken(tokenType.GetText(), tokenType);
         }
 
-        static public Func<IndexedCharStream, Token> GetStringToken(string str, TokenType tokenType)
+        static public Func<IndexedCharInput, Token> GetStringToken(string str, TokenType tokenType)
         {
             return
              GetTokenTest(tokenType, (count, c) =>
@@ -104,25 +103,25 @@ namespace MarineLang.LexicalAnalysis
              );
         }
 
-        static public Token GetStringTokenTailDelimiter(TokenType tokenType, IndexedCharStream stream)
+        static public Token GetStringTokenTailDelimiter(TokenType tokenType, IndexedCharInput input)
         {
-            return GetStringTokenTailDelimiter(tokenType.GetText(), tokenType, stream);
+            return GetStringTokenTailDelimiter(tokenType.GetText(), tokenType, input);
         }
 
-        static public Token GetStringTokenTailDelimiter(string str, TokenType tokenType, IndexedCharStream stream)
+        static public Token GetStringTokenTailDelimiter(string str, TokenType tokenType, IndexedCharInput input)
         {
-            var backUpIndex = stream.Index;
-            var token = GetStringToken(str, tokenType)(stream);
+            var backUpIndex = input.Index;
+            var token = GetStringToken(str, tokenType)(input);
             if (token == null)
                 return null;
-            if (stream.IsEnd == true || Delimiter(stream))
+            if (input.IsEnd == true || Delimiter(input))
                 return token;
 
-            stream.SetIndex(backUpIndex);
+            input.SetIndex(backUpIndex);
             return null;
         }
 
-        static public Func<IndexedCharStream, Token> GetIdToken()
+        static public Func<IndexedCharInput, Token> GetIdToken()
         {
             return
              GetTokenTest(TokenType.Id, (count, c) =>
@@ -136,7 +135,7 @@ namespace MarineLang.LexicalAnalysis
              );
         }
 
-        static public Func<IndexedCharStream, Token> GetClassNameToken()
+        static public Func<IndexedCharInput, Token> GetClassNameToken()
         {
             return
              GetTokenTest(TokenType.ClassName, (count, c) =>
@@ -150,7 +149,7 @@ namespace MarineLang.LexicalAnalysis
              );
         }
 
-        static public Func<IndexedCharStream, Token> GetMacroNameToken()
+        static public Func<IndexedCharInput, Token> GetMacroNameToken()
         {
             return
              GetTokenTest(TokenType.MacroName, (count, c) =>
@@ -164,7 +163,7 @@ namespace MarineLang.LexicalAnalysis
              );
         }
 
-        static public Func<IndexedCharStream, Token> GetIntLiteralToken()
+        static public Func<IndexedCharInput, Token> GetIntLiteralToken()
         {
             return
                 GetTokenTest(TokenType.Int, (_, c) =>
@@ -172,102 +171,102 @@ namespace MarineLang.LexicalAnalysis
                 );
         }
 
-        static public Token GetCharLiteralToken(IndexedCharStream stream)
+        static public Token GetCharLiteralToken(IndexedCharInput input)
         {
-            var indexedChar = stream.Current;
-            var backUpIndex = stream.Index;
+            var indexedChar = input.Current;
+            var backUpIndex = input.Index;
 
             if (indexedChar.c != '\'')
                 return null;
-            if (stream.MoveNext() == false)
+            if (input.MoveNext() == false)
             {
-                stream.SetIndex(backUpIndex);
+                input.SetIndex(backUpIndex);
                 return null;
             }
 
-            var value = stream.Current.c;
+            var value = input.Current.c;
 
             if (value == '\'')
             {
-                stream.SetIndex(backUpIndex);
+                input.SetIndex(backUpIndex);
                 return null;
             }
 
             if (value == '\\')
             {
-                var escapeChar = GetEscapeChar(stream);
+                var escapeChar = GetEscapeChar(input);
                 if (escapeChar.HasValue == false)
                 {
-                    stream.SetIndex(backUpIndex);
+                    input.SetIndex(backUpIndex);
                     return null;
                 }
                 value = escapeChar.Value;
             }
             else
-                stream.MoveNext();
+                input.MoveNext();
 
-            if (stream.IsEnd || stream.Current.c != '\'')
+            if (input.IsEnd || input.Current.c != '\'')
             {
-                stream.SetIndex(backUpIndex);
+                input.SetIndex(backUpIndex);
                 return null;
             }
 
-            stream.MoveNext();
+            input.MoveNext();
 
             return new Token(TokenType.Char, "'" + value + "'", indexedChar.position);
         }
 
-        static public Token GetStringLiteralToken(IndexedCharStream stream)
+        static public Token GetStringLiteralToken(IndexedCharInput input)
         {
-            var indexedChar = stream.Current;
-            var backUpIndex = stream.Index;
+            var indexedChar = input.Current;
+            var backUpIndex = input.Index;
 
             if (indexedChar.c != '"')
                 return null;
 
             var value = "";
-            stream.MoveNext();
+            input.MoveNext();
 
-            while (stream.IsEnd == false && stream.Current.c != '"')
+            while (input.IsEnd == false && input.Current.c != '"')
             {
-                var escapeChar = GetEscapeChar(stream);
+                var escapeChar = GetEscapeChar(input);
                 if (escapeChar.HasValue)
                     value += escapeChar.Value;
                 else
                 {
-                    value += stream.Current.c;
-                    stream.MoveNext();
+                    value += input.Current.c;
+                    input.MoveNext();
                 }
             }
 
-            if (stream.IsEnd)
+            if (input.IsEnd)
             {
-                stream.SetIndex(backUpIndex);
+                input.SetIndex(backUpIndex);
                 return null;
             }
 
-            stream.MoveNext();
+            input.MoveNext();
 
             return new Token(TokenType.String, "\"" + value + "\"", indexedChar.position);
         }
 
-        static public char? GetEscapeChar(IndexedCharStream stream)
+        static public char? GetEscapeChar(IndexedCharInput input)
         {
-            var value = stream.Current.c;
+            var value = input.Current.c;
             if (value != '\\')
                 return null;
-            if (stream.MoveNext() == false)
+            if (input.MoveNext() == false)
             {
-                stream.SetIndex(stream.Index - 1);
+                input.SetIndex(input.Index - 1);
                 return null;
             }
-            var escapeChar = ToEspaceChar(value.ToString() + stream.Current.c);
+            var escapeChar = ToEspaceChar(value.ToString() + input.Current.c);
             if (escapeChar.HasValue == false)
             {
-                stream.SetIndex(stream.Index - 1);
+                input.SetIndex(input.Index - 1);
                 return null;
             }
-            stream.MoveNext();
+            input.MoveNext();
             return escapeChar.Value;
         }
 
@@ -291,33 +290,33 @@ namespace MarineLang.LexicalAnalysis
             return null;
         }
 
-        static public Token GetFloatLiteralToken(IndexedCharStream stream)
+        static public Token GetFloatLiteralToken(IndexedCharInput input)
         {
-            var indexedChar = stream.Current;
-            var backUpIndex = stream.Index;
+            var indexedChar = input.Current;
+            var backUpIndex = input.Index;
             var buf = "";
 
-            var head = GetIntLiteralToken()(stream)?.text;
+            var head = GetIntLiteralToken()(input)?.text;
             if (head == null)
                 return null;
 
             buf += head;
 
             if (
-                stream.IsEnd ||
-                stream.Current.c != '.' ||
-                stream.MoveNext() == false
+                input.IsEnd ||
+                input.Current.c != '.' ||
+                input.MoveNext() == false
             )
             {
-                stream.SetIndex(backUpIndex);
+                input.SetIndex(backUpIndex);
                 return null;
             }
             buf += '.';
 
-            var tail = GetIntLiteralToken()(stream)?.text;
+            var tail = GetIntLiteralToken()(input)?.text;
             if (tail == null)
             {
-                stream.SetIndex(backUpIndex);
+                input.SetIndex(backUpIndex);
                 return null;
             }
             buf += tail;
@@ -326,22 +325,22 @@ namespace MarineLang.LexicalAnalysis
 
         }
 
-        static public Token GetUnknownToken(IndexedCharStream stream)
+        static public Token GetUnknownToken(IndexedCharInput input)
         {
-            var indexedChar = stream.Current;
-            var buf = stream.Current.c.ToString();
+            var indexedChar = input.Current;
+            var buf = input.Current.c.ToString();
 
-            while (stream.MoveNext())
+            while (input.MoveNext())
             {
-                if (ManySkip(stream))
+                if (ManySkip(input))
                     break;
-                buf += stream.Current.c;
+                buf += input.Current.c;
             }
             return new Token(TokenType.UnKnown, buf, indexedChar.position);
 
         }
 
-        static Func<IndexedCharStream, Token> GetTokenTest(TokenType tokenType, Func<int, char, TestResult> test)
+        static Func<IndexedCharInput, Token> GetTokenTest(TokenType tokenType, Func<int, char, TestResult> test)
         {
 
             return input =>

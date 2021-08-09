@@ -6,7 +6,7 @@ using MarineLang.MacroPlugins;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
-using MarineLang.Streams;
+using MarineLang.Inputs;
 using MarineLang.SyntaxAnalysis;
 using MineUtil;
 
@@ -28,7 +28,7 @@ namespace MarineLang.PresetMacroPlugins
             var tokens2 = new LexicalAnalyzer().GetTokens(str);
 
             return
-                marineParser.ParseProgram(TokenStream.Create(tokens2.ToArray()))
+                marineParser.ParseProgram(TokenInput.Create(tokens2.ToArray()))
                 .Result.Select(programAst => programAst.funcDefinitionAsts);
         }
     }

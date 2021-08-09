@@ -2,9 +2,9 @@
 using MarineLang.ParserCore;
 using System;
 
-namespace MarineLang.Streams
+namespace MarineLang.Inputs
 {
-    public abstract class Stream<T> : IInput<T>
+    public abstract class Input<T> : IInput<T>
     {
         protected readonly T[] items;
 
@@ -16,7 +16,7 @@ namespace MarineLang.Streams
 
         public abstract RangePosition RangePosition { get; }
 
-        public Stream(T[] items, int index)
+        public Input(T[] items, int index)
         {
             this.items = items;
             Index = index;

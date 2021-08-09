@@ -1,5 +1,5 @@
 ﻿using MarineLang.Models;
-using MarineLang.Streams;
+using MarineLang.Inputs;
 using System.Collections.Generic;
 
 namespace MarineLang.LexicalAnalysis
@@ -8,65 +8,65 @@ namespace MarineLang.LexicalAnalysis
     {
         public IEnumerable<Token> GetTokens(string str)
         {
-            var stream = IndexedCharStream.Create(str);
+            var input = IndexedCharInput.Create(str);
 
-            if (stream.IsEnd == false)
-                LexerHelper.ManySkip(stream);
-            while (stream.IsEnd == false)
+            if (input.IsEnd == false)
+                LexerHelper.ManySkip(input);
+            while (input.IsEnd == false)
             {
                 yield return
-                    LexerHelper.GetStringToken(TokenType.AndOp)(stream) ??
-                    LexerHelper.GetStringToken(TokenType.OrOp)(stream) ??
-                    LexerHelper.GetStringToken(TokenType.EqualOp)(stream) ??
-                    LexerHelper.GetStringToken(TokenType.GreaterEqualOp)(stream) ??
-                    LexerHelper.GetStringToken(TokenType.LessEqualOp)(stream) ??
-                    LexerHelper.GetStringToken(TokenType.NotEqualOp)(stream) ??
-                    LexerHelper.GetStringToken(TokenType.TwoColon)(stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Await, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Yield, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Break, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.If, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Else, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Func, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.End, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Let, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter("true", TokenType.Bool, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter("false", TokenType.Bool, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Return, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.While, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.For, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.ForEach, stream) ??
-                    LexerHelper.GetStringTokenTailDelimiter(TokenType.In, stream) ??
-                    LexerHelper.GetFloatLiteralToken(stream) ??
-                    LexerHelper.GetIntLiteralToken()(stream) ??
-                    LexerHelper.GetCharLiteralToken(stream) ??
-                    LexerHelper.GetStringLiteralToken(stream) ??
-                    LexerHelper.GetCharToken(stream, TokenType.Semicolon) ??
-                    LexerHelper.GetCharToken(stream, TokenType.LeftCurlyBracket) ??
-                    LexerHelper.GetCharToken(stream, TokenType.RightCurlyBracket) ??
-                    LexerHelper.GetCharToken(stream, TokenType.LeftBracket) ??
-                    LexerHelper.GetCharToken(stream, TokenType.RightBracket) ??
-                    LexerHelper.GetCharToken(stream, TokenType.LeftParen) ??
-                    LexerHelper.GetCharToken(stream, TokenType.RightParen) ??
-                    LexerHelper.GetCharToken(stream, TokenType.DotOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.GreaterOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.LessOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.PlusOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.MinusOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.MulOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.DivOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.ModOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.PipeOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.AssignmentOp) ??
-                    LexerHelper.GetCharToken(stream, TokenType.Comma) ??
-                    LexerHelper.GetCharToken(stream, TokenType.NotOp) ??
-                    LexerHelper.GetIdToken()(stream) ??
-                    LexerHelper.GetClassNameToken()(stream) ??
-                    LexerHelper.GetMacroNameToken()(stream) ??
-                    LexerHelper.GetUnknownToken(stream);
+                    LexerHelper.GetStringToken(TokenType.AndOp)(input) ??
+                    LexerHelper.GetStringToken(TokenType.OrOp)(input) ??
+                    LexerHelper.GetStringToken(TokenType.EqualOp)(input) ??
+                    LexerHelper.GetStringToken(TokenType.GreaterEqualOp)(input) ??
+                    LexerHelper.GetStringToken(TokenType.LessEqualOp)(input) ??
+                    LexerHelper.GetStringToken(TokenType.NotEqualOp)(input) ??
+                    LexerHelper.GetStringToken(TokenType.TwoColon)(input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Await, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Yield, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Break, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.If, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Else, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Func, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.End, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Let, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter("true", TokenType.Bool, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter("false", TokenType.Bool, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.Return, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.While, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.For, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.ForEach, input) ??
+                    LexerHelper.GetStringTokenTailDelimiter(TokenType.In, input) ??
+                    LexerHelper.GetFloatLiteralToken(input) ??
+                    LexerHelper.GetIntLiteralToken()(input) ??
+                    LexerHelper.GetCharLiteralToken(input) ??
+                    LexerHelper.GetStringLiteralToken(input) ??
+                    LexerHelper.GetCharToken(input, TokenType.Semicolon) ??
+                    LexerHelper.GetCharToken(input, TokenType.LeftCurlyBracket) ??
+                    LexerHelper.GetCharToken(input, TokenType.RightCurlyBracket) ??
+                    LexerHelper.GetCharToken(input, TokenType.LeftBracket) ??
+                    LexerHelper.GetCharToken(input, TokenType.RightBracket) ??
+                    LexerHelper.GetCharToken(input, TokenType.LeftParen) ??
+                    LexerHelper.GetCharToken(input, TokenType.RightParen) ??
+                    LexerHelper.GetCharToken(input, TokenType.DotOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.GreaterOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.LessOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.PlusOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.MinusOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.MulOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.DivOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.ModOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.PipeOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.AssignmentOp) ??
+                    LexerHelper.GetCharToken(input, TokenType.Comma) ??
+                    LexerHelper.GetCharToken(input, TokenType.NotOp) ??
+                    LexerHelper.GetIdToken()(input) ??
+                    LexerHelper.GetClassNameToken()(input) ??
+                    LexerHelper.GetMacroNameToken()(input) ??
+                    LexerHelper.GetUnknownToken(input);
 
-                if (stream.IsEnd == false)
-                    LexerHelper.ManySkip(stream);
+                if (input.IsEnd == false)
+                    LexerHelper.ManySkip(input);
             }
         }
     }
