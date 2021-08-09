@@ -7,7 +7,7 @@ namespace MarineLang.ParserCore
 {
     public static class ParserExtension
     {
-        public static Parser<T, I> InCompleteError<T, I>(this Parser<T, I> parser, Func<IInput<I>, ParseErrorInfo> func)
+        public static Parse<I>.Parser<T> InCompleteError<T, I>(this Parse<I>.Parser<T> parser, Func<IInput<I>, ParseErrorInfo> func)
         {
             return input =>
             {
@@ -18,31 +18,31 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<T, I> InCompleteError<T, I>
-            (this Parser<T, I> parser, ErrorCode errorCode, RangePosition rangePosition, string prefixErrorMessage = "")
+        public static Parse<I>.Parser<T> InCompleteError<T, I>
+            (this Parse<I>.Parser<T> parser, ErrorCode errorCode, RangePosition rangePosition, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(input =>
                new ParseErrorInfo(prefixErrorMessage, errorCode, rangePosition)
            );
         }
 
-        public static Parser<T, I> InCompleteErrorWithPositionEnd<T, I>
-            (this Parser<T, I> parser, ErrorCode errorCode, string prefixErrorMessage = "")
+        public static Parse<I>.Parser<T> InCompleteErrorWithPositionEnd<T, I>
+            (this Parse<I>.Parser<T> parser, ErrorCode errorCode, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(input =>
                 new ParseErrorInfo(prefixErrorMessage, errorCode, input.RangePosition)
             );
         }
 
-        public static Parser<T, I> InCompleteErrorWithPositionHead<T, I>
-            (this Parser<T, I> parser, ErrorCode errorCode, string prefixErrorMessage = "")
+        public static Parse<I>.Parser<T> InCompleteErrorWithPositionHead<T, I>
+            (this Parse<I>.Parser<T> parser, ErrorCode errorCode, string prefixErrorMessage = "")
         {
             return parser.InCompleteError(input =>
                 new ParseErrorInfo(prefixErrorMessage, errorCode, input.RangePosition)
             );
         }
 
-        public static Parser<TT, I> Right<T, TT, I>(this Parser<T, I> parser, Parser<TT, I> parser2)
+        public static Parse<I>.Parser<TT> Right<T, TT, I>(this Parse<I>.Parser<T> parser, Parse<I>.Parser<TT> parser2)
         {
             return input =>
             {
@@ -54,7 +54,7 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<T, I> Left<T, TT, I>(this Parser<T, I> parser, Parser<TT, I> parser2)
+        public static Parse<I>.Parser<T> Left<T, TT, I>(this Parse<I>.Parser<T> parser, Parse<I>.Parser<TT> parser2)
         {
             return input =>
             {
@@ -71,7 +71,7 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<TT, I> Bind<T, TT, I>(this Parser<T, I> parser, Func<T, Parser<TT, I>> func)
+        public static Parse<I>.Parser<TT> Bind<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, Parse<I>.Parser<TT>> func)
         {
             return input =>
             {
@@ -82,15 +82,15 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<V, I> SelectMany<T, U, V, I>(
-                 this Parser<T, I> parser,
-                 Func<T, Parser<U, I>> selector,
+        public static Parse<I>.Parser<V> SelectMany<T, U, V, I>(
+                 this Parse<I>.Parser<T> parser,
+                 Func<T, Parse<I>.Parser<U>> selector,
                  Func<T, U, V> projector)
         {
             return parser.Bind(t => selector(t).Select(u => projector(t, u)));
         }
 
-        public static Parser<TT, I> BindResult<T, TT, I>(this Parser<T, I> parser, Func<T, IResult<TT, ParseErrorInfo>> func)
+        public static Parse<I>.Parser<TT> BindResult<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, IResult<TT, ParseErrorInfo>> func)
         {
             return input =>
             {
@@ -101,17 +101,17 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<TT, I> MapResult<T, TT, I>(this Parser<T, I> parser, Func<T, TT> func)
+        public static Parse<I>.Parser<TT> MapResult<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, TT> func)
         {
             return parser.BindResult(t => Result.Ok<TT, ParseErrorInfo>(func(t)));
         }
 
-        public static Parser<TT, I> Select<T, TT, I>(this Parser<T, I> parser, Func<T, TT> selector)
+        public static Parse<I>.Parser<TT> Select<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, TT> selector)
         {
             return MapResult(parser, selector);
         }
 
-        public static Parser<T, I> Try<T, I>(this Parser<T, I> parser)
+        public static Parse<I>.Parser<T> Try<T, I>(this Parse<I>.Parser<T> parser)
         {
             return
                 input =>
@@ -125,7 +125,7 @@ namespace MarineLang.ParserCore
                 };
         }
 
-        public static Parser<T, I> Default<T, I>(this Parser<T, I> parser, T defaultValue)
+        public static Parse<I>.Parser<T> Default<T, I>(this Parse<I>.Parser<T> parser, T defaultValue)
         {
             return input =>
             {

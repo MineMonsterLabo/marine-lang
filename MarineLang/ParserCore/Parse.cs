@@ -5,9 +5,11 @@ using System.Collections.Generic;
 
 namespace MarineLang.ParserCore
 {
-    public static class Parse
+    public static class Parse<I>
     {
-        public static Parser<List<T>, I> Many<T, I>(Parser<T, I> parser)
+        public delegate IParseResult<T, I> Parser<out T>(IInput<I> input);
+
+        public static Parser<List<T>> Many<T>(Parser<T> parser)
         {
             return
                 input =>
@@ -26,7 +28,7 @@ namespace MarineLang.ParserCore
                 };
         }
 
-        public static Parser<List<T>, I> ManyUntilEnd<T, I>(Parser<T, I> parser)
+        public static Parser<List<T>> ManyUntilEnd<T>(Parser<T> parser)
         {
             return
                 input =>
@@ -44,7 +46,7 @@ namespace MarineLang.ParserCore
                 };
         }
 
-        public static Parser<List<T>, I> OneMany<T, I>(Parser<T, I> parser)
+        public static Parser<List<T>> OneMany<T>(Parser<T> parser)
         {
             return
                 input =>
@@ -56,7 +58,7 @@ namespace MarineLang.ParserCore
                 };
         }
 
-        public static Parser<object[], I> Parsers<I>(params Parser<object, I>[] parsers)
+        public static Parser<object[]> Parsers(params Parser<object>[] parsers)
         {
             var values = new object[parsers.Length];
 
@@ -77,39 +79,39 @@ namespace MarineLang.ParserCore
                 };
         }
 
-        public static Parser<(T1, T2), I> Tuple<T1, T2, I>(Parser<T1, I> parser1, Parser<T2, I> parser2)
+        public static Parser<(T1, T2)> Tuple<T1, T2>(Parser<T1> parser1, Parser<T2> parser2)
         {
-            return Parsers(parser1 as Parser<object, I>, parser2 as Parser<object, I>)
+            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>)
                 .MapResult(objects => ((T1)objects[0], (T2)objects[1]));
         }
 
-        public static Parser<(T1, T2, T3), I> Tuple<T1, T2, T3, I>(Parser<T1, I> parser1, Parser<T2, I> parser2, Parser<T3, I> parser3)
+        public static Parser<(T1, T2, T3)> Tuple<T1, T2, T3>(Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3)
         {
-            return Parsers(parser1 as Parser<object, I>, parser2 as Parser<object, I>, parser3 as Parser<object, I>)
+            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>)
                 .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2]));
         }
 
-        public static Parser<(T1, T2, T3, T4), I> Tuple<T1, T2, T3, T4, I>(Parser<T1, I> parser1, Parser<T2, I> parser2, Parser<T3, I> parser3, Parser<T4, I> parser4)
+        public static Parser<(T1, T2, T3, T4)> Tuple<T1, T2, T3, T4>(Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4)
         {
-            return Parsers(parser1 as Parser<object, I>, parser2 as Parser<object, I>, parser3 as Parser<object, I>, parser4 as Parser<object, I>)
+            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>)
                 .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3]));
         }
 
-        public static Parser<(T1, T2, T3, T4, T5), I> Tuple<T1, T2, T3, T4, T5, I>
-            (Parser<T1, I> parser1, Parser<T2, I> parser2, Parser<T3, I> parser3, Parser<T4, I> parser4, Parser<T5, I> parser5)
+        public static Parser<(T1, T2, T3, T4, T5)> Tuple<T1, T2, T3, T4, T5>
+            (Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4, Parser<T5> parser5)
         {
-            return Parsers(parser1 as Parser<object, I>, parser2 as Parser<object, I>, parser3 as Parser<object, I>, parser4 as Parser<object, I>, parser5 as Parser<object, I>)
+            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>, parser5 as Parser<object>)
                 .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4]));
         }
 
-        public static Parser<(T1, T2, T3, T4, T5, T6), I> Tuple<T1, T2, T3, T4, T5, T6, I>
-            (Parser<T1, I> parser1, Parser<T2, I> parser2, Parser<T3, I> parser3, Parser<T4, I> parser4, Parser<T5, I> parser5, Parser<T6, I> parser6)
+        public static Parser<(T1, T2, T3, T4, T5, T6)> Tuple<T1, T2, T3, T4, T5, T6>
+            (Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4, Parser<T5> parser5, Parser<T6> parser6)
         {
-            return Parsers(parser1 as Parser<object, I>, parser2 as Parser<object, I>, parser3 as Parser<object, I>, parser4 as Parser<object, I>, parser5 as Parser<object, I>, parser6 as Parser<object, I>)
+            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>, parser5 as Parser<object>, parser6 as Parser<object>)
                 .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4], (T6)objects[5]));
         }
 
-        public static Parser<T, I> Or<T, I>(params Parser<T, I>[] parsers)
+        public static Parser<T> Or<T>(params Parser<T>[] parsers)
         {
             return
                 input =>
@@ -127,7 +129,7 @@ namespace MarineLang.ParserCore
         }
 
         //入力を消費するエラーが発生したら、即座に終了するOr
-        public static Parser<T, I> OrConsumedError<T, I>(params Parser<T, I>[] parsers)
+        public static Parser<T> OrConsumedError<T>(params Parser<T>[] parsers)
         {
             return
                 input =>
@@ -146,7 +148,7 @@ namespace MarineLang.ParserCore
                 };
         }
 
-        public static Parser<T[], I> Separated<T, TT, I>(Parser<T, I> parser, Parser<TT, I> separateParser)
+        public static Parser<T[]> Separated<T, TT>(Parser<T> parser, Parser<TT> separateParser)
         {
             return input =>
             {
@@ -172,7 +174,7 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<I, I> TestOnce<I>(Func<I, bool> test)
+        public static Parser<I> TestOnce(Func<I, bool> test)
         {
             return input =>
             {
@@ -190,20 +192,15 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<Unit, I> UnitReturn<I>()
-        {
-            return input => ParseResult.Ok(Unit.Value, input);
-        }
-
-        public static Parser<Unit, I> End<I>()
+        public static Parser<Unit> End()
         {
             return input =>
                      input.IsEnd ? 
-                        UnitReturn<I>()(input) : 
+                        UnitReturn()(input) : 
                         ParseResult.Error<Unit, I>(new ParseErrorInfo(), input);
         }
 
-        public static Parser<Unit, I> Except<T, I>(Parser<T, I> except)
+        public static Parser<Unit> Except<T>(Parser<T> except)
         {
             return input =>
             {
@@ -212,6 +209,16 @@ namespace MarineLang.ParserCore
                     return result.Error<Unit>(new ParseErrorInfo());
                 return result.Ok(Unit.Value);
             };
+        }
+
+        public static Parser<T> Return<T>(T t)
+        {
+            return input => ParseResult.Ok(t, input);
+        }
+
+        public static Parser<Unit> UnitReturn()
+        {
+            return Return(Unit.Value);
         }
     }
 }
