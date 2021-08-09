@@ -281,7 +281,7 @@ namespace MarineLang.SyntaxAnalysis
                 input = parseTokenResult.Remain;
 
                 if (parseTokenResult.Result.IsError || input.IsEnd)
-                    return ParseResult.Error<Block, Token>(new ParseErrorInfo("", ErrorKind.InComplete), input);
+                    return parseTokenResult.Error<Block>(new ParseErrorInfo("", ErrorKind.InComplete));
 
                 var statementAsts = new List<StatementAst>();
                 while (input.IsEnd == false && input.Current.tokenType != TokenType.RightCurlyBracket)
@@ -290,7 +290,7 @@ namespace MarineLang.SyntaxAnalysis
                     input = parseResult.Remain;
 
                     if (parseResult.Result.IsError)
-                        return ParseResult.Error<Block, Token>(parseResult.Result.RawError, input);
+                        return parseResult.Error<Block>(parseResult.Result.RawError);
 
                     statementAsts.Add(parseResult.Result.RawValue);
                 }
@@ -416,7 +416,7 @@ namespace MarineLang.SyntaxAnalysis
                     input = result2.Remain;
 
                     if (result2.Result.IsError)
-                        return ParseResult.Error<ExprAst, Token>(result2.Result.RawError, input);
+                        return result2.Error<ExprAst>(result2.Result.RawError);
                     instance = result2.Result.RawValue.Aggregate(instance, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
                 }
                 return ParseResult.Ok(instance, input);
@@ -720,9 +720,8 @@ namespace MarineLang.SyntaxAnalysis
                           var semicolonResult = ParseToken(TokenType.Semicolon)(input);
                           input = semicolonResult.Remain;
                           if (semicolonResult.Result.IsError)
-                              return ParseResult.Ok(
-                                  ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, exprs.Length),
-                                  input
+                              return semicolonResult.Ok(
+                                  ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, exprs.Length)
                               );
 
                           var sizeResult = ParseInt(input);

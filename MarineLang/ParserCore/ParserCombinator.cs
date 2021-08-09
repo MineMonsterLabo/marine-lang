@@ -18,7 +18,7 @@ namespace MarineLang.ParserCore
                         var parseResult = parser(input);
                         input = parseResult.Remain;
                         if (parseResult.TryGetError(out var parseErrorInfo) && parseErrorInfo.ErrorKind != ErrorKind.InComplete)
-                            return ParseResult.Error<List<T>, I>(parseErrorInfo, input);
+                            return parseResult.Error<List<T>>(parseErrorInfo);
                         if (parseResult.Result.IsError)
                             break;
                         list.Add(parseResult.Result.Unwrap());
@@ -34,7 +34,7 @@ namespace MarineLang.ParserCore
                 {
                     var result = Many(parser)(input);
                     if (result.Result.IsError == false && result.Result.RawValue.Count == 0)
-                        return ParseResult.Error<List<T>, I>(new ParseErrorInfo(ErrorKind.InComplete), result.Remain);
+                        return result.Error<List<T>>(new ParseErrorInfo(ErrorKind.InComplete));
                     return result;
                 };
         }
@@ -51,9 +51,9 @@ namespace MarineLang.ParserCore
                         var result = parsers[i](input);
                         input = result.Remain;
                         if (result.Result.IsError)
-                            return ParseResult.Error<object[], I>(result.Result.RawError, input);
+                            return result.Error<object[]>(result.Result.RawError);
                         if (input.IsEnd && i + 1 != parsers.Length)
-                            return ParseResult.Error<object[], I>(new ParseErrorInfo(ErrorKind.InComplete), input);
+                            return result.Error<object[]>(new ParseErrorInfo(ErrorKind.InComplete));
                         values[i] = result.Result.RawValue;
                     }
                     return ParseResult.Ok(values, input);
@@ -124,7 +124,7 @@ namespace MarineLang.ParserCore
                     var result = parser(input);
                     input = result.Remain;
                     if (result.Result.IsError && isFirst == false)
-                        return ParseResult.Error<T[], I>(new ParseErrorInfo(ErrorKind.InComplete), input);
+                        return result.Error<T[]>(new ParseErrorInfo(ErrorKind.InComplete));
                     isFirst = false;
                     if (result.Result.IsError)
                         break;

@@ -13,7 +13,7 @@ namespace MarineLang.ParserCore
             {
                 var result = parser(input);
                 if (result.TryGetError(out var parseErrorInfo) && parseErrorInfo.ErrorKind == ErrorKind.InComplete)
-                    return ParseResult.Error<T, I>(func(result.Remain), result.Remain);
+                    return result.Error<T>(func(result.Remain));
                 return result;
             };
         }
@@ -49,9 +49,9 @@ namespace MarineLang.ParserCore
                 var result = parser(input);
                 input = result.Remain;
                 if (result.TryGetError(out var parseErrorInfo))
-                    return ParseResult.Error<TT, I>(parseErrorInfo, input);
+                    return result.Error<TT>(parseErrorInfo);
                 if (result.Remain.IsEnd)
-                    return ParseResult.Error<TT, I>(new ParseErrorInfo(ErrorKind.InComplete), input);
+                    return result.Error<TT>(new ParseErrorInfo(ErrorKind.InComplete));
                 return parser2(input);
             };
         }
@@ -65,11 +65,11 @@ namespace MarineLang.ParserCore
                 if (result.Result.IsError == false)
                 {
                     if (result.Remain.IsEnd)
-                        return ParseResult.Error<T, I>(new ParseErrorInfo(ErrorKind.InComplete), input);
+                        return result.Error<T>(new ParseErrorInfo(ErrorKind.InComplete));
                     var result2 = parser2(result.Remain);
                     input = result2.Remain;
                     if (result2.Result.IsError)
-                        return ParseResult.Error<T, I>(result2.Result.RawError, input);
+                        return result2.Error<T>(result2.Result.RawError);
                 }
                 return new ParseResult<T, I>(result.Result, input);
             };
@@ -81,7 +81,7 @@ namespace MarineLang.ParserCore
             {
                 var result = parser(input);
                 if (result.Result.IsError == false && result.Remain.IsEnd)
-                    return ParseResult.Error<T, I>(new ParseErrorInfo(ErrorKind.InComplete), result.Remain);
+                    return result.Error<T>(new ParseErrorInfo(ErrorKind.InComplete));
                 return result;
             };
         }
@@ -111,7 +111,7 @@ namespace MarineLang.ParserCore
             {
                 var result = parser(input);
                 if (result.TryGetError(out var parseErrorInfo))
-                    return ParseResult.Error<TT, I>(parseErrorInfo, result.Remain);
+                    return result.Error<TT>(parseErrorInfo);
                 return new ParseResult<TT, I>(func(result.Result.RawValue), result.Remain);
             };
         }
@@ -147,7 +147,7 @@ namespace MarineLang.ParserCore
                 var parseResult = parser(input);
                 if (parseResult.Result.IsError)
                 {
-                    return ParseResult.Ok(defaultValue, parseResult.Remain);
+                    return parseResult.Ok(defaultValue);
                 }
                 return parseResult;
             };

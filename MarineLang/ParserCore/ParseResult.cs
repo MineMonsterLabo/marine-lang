@@ -7,6 +7,8 @@ namespace MarineLang.ParserCore
     {
         IResult<T, ParseErrorInfo> Result { get; }
         IInput<I> Remain { get; }
+        IParseResult<TT, I> Ok<TT>(TT value);
+        IParseResult<TT, I> Error<TT>(ParseErrorInfo error);
     }
 
     public class ParseResult<T, I> : IParseResult<T, I>
@@ -18,6 +20,16 @@ namespace MarineLang.ParserCore
         {
             Result = result;
             Remain = remain;
+        }
+
+        public  IParseResult<TT, I> Ok<TT>(TT value)
+        {
+            return new ParseResult<TT, I>(MineUtil.Result.Ok<TT, ParseErrorInfo>(value), Remain);
+        }
+
+        public IParseResult<TT, I> Error<TT>(ParseErrorInfo error)
+        {
+            return new ParseResult<TT, I>(MineUtil.Result.Error<TT, ParseErrorInfo>(error), Remain);
         }
     }
 
