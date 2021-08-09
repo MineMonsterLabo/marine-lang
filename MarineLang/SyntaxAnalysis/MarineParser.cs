@@ -84,7 +84,7 @@ namespace MarineLang.SyntaxAnalysis
                          .InCompleteError(ErrorCode.SyntaxNonFuncName, new RangePosition(headToken.position, headToken.PositionEnd))
                     )
                     .Left(
-                        Parse.Except(Parse.End())
+                        Parse.Except(Parse.End)
                         .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonFuncParen)
                     )
                  
@@ -520,7 +520,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParseToken(TokenType.Return)
                     .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "retを期待してます")
                     .Left(
-                        Parse.Except(Parse.End())
+                        Parse.Except(Parse.End)
                         .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonRetExpr)
                     ),
                     ParseExpr().InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonRetExpr)
@@ -535,13 +535,13 @@ namespace MarineLang.SyntaxAnalysis
                     ParseToken(TokenType.Let)
                         .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "letを期待してます")
                         .Left(
-                            Parse.Except(Parse.End())
+                            Parse.Except(Parse.End)
                             .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonLetVarName)
                          ),
                         ParseVariable
                         .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonLetVarName)
                         .Left(
-                            Parse.Except(Parse.End())
+                            Parse.Except(Parse.End)
                             .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonLetEqual)
                         )
                         .Left(
@@ -549,7 +549,7 @@ namespace MarineLang.SyntaxAnalysis
                             .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonLetEqual)
                         )
                         .Left(
-                            Parse.Except(Parse.End())
+                            Parse.Except(Parse.End)
                             .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
                         )
                 ).Bind(pair =>
@@ -568,7 +568,7 @@ namespace MarineLang.SyntaxAnalysis
                 .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "=を期待してます")
                 .Try()
                 .Left(
-                    Parse.Except(Parse.End())
+                    Parse.Except(Parse.End)
                     .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
                 )
                 .Bind(variable =>
@@ -589,7 +589,7 @@ namespace MarineLang.SyntaxAnalysis
                         ParseToken(TokenType.AssignmentOp)
                         .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "=を期待してます")
                         .Left(
-                            Parse.Except(Parse.End())
+                            Parse.Except(Parse.End)
                             .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
                         )
                     select pair
@@ -622,7 +622,7 @@ namespace MarineLang.SyntaxAnalysis
                 .Left(ParseToken(TokenType.AssignmentOp))
                 .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "=を期待してます")
                 .Left(
-                    Parse.Except(Parse.End())
+                    Parse.Except(Parse.End)
                     .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
                 )
                 .Bind<ExprAst, StatementAst, Token>(exprAst =>

@@ -192,13 +192,11 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<Unit> End()
-        {
-            return input =>
-                     input.IsEnd ? 
-                        UnitReturn()(input) : 
-                        ParseResult.Error<Unit, I>(new ParseErrorInfo(), input);
-        }
+        public static readonly Parser<Unit> End =
+            input =>
+                input.IsEnd ?
+                    UnitReturn(input) :
+                    ParseResult.Error<Unit, I>(new ParseErrorInfo(), input);
 
         public static Parser<Unit> Except<T>(Parser<T> except)
         {
@@ -216,9 +214,6 @@ namespace MarineLang.ParserCore
             return input => ParseResult.Ok(t, input);
         }
 
-        public static Parser<Unit> UnitReturn()
-        {
-            return Return(Unit.Value);
-        }
+        public static readonly Parser<Unit> UnitReturn = Return(Unit.Value);
     }
 }
