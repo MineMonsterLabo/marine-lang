@@ -7,7 +7,7 @@ namespace MarineLang.ParserCore
 {
     public static class ParserExtension
     {
-        public static Parse<I>.Parser<T> InCompleteError<T, I>(this Parse<I>.Parser<T> parser, Func<IInput<I>, ParseErrorInfo> func)
+        public static Parse<I>.Parser<T> NamedError<T, I>(this Parse<I>.Parser<T> parser, Func<IInput<I>, ParseErrorInfo> func)
         {
             return input =>
             {
@@ -18,26 +18,18 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parse<I>.Parser<T> InCompleteError<T, I>
+        public static Parse<I>.Parser<T> NamedError<T, I>
             (this Parse<I>.Parser<T> parser, ErrorCode errorCode, RangePosition rangePosition, string prefixErrorMessage = "")
         {
-            return parser.InCompleteError(input =>
+            return parser.NamedError(input =>
                new ParseErrorInfo(prefixErrorMessage, errorCode, rangePosition)
            );
         }
 
-        public static Parse<I>.Parser<T> InCompleteErrorWithPositionEnd<T, I>
+        public static Parse<I>.Parser<T> NamedError<T, I>
             (this Parse<I>.Parser<T> parser, ErrorCode errorCode, string prefixErrorMessage = "")
         {
-            return parser.InCompleteError(input =>
-                new ParseErrorInfo(prefixErrorMessage, errorCode, input.RangePosition)
-            );
-        }
-
-        public static Parse<I>.Parser<T> InCompleteErrorWithPositionHead<T, I>
-            (this Parse<I>.Parser<T> parser, ErrorCode errorCode, string prefixErrorMessage = "")
-        {
-            return parser.InCompleteError(input =>
+            return parser.NamedError(input =>
                 new ParseErrorInfo(prefixErrorMessage, errorCode, input.RangePosition)
             );
         }

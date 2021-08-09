@@ -13,7 +13,6 @@ namespace MarineLang.SyntaxAnalysis
 
     public class MarineParser
     {
-
         public class Block
         {
             public StatementAst[] statementAsts;
@@ -78,19 +77,19 @@ namespace MarineLang.SyntaxAnalysis
                 var headToken = input.Current;
                 return
                     ParseToken(TokenType.Func)
-                    .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonFuncWord, $"\"{input.Current.text}\"")
+                    .NamedError(ErrorCode.SyntaxNonFuncWord, $"\"{input.Current.text}\"")
                     .Right(
                         ParseToken(TokenType.Id)
-                         .InCompleteError(ErrorCode.SyntaxNonFuncName, new RangePosition(headToken.position, headToken.PositionEnd))
+                         .NamedError(ErrorCode.SyntaxNonFuncName, new RangePosition(headToken.position, headToken.PositionEnd))
                     )
                     .Left(
                         Parse.Except(Parse.End)
-                        .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonFuncParen)
+                        .NamedError(ErrorCode.SyntaxNonFuncParen)
                     )
-                 
+
                     .Bind(funcNameToken =>
                          ParseVariableList().Try()
-                         .InCompleteError(ErrorCode.SyntaxNonFuncParen, funcNameToken.rangePosition)
+                         .NamedError(ErrorCode.SyntaxNonFuncParen, funcNameToken.rangePosition)
                          .Bind(varList =>
                             ParserExtension.Try(ParseFuncBody(TokenType.End))
                             .MapResult(pair => FuncDefinitionAst.Create(headToken, funcNameToken.text, varList, pair.statementAsts, pair.endToken))
@@ -98,7 +97,7 @@ namespace MarineLang.SyntaxAnalysis
                      )
                     .Left(
                         ParseToken(TokenType.End)
-                        .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonEndWord)
+                        .NamedError(ErrorCode.SyntaxNonEndWord)
                     )
                     (input);
             };
@@ -126,26 +125,26 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParseToken(TokenType.MacroName).Left(ParseToken(TokenType.LeftCurlyBracket))
-                .Bind<Token, MacroBlock,Token>(macroName =>
-                     input =>
-                     {
-                         var tokens = new List<Token>();
-                         while (input.Current.tokenType != TokenType.RightCurlyBracket)
-                         {
-                             tokens.Add(input.Current);
-                             input = input.Advance();
-                             if (input.IsEnd)
-                                 return ParseResult.Error<MacroBlock, Token>(new ParseErrorInfo(), input);
-                         }
-                         input = input.Advance();
-                         return ParseResult.Ok(
-                             new MacroBlock
-                             {
-                                 macroName = macroName.text.Substring(1),
-                                 tokens = tokens
-                             }, input
-                         );
-                     }
+                .Bind<Token, MacroBlock, Token>(macroName =>
+                      input =>
+                      {
+                          var tokens = new List<Token>();
+                          while (input.Current.tokenType != TokenType.RightCurlyBracket)
+                          {
+                              tokens.Add(input.Current);
+                              input = input.Advance();
+                              if (input.IsEnd)
+                                  return ParseResult.Error<MacroBlock, Token>(new ParseErrorInfo(), input);
+                          }
+                          input = input.Advance();
+                          return ParseResult.Ok(
+                              new MacroBlock
+                              {
+                                  macroName = macroName.text.Substring(1),
+                                  tokens = tokens
+                              }, input
+                          );
+                      }
                 );
         }
 
@@ -160,7 +159,7 @@ namespace MarineLang.SyntaxAnalysis
                     input = parseResult.Remain;
 
                     if (parseResult.Result.IsError)
-                        return ParseResult.Error<Block,Token>(parseResult.Result.RawError, input);
+                        return ParseResult.Error<Block, Token>(parseResult.Result.RawError, input);
 
                     statementAsts.Add(parseResult.Result.RawValue);
                 }
@@ -518,12 +517,12 @@ namespace MarineLang.SyntaxAnalysis
             return
                 from pair in Parse.Tuple(
                     ParseToken(TokenType.Return)
-                    .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "retを期待してます")
+                    .NamedError(ErrorCode.Unknown, "retを期待してます")
                     .Left(
                         Parse.Except(Parse.End)
-                        .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonRetExpr)
+                        .NamedError(ErrorCode.SyntaxNonRetExpr)
                     ),
-                    ParseExpr().InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonRetExpr)
+                    ParseExpr().NamedError(ErrorCode.SyntaxNonRetExpr)
                 )
                 select ReturnAst.Create(pair.Item1, pair.Item2);
         }
@@ -533,28 +532,28 @@ namespace MarineLang.SyntaxAnalysis
             return
                 Parse.Tuple(
                     ParseToken(TokenType.Let)
-                        .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "letを期待してます")
+                        .NamedError(ErrorCode.Unknown, "letを期待してます")
                         .Left(
                             Parse.Except(Parse.End)
-                            .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonLetVarName)
+                            .NamedError(ErrorCode.SyntaxNonLetVarName)
                          ),
                         ParseVariable
-                        .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonLetVarName)
+                        .NamedError(ErrorCode.SyntaxNonLetVarName)
                         .Left(
                             Parse.Except(Parse.End)
-                            .InCompleteErrorWithPositionEnd(ErrorCode.SyntaxNonLetEqual)
+                            .NamedError(ErrorCode.SyntaxNonLetEqual)
                         )
                         .Left(
                             ParseToken(TokenType.AssignmentOp)
-                            .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonLetEqual)
+                            .NamedError(ErrorCode.SyntaxNonLetEqual)
                         )
                         .Left(
                             Parse.Except(Parse.End)
-                            .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
+                            .NamedError(ErrorCode.SyntaxNonEqualExpr)
                         )
                 ).Bind(pair =>
                     ParseExpr()
-                    .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
+                    .NamedError(ErrorCode.SyntaxNonEqualExpr)
                     .MapResult(expr => AssignmentVariableAst.Create(pair.Item1, pair.Item2, expr))
                 );
         }
@@ -563,18 +562,18 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                  ParseVariable
-                .InCompleteErrorWithPositionHead(ErrorCode.Unknown)
+                .NamedError(ErrorCode.Unknown)
                 .Left(ParseToken(TokenType.AssignmentOp))
-                .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "=を期待してます")
+                .NamedError(ErrorCode.Unknown, "=を期待してます")
                 .Try()
                 .Left(
                     Parse.Except(Parse.End)
-                    .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
+                    .NamedError(ErrorCode.SyntaxNonEqualExpr)
                 )
                 .Bind(variable =>
                     ParseExpr()
                     .MapResult(expr => ReAssignmentVariableAst.Create(variable, expr))
-                    .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
+                    .NamedError(ErrorCode.SyntaxNonEqualExpr)
                );
         }
 
@@ -584,13 +583,13 @@ namespace MarineLang.SyntaxAnalysis
                 (
                     from pair in
                         Parse.Tuple(ParseTerm(), ParseIndexers(true))
-                        .InCompleteErrorWithPositionHead(ErrorCode.Unknown)
+                        .NamedError(ErrorCode.Unknown)
                     from _ in
                         ParseToken(TokenType.AssignmentOp)
-                        .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "=を期待してます")
+                        .NamedError(ErrorCode.Unknown, "=を期待してます")
                         .Left(
                             Parse.Except(Parse.End)
-                            .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
+                            .NamedError(ErrorCode.SyntaxNonEqualExpr)
                         )
                     select pair
                 )
@@ -603,7 +602,7 @@ namespace MarineLang.SyntaxAnalysis
                     return
                         from expr in
                             ParseExpr()
-                            .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
+                            .NamedError(ErrorCode.SyntaxNonEqualExpr)
                         select
                             ReAssignmentIndexerAst.Create(
                                 GetIndexerAst.Create(pair.Item1, pair.Item2.Last().Item2),
@@ -618,12 +617,12 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParseIndexerOpExpr()
                 .Bind(ParseDotTerms)
-                .InCompleteErrorWithPositionHead(ErrorCode.Unknown)
+                .NamedError(ErrorCode.Unknown)
                 .Left(ParseToken(TokenType.AssignmentOp))
-                .InCompleteErrorWithPositionHead(ErrorCode.Unknown, "=を期待してます")
+                .NamedError(ErrorCode.Unknown, "=を期待してます")
                 .Left(
                     Parse.Except(Parse.End)
-                    .InCompleteErrorWithPositionHead(ErrorCode.SyntaxNonEqualExpr)
+                    .NamedError(ErrorCode.SyntaxNonEqualExpr)
                 )
                 .Bind<ExprAst, StatementAst, Token>(exprAst =>
                  {
@@ -735,25 +734,25 @@ namespace MarineLang.SyntaxAnalysis
                 Parse.Tuple(
                     ParseToken(TokenType.LeftBracket),
                     Parse.Separated(ParseExpr(), ParseToken(TokenType.Comma))
-                     .Bind<ExprAst[], ArrayLiteralAst.ArrayLiteralExprs,Token>(exprs =>
-                      input =>
-                      {
-                          var semicolonResult = ParseToken(TokenType.Semicolon)(input);
-                          input = semicolonResult.Remain;
-                          if (semicolonResult.Result.IsError)
-                              return semicolonResult.Ok(
-                                  ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, exprs.Length)
-                              );
+                     .Bind<ExprAst[], ArrayLiteralAst.ArrayLiteralExprs, Token>(exprs =>
+                       input =>
+                       {
+                           var semicolonResult = ParseToken(TokenType.Semicolon)(input);
+                           input = semicolonResult.Remain;
+                           if (semicolonResult.Result.IsError)
+                               return semicolonResult.Ok(
+                                   ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, exprs.Length)
+                               );
 
-                          var sizeResult = ParseInt(input);
-                          input = sizeResult.Remain;
+                           var sizeResult = ParseInt(input);
+                           input = sizeResult.Remain;
 
-                          var result =
-                             from size in sizeResult.Result
-                             select ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, (int)size.value);
+                           var result =
+                              from size in sizeResult.Result
+                              select ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, (int)size.value);
 
-                          return new ParseResult<ArrayLiteralAst.ArrayLiteralExprs, Token>(result, input);
-                      }
+                           return new ParseResult<ArrayLiteralAst.ArrayLiteralExprs, Token>(result, input);
+                       }
                     ),
                     ParseToken(TokenType.RightBracket)
                 ).MapResult(tuple => ArrayLiteralAst.Create(tuple.Item1, tuple.Item2, tuple.Item3));
