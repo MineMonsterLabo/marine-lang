@@ -7,13 +7,13 @@ namespace MarineLang.ParserCore
 {
     public static class ParserExtension
     {
-        public static Parse<I>.Parser<T> NamedError<T, I>(this Parse<I>.Parser<T> parser, Func<IInput<I>, ParseErrorInfo> func)
+        public static Parse<I>.Parser<T> NamedError<T, I>(this Parse<I>.Parser<T> parser, Func<RangePosition, ParseErrorInfo> func)
         {
             return input =>
             {
                 var result = parser(input);
                 if (result.TryGetError(out var parseErrorInfo))
-                    return result.Error<T>(func(result.Remain));
+                    return result.Error<T>(func(result.Remain.RangePosition));
                 return result;
             };
         }
@@ -21,7 +21,7 @@ namespace MarineLang.ParserCore
         public static Parse<I>.Parser<T> NamedError<T, I>
             (this Parse<I>.Parser<T> parser, ErrorCode errorCode, RangePosition rangePosition, string prefixErrorMessage = "")
         {
-            return parser.NamedError(input =>
+            return parser.NamedError(_ =>
                new ParseErrorInfo(prefixErrorMessage, errorCode, rangePosition)
            );
         }
@@ -29,8 +29,8 @@ namespace MarineLang.ParserCore
         public static Parse<I>.Parser<T> NamedError<T, I>
             (this Parse<I>.Parser<T> parser, ErrorCode errorCode, string prefixErrorMessage = "")
         {
-            return parser.NamedError(input =>
-                new ParseErrorInfo(prefixErrorMessage, errorCode, input.RangePosition)
+            return parser.NamedError(rangePosition =>
+                new ParseErrorInfo(prefixErrorMessage, errorCode, rangePosition)
             );
         }
 
@@ -115,6 +115,11 @@ namespace MarineLang.ParserCore
 
                     return parseResult;
                 };
+        }
+
+        public static Parse<I>.Parser<T> NoConsume<T, I>(this Parse<I>.Parser<T> parser)
+        {
+            return input => new ParseResult<T, I>(parser(input).Result, input);
         }
 
         public static Parse<I>.Parser<T> Default<T, I>(this Parse<I>.Parser<T> parser, T defaultValue)

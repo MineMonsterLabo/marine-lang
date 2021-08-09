@@ -1,4 +1,5 @@
-﻿using MarineLang.Models.Errors;
+﻿using MarineLang.Models;
+using MarineLang.Models.Errors;
 using MineUtil;
 using System;
 using System.Collections.Generic;
@@ -192,6 +193,32 @@ namespace MarineLang.ParserCore
             };
         }
 
+        public static Parser<List<T>> Until<T, TT>(Parser<T> parser, Parser<TT> until)
+        {
+            return input =>
+            {
+                var list = new List<T>();
+                while (input.IsEnd == false)
+                {
+                    var untilResult = until(input);
+                    if (untilResult.Result.IsOk)
+                    {
+                        input = untilResult.Remain;
+                        break;
+                    }
+
+                    var result = parser(input);
+                    input = result.Remain;
+
+                    if (result.TryGetError(out var parseErrorInfo))
+                        return result.Error<List<T>>(parseErrorInfo);
+
+                    list.Add(result.Result.Unwrap());
+                }
+                return ParseResult.Ok(list, input);
+            };
+        }
+
         public static readonly Parser<Unit> End =
             input =>
                 input.IsEnd ?
@@ -214,6 +241,16 @@ namespace MarineLang.ParserCore
             return input => ParseResult.Ok(t, input);
         }
 
+        public static Parser<T> ErrorReturn<T>(ParseErrorInfo parseErrorInfo)
+        {
+            return input => ParseResult.Error<T, I>(parseErrorInfo, input);
+        }
+
         public static readonly Parser<Unit> UnitReturn = Return(Unit.Value);
+
+        public static readonly Parser<RangePosition> Positioned = input => ParseResult.Ok(input.RangePosition, input);
+
+        public static readonly Parser<I> Current = input => ParseResult.Ok(input.Current, input.Advance());
+        public static readonly Parser<I> LastCurrent = input => ParseResult.Ok(input.LastCurrent, input.Advance());
     }
 }
