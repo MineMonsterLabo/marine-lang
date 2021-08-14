@@ -83,33 +83,33 @@ namespace MarineLang.ParserCore
         public static Parser<(T1, T2)> Tuple<T1, T2>(Parser<T1> parser1, Parser<T2> parser2)
         {
             return Parsers(parser1 as Parser<object>, parser2 as Parser<object>)
-                .MapResult(objects => ((T1)objects[0], (T2)objects[1]));
+                .Map(objects => ((T1)objects[0], (T2)objects[1]));
         }
 
         public static Parser<(T1, T2, T3)> Tuple<T1, T2, T3>(Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3)
         {
             return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>)
-                .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2]));
+                .Map(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2]));
         }
 
         public static Parser<(T1, T2, T3, T4)> Tuple<T1, T2, T3, T4>(Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4)
         {
             return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>)
-                .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3]));
+                .Map(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3]));
         }
 
         public static Parser<(T1, T2, T3, T4, T5)> Tuple<T1, T2, T3, T4, T5>
             (Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4, Parser<T5> parser5)
         {
             return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>, parser5 as Parser<object>)
-                .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4]));
+                .Map(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4]));
         }
 
         public static Parser<(T1, T2, T3, T4, T5, T6)> Tuple<T1, T2, T3, T4, T5, T6>
             (Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4, Parser<T5> parser5, Parser<T6> parser6)
         {
             return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>, parser5 as Parser<object>, parser6 as Parser<object>)
-                .MapResult(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4], (T6)objects[5]));
+                .Map(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4], (T6)objects[5]));
         }
 
         public static Parser<T> Or<T>(params Parser<T>[] parsers)
@@ -175,7 +175,7 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<I> TestOnce(Func<I, bool> test)
+        public static Parser<I> Verify(Func<I, bool> test)
         {
             return input =>
             {

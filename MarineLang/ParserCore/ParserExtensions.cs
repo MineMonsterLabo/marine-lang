@@ -93,14 +93,14 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parse<I>.Parser<TT> MapResult<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, TT> func)
+        public static Parse<I>.Parser<TT> Map<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, TT> func)
         {
             return parser.BindResult(t => Result.Ok<TT, ParseErrorInfo>(func(t)));
         }
 
         public static Parse<I>.Parser<TT> Select<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, TT> selector)
         {
-            return MapResult(parser, selector);
+            return Map(parser, selector);
         }
 
         public static Parse<I>.Parser<T> Try<T, I>(this Parse<I>.Parser<T> parser)

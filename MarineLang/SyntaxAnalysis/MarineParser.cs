@@ -63,11 +63,11 @@ namespace MarineLang.SyntaxAnalysis
                 Parse.ManyUntilEnd(
                    Parse.Or(
                        ParseMacroFuncDefinitions(),
-                       ParseFuncDefinition.Try().MapResult(funcDefinition => new[] { funcDefinition })
+                       ParseFuncDefinition.Try().Map(funcDefinition => new[] { funcDefinition })
                    )
                 )
-                .MapResult(funcDefinitions => funcDefinitions.SelectMany(x => x).ToArray())
-                .MapResult(ProgramAst.Create);
+                .Map(funcDefinitions => funcDefinitions.SelectMany(x => x).ToArray())
+                .Map(ProgramAst.Create);
         }
 
         Parse.Parser<FuncDefinitionAst> InternalParseFuncDefinition()
@@ -92,7 +92,7 @@ namespace MarineLang.SyntaxAnalysis
                          .NamedError(ErrorCode.SyntaxNonFuncParen, funcNameToken.rangePosition)
                          .Bind(varList =>
                             ParserExtensions.Try(ParseFuncBody(TokenType.End))
-                            .MapResult(pair => FuncDefinitionAst.Create(headToken, funcNameToken.text, varList, pair.statementAsts, pair.endToken))
+                            .Map(pair => FuncDefinitionAst.Create(headToken, funcNameToken.text, varList, pair.statementAsts, pair.endToken))
                          )
                      )
                     .Left(
@@ -160,18 +160,18 @@ namespace MarineLang.SyntaxAnalysis
                     ParseInstanceFieldAssignment().Try(),
                     ParseReAssignmentVariable(),
                     ParseReAssignmentIndexer().Try(),
-                    ParseExpr().MapResult(ExprStatementAst.Create).Try()
+                    ParseExpr().Map(ExprStatementAst.Create).Try()
                 );
         }
 
         Parse.Parser<YieldAst> InternalParseYield()
         {
-            return ParseToken(TokenType.Yield).MapResult(_ => new YieldAst());
+            return ParseToken(TokenType.Yield).Map(_ => new YieldAst());
         }
 
         Parse.Parser<BreakAst> InternalParseBreak()
         {
-            return ParseToken(TokenType.Break).MapResult(_ => new BreakAst());
+            return ParseToken(TokenType.Break).Map(_ => new BreakAst());
         }
 
         public Parse.Parser<WhileAst> ParseWhile()
@@ -380,7 +380,7 @@ namespace MarineLang.SyntaxAnalysis
         public Parse.Parser<Token> ParseBinaryOpToken()
         {
             return
-                Parse.TestOnce(token =>
+                Parse.Verify(token =>
                     token.tokenType >= TokenType.OrOp
                     && token.tokenType <= TokenType.ModOp
                 );
@@ -502,7 +502,7 @@ namespace MarineLang.SyntaxAnalysis
                 ).Bind(pair =>
                     ParseExpr()
                     .NamedError(ErrorCode.SyntaxNonEqualExpr)
-                    .MapResult(expr => AssignmentVariableAst.Create(pair.Item1, pair.Item2, expr))
+                    .Map(expr => AssignmentVariableAst.Create(pair.Item1, pair.Item2, expr))
                 );
         }
 
@@ -520,7 +520,7 @@ namespace MarineLang.SyntaxAnalysis
                 )
                 .Bind(variable =>
                     ParseExpr()
-                    .MapResult(expr => ReAssignmentVariableAst.Create(variable, expr))
+                    .Map(expr => ReAssignmentVariableAst.Create(variable, expr))
                     .NamedError(ErrorCode.SyntaxNonEqualExpr)
                );
         }
@@ -577,14 +577,14 @@ namespace MarineLang.SyntaxAnalysis
                      if (exprAst is InstanceFieldAst fieldAst)
                          return
                              ParseExpr()
-                             .MapResult(expr =>
+                             .Map(expr =>
                                InstanceFieldAssignmentAst.Create(fieldAst, expr)
                              );
 
                      if (exprAst is GetIndexerAst getIndexerAst)
                          return
                              ParseExpr()
-                             .MapResult(expr => ReAssignmentIndexerAst.Create(getIndexerAst, expr));
+                             .Map(expr => ReAssignmentIndexerAst.Create(getIndexerAst, expr));
 
                      return Parse.ErrorReturn<StatementAst>(new ParseErrorInfo());
                  });
@@ -624,19 +624,19 @@ namespace MarineLang.SyntaxAnalysis
         Parse.Parser<ValueAst> InternalParseBool()
         {
             return ParseToken(TokenType.Bool)
-                .MapResult(token => ValueAst.Create(bool.Parse(token.text), token));
+                .Map(token => ValueAst.Create(bool.Parse(token.text), token));
         }
 
         Parse.Parser<ValueAst> InternalParseChar()
         {
             return ParseToken(TokenType.Char)
-              .MapResult(token => ValueAst.Create(token.text[1], token));
+              .Map(token => ValueAst.Create(token.text[1], token));
         }
 
         Parse.Parser<ValueAst> InternalParseString()
         {
             return ParseToken(TokenType.String)
-            .MapResult(token =>
+            .Map(token =>
             {
                 var text = token.text;
                 var value = text.Length == 2 ? "" : text.Substring(1, text.Length - 2);
@@ -648,7 +648,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 ParseToken(TokenType.Id)
-                .MapResult(token => VariableAst.Create(token));
+                .Map(token => VariableAst.Create(token));
         }
 
         public Parse.Parser<(Token, ExprAst[], Token)> ParseParamList()
@@ -704,7 +704,7 @@ namespace MarineLang.SyntaxAnalysis
                        }
                     ),
                     ParseToken(TokenType.RightBracket)
-                ).MapResult(tuple => ArrayLiteralAst.Create(tuple.Item1, tuple.Item2, tuple.Item3));
+                ).Map(tuple => ArrayLiteralAst.Create(tuple.Item1, tuple.Item2, tuple.Item3));
         }
 
         public Parse.Parser<ActionAst> ParseActionLiteral()
@@ -713,20 +713,20 @@ namespace MarineLang.SyntaxAnalysis
                 Parse.Tuple(
                     ParseToken(TokenType.LeftCurlyBracket),
                     Parse.Or(
-                        ParseToken(TokenType.OrOp).MapResult(_ => new VariableAst[] { }),
+                        ParseToken(TokenType.OrOp).Map(_ => new VariableAst[] { }),
                         ParseActionVariableList()
                     ),
                     ParseFuncBody(TokenType.RightCurlyBracket),
                     ParseToken(TokenType.RightCurlyBracket)
                 )
-                .MapResult(pair =>
+                .Map(pair =>
                     ActionAst.Create(pair.Item1, pair.Item2, pair.Item3.statementAsts, pair.Item4)
                 );
         }
 
         public Parse.Parser<Token> ParseToken(TokenType tokenType)
         {
-            return Parse.TestOnce(token =>
+            return Parse.Verify(token =>
             {
                 return token.tokenType == tokenType;
             });
