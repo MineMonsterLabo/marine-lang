@@ -2,6 +2,7 @@
 using MarineLang.Models.Errors;
 using MineUtil;
 using System;
+using System.Collections.Generic;
 
 namespace MarineLang.ParserCore
 {
@@ -132,6 +133,25 @@ namespace MarineLang.ParserCore
                     return parseResult.Ok(defaultValue);
                 }
                 return parseResult;
+            };
+        }
+
+        public static Parse<I>.Parser<List<T>> Concat<T, I>(this IEnumerable<Parse<I>.Parser<T>> parsers)
+        {
+            return input =>
+            {
+                var list = new List<T>();
+                foreach (var parser in parsers)
+                {
+                    var parseResult = parser(input);
+                    input = parseResult.Remain;
+                    if (parseResult.TryGetError(out var parseErrorInfo))
+                    {
+                        return parseResult.Error<List<T>>(parseErrorInfo);
+                    }
+                    list.Add(parseResult.Result.Unwrap());
+                }
+                return ParseResult.Ok(list, input);
             };
         }
     }

@@ -3,6 +3,7 @@ using MarineLang.Models.Errors;
 using MineUtil;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MarineLang.ParserCore
 {
@@ -244,6 +245,16 @@ namespace MarineLang.ParserCore
         public static Parser<T> ErrorReturn<T>(ParseErrorInfo parseErrorInfo)
         {
             return input => ParseResult.Error<T, I>(parseErrorInfo, input);
+        }
+
+        public static Parse<char>.Parser<char> Char(char c)
+        {
+            return Parse<char>.Verify(inputChar => inputChar == c);
+        }
+
+        public static Parse<char>.Parser<string> String(string s)
+        {
+            return s.Select(Char).Concat().Map(string.Concat).Try();
         }
 
         public static readonly Parser<Unit> UnitReturn = Return(Unit.Value);
