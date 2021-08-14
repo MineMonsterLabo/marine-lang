@@ -91,7 +91,7 @@ namespace MarineLang.SyntaxAnalysis
                          ParseVariableList().Try()
                          .NamedError(ErrorCode.SyntaxNonFuncParen, funcNameToken.rangePosition)
                          .Bind(varList =>
-                            ParserExtension.Try(ParseFuncBody(TokenType.End))
+                            ParserExtensions.Try(ParseFuncBody(TokenType.End))
                             .MapResult(pair => FuncDefinitionAst.Create(headToken, funcNameToken.text, varList, pair.statementAsts, pair.endToken))
                          )
                      )

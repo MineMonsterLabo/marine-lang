@@ -5,7 +5,7 @@ using System;
 
 namespace MarineLang.ParserCore
 {
-    public static class ParserExtension
+    public static class ParserExtensions
     {
         public static Parse<I>.Parser<T> NamedError<T, I>(this Parse<I>.Parser<T> parser, Func<RangePosition, ParseErrorInfo> func)
         {
@@ -134,6 +134,5 @@ namespace MarineLang.ParserCore
                 return parseResult;
             };
         }
-      
     }
 }
