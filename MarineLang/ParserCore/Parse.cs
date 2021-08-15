@@ -247,6 +247,12 @@ namespace MarineLang.ParserCore
             return input => ParseResult.Error<T, I>(parseErrorInfo, input);
         }
 
+        public static readonly Parser<I> Any =
+            input =>
+                input.IsEnd ?
+                    ParseResult.Error<I, I>(new ParseErrorInfo(), input) :
+                    ParseResult.Ok(input.Current, input.Advance());
+
         public static Parse<char>.Parser<char> Char(char c)
         {
             return Parse<char>.Verify(inputChar => inputChar == c);

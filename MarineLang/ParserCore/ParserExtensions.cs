@@ -99,6 +99,17 @@ namespace MarineLang.ParserCore
             return parser.BindResult(t => Result.Ok<TT, ParseErrorInfo>(func(t)));
         }
 
+        public static Parse<I>.Parser<T> ErrorRetry<T, I>(this Parse<I>.Parser<T> parser, Func<IParseResult<T, I>, T> func)
+        {
+            return input =>
+            {
+                var result = parser(input);
+                if (result.Result.IsError)
+                    return result.Ok(func(result));
+                return result;
+            };
+        }
+
         public static Parse<I>.Parser<TT> Select<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, TT> selector)
         {
             return Map(parser, selector);
@@ -153,6 +164,20 @@ namespace MarineLang.ParserCore
                 }
                 return ParseResult.Ok(list, input);
             };
+        }
+
+        public static Parse<I>.Parser<T> Where<T, I>(this Parse<I>.Parser<T> parser,Func<T,bool> predicate)
+        {
+            return parser.BindResult(
+                t => predicate(t) ? 
+                    Result.Ok<T, ParseErrorInfo>(t) : 
+                    Result.Error<T, ParseErrorInfo>(new ParseErrorInfo())
+            );
+        }
+
+        public static Parse<I>.Parser<string> Text<I>(this Parse<I>.Parser<IEnumerable<char>> parser)
+        {
+            return parser.Map(string.Concat);
         }
     }
 }
