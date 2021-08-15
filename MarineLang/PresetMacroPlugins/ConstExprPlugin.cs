@@ -12,7 +12,7 @@ namespace MarineLang.PresetMacroPlugins
 {
     public class ConstExprPlugin : IExprMacroPlugin
     {
-        public IResult<ExprAst, ParseErrorInfo> Replace(MarineParser marineParser, List<Token> tokens)
+        public IResult<ExprAst, ParseErrorInfo> Replace(SyntaxParser marineParser, List<Token> tokens)
         {
             var vm = new HighLevelVirtualMachine();
             return

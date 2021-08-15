@@ -9,7 +9,7 @@ namespace MarineLang.MacroPlugins
 {
     public interface IMacroPlugin<T>
     {
-        IResult<T, ParseErrorInfo> Replace(MarineParser marineParser, List<Token> tokens);
+        IResult<T, ParseErrorInfo> Replace(SyntaxParser marineParser, List<Token> tokens);
     }
 
     public interface IFuncDefinitionMacroPlugin : IMacroPlugin<IEnumerable<FuncDefinitionAst>> { }

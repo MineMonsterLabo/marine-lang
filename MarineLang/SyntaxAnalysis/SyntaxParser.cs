@@ -11,7 +11,7 @@ namespace MarineLang.SyntaxAnalysis
 {
     using Parse = Parse<Token>;
 
-    public class MarineParser
+    public class SyntaxParser
     {
         public class Block
         {
@@ -40,7 +40,7 @@ namespace MarineLang.SyntaxAnalysis
 
         private readonly PluginContainer pluginContainer;
 
-        public MarineParser(PluginContainer pluginContainer)
+        public SyntaxParser(PluginContainer pluginContainer)
         {
             ParseInt = InternalParseInt();
             ParseFloat = InternalParseFloat();

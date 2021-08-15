@@ -11,14 +11,14 @@ namespace MarineLang.SyntaxAnalysis
 {
     public class SyntaxAnalyzer
     {
-        public readonly MarineParser marineParser;
+        public readonly SyntaxParser marineParser;
 
         public SyntaxAnalyzer(PluginContainer pluginContainer = null)
         {
             if (pluginContainer == null)
                 pluginContainer = new PluginContainer();
 
-            marineParser = new MarineParser(pluginContainer);
+            marineParser = new SyntaxParser(pluginContainer);
         }
 
         public IResult<ProgramAst, ParseErrorInfo> Parse(IEnumerable<Token> tokens)

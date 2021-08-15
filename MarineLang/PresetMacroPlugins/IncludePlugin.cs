@@ -14,7 +14,7 @@ namespace MarineLang.PresetMacroPlugins
 {
     public class IncludePlugin : IFuncDefinitionMacroPlugin
     {
-        public IResult<IEnumerable<FuncDefinitionAst>,ParseErrorInfo> Replace(MarineParser marineParser, List<Token> tokens)
+        public IResult<IEnumerable<FuncDefinitionAst>,ParseErrorInfo> Replace(SyntaxParser marineParser, List<Token> tokens)
         {
             var str = "";
             foreach (var token in tokens)
