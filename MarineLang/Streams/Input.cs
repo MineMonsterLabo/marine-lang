@@ -22,19 +22,6 @@ namespace MarineLang.Inputs
             Index = index;
         }
 
-        public bool MoveNext()
-        {
-            Index++;
-            if (items.Length > Index)
-                return true;
-            return false;
-        }
-
-        public void SetIndex(int index)
-        {
-            Index = index;
-        }
-
         public abstract IInput<T> Advance();
     }
 }
