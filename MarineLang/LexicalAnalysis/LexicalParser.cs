@@ -14,13 +14,13 @@ namespace MarineLang.LexicalAnalysis
             return
                 ManySkip()
                 .Right(
-                    Parse<char>.ManyUntilEnd(GetToken().Left(ManySkip()))
+                    Parse.ManyUntilEnd(GetToken().Left(ManySkip()))
                 );
         }
 
         static public Parse.Parser<Token> GetToken()
         {
-            return Parse<char>.Or(
+            return Parse.Or(
                 GetStringToken(TokenType.AndOp),
                 GetStringToken(TokenType.OrOp),
                 GetStringToken(TokenType.EqualOp),
