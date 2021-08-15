@@ -1,273 +1,184 @@
 ﻿using MarineLang.Models;
-using MarineLang.Inputs;
-using System;
+using MarineLang.ParserCore;
+using MineUtil;
 
 namespace MarineLang.LexicalAnalysis
 {
+    using Parse = Parse<char>;
+
     public static class LexerHelper
     {
-        static public bool Delimiter(IndexedCharInput input)
+        static public Parse.Parser<Unit> Delimiter()
         {
-            if (Skip(input))
-                return true;
-            if (char.IsLetterOrDigit(input.Current.c) == false && input.Current.c != '_')
-                return true;
-            return false;
+            return
+                Parse.Or(
+                    Parse.End.Map(_ => Unit.Value),
+                    Skip(),
+                    Parse.Verify(c => char.IsLetterOrDigit(c) == false && c != '_').Map(_ => Unit.Value).NoConsume()
+                );
         }
-        static public bool Skip(IndexedCharInput input)
-        {
-            if (CommentOut(input))
-            {
-                return true;
-            }
 
-            if (
-                input.Current.c == ' ' ||
-                input.Current.c == '\n' ||
-                input.Current.c == '\r' ||
-                input.Current.c == '\t'
+        static public Parse.Parser<Unit> Skip()
+        {
+            return Parse.Or(CommentOut(), SkipChar());
+        }
+
+        static private Parse.Parser<Unit> SkipChar()
+        {
+            return
+                Parse.Or(
+                    Parse.Char(' '),
+                    Parse.Char('\n'),
+                    Parse.Char('\r'),
+                    Parse.Char('\t')
                 )
-            {
-                input.MoveNext();
-                return true;
-            }
-            return false;
+                .Map(_ => Unit.Value);
         }
 
-        static public bool CommentOut(IndexedCharInput input)
+        static public Parse.Parser<Unit> CommentOut()
         {
-            var backUpIndex = input.Index;
-            if (input.Current.c == '/' && input.MoveNext())
-            {
-                if (input.Current.c == '/')
-                {
-                    while (input.MoveNext() && input.Current.c != '\n') ;
-                    input.MoveNext();
-                    return true;
-                }
-                else if (input.Current.c == '*')
-                {
-                    while (input.MoveNext())
-                        if (input.Current.c == '*' && input.MoveNext() && input.Current.c == '/')
-                            break;
-                    input.MoveNext();
-                    return true;
-                }
-            }
-
-            input.SetIndex(backUpIndex);
-            return false;
+            return Parse.Or(LineCommentOut().Try(), RangeCommentOut().Try());
         }
 
-        static public bool ManySkip(IndexedCharInput input)
+        static private Parse.Parser<Unit> LineCommentOut()
         {
-            if (Skip(input) == false)
-                return false;
-
-            while (input.IsEnd == false && Skip(input)) ;
-            return true;
+            return
+                 Parse.String("//")
+                 .Right(Parse.Until(Parse.Any, Parse.Char('\n')))
+                 .Map(_ => Unit.Value);
         }
 
-        static public Token GetCharToken(IndexedCharInput input, TokenType tokenType)
+        static private Parse.Parser<Unit> RangeCommentOut()
         {
-            return GetCharToken(input, tokenType.GetText()[0], tokenType);
+            return
+                 Parse.String("/*")
+                 .Right(Parse.Until(Parse.Any, Parse.String("*/")))
+                 .Map(_ => Unit.Value);
         }
 
-            static public Token GetCharToken(IndexedCharInput input, char c, TokenType tokenType)
+        static public Parse.Parser<Unit> OneManySkip()
         {
-            var indexedChar = input.Current;
-            if (indexedChar.c == c)
-            {
-                input.MoveNext();
-                return new Token(tokenType, indexedChar.c.ToString(), indexedChar.position);
-            }
-            return null;
+            return Parse.OneMany(Skip()).Map(_ => Unit.Value);
         }
 
-        static public Func<IndexedCharInput, Token> GetStringToken(TokenType tokenType)
+        static public Parse.Parser<Unit> ManySkip()
+        {
+            return Parse.Many(Skip()).Map(_ => Unit.Value);
+        }
+
+        static public Parse.Parser<Token> GetCharToken(TokenType tokenType)
+        {
+            return GetCharToken(tokenType.GetText()[0], tokenType);
+        }
+
+        static public Parse.Parser<Token> GetCharToken(char c, TokenType tokenType)
+        {
+            return
+                from position in Parse.Positioned
+                from character in Parse.Char(c)
+                select new Token(tokenType, character.ToString(), position.Start);
+        }
+
+        static public Parse.Parser<Token> GetStringToken(TokenType tokenType)
         {
             return GetStringToken(tokenType.GetText(), tokenType);
         }
 
-        static public Func<IndexedCharInput, Token> GetStringToken(string str, TokenType tokenType)
+        static public Parse.Parser<Token> GetStringToken(string str, TokenType tokenType)
         {
             return
-             GetTokenTest(tokenType, (count, c) =>
-             {
-                 if (str.Length <= count)
-                     return TestResult.End;
-                 if (c == str[count])
-                     return str.Length - 1 == count ? TestResult.Pass : TestResult.Continue;
-                 return TestResult.End;
-             }
-             );
+                from position in Parse.Positioned
+                from text in Parse.String(str)
+                select new Token(tokenType, text, position.Start);
         }
 
-        static public Token GetStringTokenTailDelimiter(TokenType tokenType, IndexedCharInput input)
+        static public Parse.Parser<Token> GetStringTokenTailDelimiter(TokenType tokenType)
         {
-            return GetStringTokenTailDelimiter(tokenType.GetText(), tokenType, input);
+            return GetStringTokenTailDelimiter(tokenType.GetText(), tokenType);
         }
 
-        static public Token GetStringTokenTailDelimiter(string str, TokenType tokenType, IndexedCharInput input)
+        static public Parse.Parser<Token> GetStringTokenTailDelimiter(string str, TokenType tokenType)
         {
-            var backUpIndex = input.Index;
-            var token = GetStringToken(str, tokenType)(input);
-            if (token == null)
-                return null;
-            if (input.IsEnd == true || Delimiter(input))
-                return token;
-
-            input.SetIndex(backUpIndex);
-            return null;
+            return GetStringToken(str, tokenType).Left(Delimiter()).Try();
         }
 
-        static public Func<IndexedCharInput, Token> GetIdToken()
+        static public Parse.Parser<Token> GetIdToken()
         {
             return
-             GetTokenTest(TokenType.Id, (count, c) =>
-             {
-                 if (count == 0 && IsLowerLetter(c) == false)
-                     return TestResult.End;
-                 if (IsIdChar(c) == false)
-                     return TestResult.End;
-                 return TestResult.Pass;
-             }
-             );
+                from position in Parse.Positioned
+                from firstChar in Parse.Verify(IsLowerLetter)
+                from tailStr in Parse.Many(Parse.Verify(IsIdChar)).Text()
+                select new Token(TokenType.Id, firstChar.ToString() + tailStr, position.Start);
         }
 
-        static public Func<IndexedCharInput, Token> GetClassNameToken()
+        static public Parse.Parser<Token> GetClassNameToken()
         {
             return
-             GetTokenTest(TokenType.ClassName, (count, c) =>
-             {
-                 if (count == 0 && IsUpperLetter(c) == false)
-                     return TestResult.End;
-                 if ((char.IsLetter(c) || char.IsDigit(c)) == false)
-                     return TestResult.End;
-                 return TestResult.Pass;
-             }
-             );
+                from position in Parse.Positioned
+                from firstChar in Parse.Verify(IsUpperLetter)
+                from tailStr in Parse.Many(Parse.Verify(c => char.IsLetter(c) || char.IsDigit(c))).Text()
+                select new Token(TokenType.ClassName, firstChar.ToString() + tailStr, position.Start);
         }
 
-        static public Func<IndexedCharInput, Token> GetMacroNameToken()
+        static public Parse.Parser<Token> GetMacroNameToken()
         {
             return
-             GetTokenTest(TokenType.MacroName, (count, c) =>
-             {
-                 if (count == 0)
-                     return c == '#' ? TestResult.Pass : TestResult.End;
-                 if ((char.IsLetter(c) || char.IsDigit(c)) == false)
-                     return TestResult.End;
-                 return TestResult.Pass;
-             }
-             );
+                from position in Parse.Positioned
+                from firstChar in Parse.Char('#')
+                from tailStr in Parse.Many(Parse.Verify(c => char.IsLetter(c) || char.IsDigit(c))).Text()
+                select new Token(TokenType.MacroName, firstChar.ToString() + tailStr, position.Start);
         }
 
-        static public Func<IndexedCharInput, Token> GetIntLiteralToken()
+        static public Parse.Parser<Token> GetIntLiteralToken()
         {
             return
-                GetTokenTest(TokenType.Int, (_, c) =>
-                   char.IsDigit(c) ? TestResult.Pass : TestResult.End
-                );
+                from position in Parse.Positioned
+                from text in Parse.OneMany(Parse.Verify(char.IsDigit)).Text()
+                select new Token(TokenType.Int, text, position.Start);
         }
 
-        static public Token GetCharLiteralToken(IndexedCharInput input)
+        static public Parse.Parser<Token> GetCharLiteralToken()
         {
-            var indexedChar = input.Current;
-            var backUpIndex = input.Index;
-
-            if (indexedChar.c != '\'')
-                return null;
-            if (input.MoveNext() == false)
-            {
-                input.SetIndex(backUpIndex);
-                return null;
-            }
-
-            var value = input.Current.c;
-
-            if (value == '\'')
-            {
-                input.SetIndex(backUpIndex);
-                return null;
-            }
-
-            if (value == '\\')
-            {
-                var escapeChar = GetEscapeChar(input);
-                if (escapeChar.HasValue == false)
-                {
-                    input.SetIndex(backUpIndex);
-                    return null;
-                }
-                value = escapeChar.Value;
-            }
-            else
-                input.MoveNext();
-
-            if (input.IsEnd || input.Current.c != '\'')
-            {
-                input.SetIndex(backUpIndex);
-                return null;
-            }
-
-            input.MoveNext();
-
-            return new Token(TokenType.Char, "'" + value + "'", indexedChar.position);
+            return
+                from position in Parse.Positioned
+                from _ in Parse.Char('\'')
+                from text in Parse.Or(GetEscapeChar().Try(), Parse.Any).Left(Parse.Char('\''))
+                select new Token(TokenType.Char, "'" + text + "'", position.Start);
         }
 
-        static public Token GetStringLiteralToken(IndexedCharInput input)
+        static public Parse.Parser<Token> GetStringLiteralToken()
         {
-            var indexedChar = input.Current;
-            var backUpIndex = input.Index;
-
-            if (indexedChar.c != '"')
-                return null;
-
-            var value = "";
-            input.MoveNext();
-
-            while (input.IsEnd == false && input.Current.c != '"')
-            {
-                var escapeChar = GetEscapeChar(input);
-                if (escapeChar.HasValue)
-                    value += escapeChar.Value;
-                else
-                {
-                    value += input.Current.c;
-                    input.MoveNext();
-                }
-            }
-
-            if (input.IsEnd)
-            {
-                input.SetIndex(backUpIndex);
-                return null;
-            }
-
-            input.MoveNext();
-
-            return new Token(TokenType.String, "\"" + value + "\"", indexedChar.position);
+            return
+                from position in Parse.Positioned
+                from _ in Parse.Char('"')
+                from text in Parse.Until(Parse.Or(GetEscapeChar().Try(), Parse.Any), Parse.Char('"')).Text()
+                select new Token(TokenType.String, "\"" + text + "\"", position.Start);
         }
 
-        static public char? GetEscapeChar(IndexedCharInput input)
+        static public Parse.Parser<char> GetEscapeChar()
         {
-            var value = input.Current.c;
-            if (value != '\\')
-                return null;
-            if (input.MoveNext() == false)
-            {
-                input.SetIndex(input.Index - 1);
-                return null;
-            }
-            var escapeChar = ToEspaceChar(value.ToString() + input.Current.c);
-            if (escapeChar.HasValue == false)
-            {
-                input.SetIndex(input.Index - 1);
-                return null;
-            }
-            input.MoveNext();
-            return escapeChar.Value;
+            return
+                from value in Parse.Current.Where(c => c == '\\')
+                from escapeChar in Parse.Current.Map(c => ToEspaceChar(value.ToString() + c)).Where(x => x.HasValue)
+                select escapeChar.Value;
+        }
+
+        static public Parse.Parser<Token> GetFloatLiteralToken()
+        {
+            return
+                from position in Parse.Positioned
+                from text1 in GetIntLiteralToken().Map(t => t.text)
+                from _ in Parse.Char('.')
+                from text2 in GetIntLiteralToken().Map(t => t.text)
+                select new Token(TokenType.Float, text1 + '.' + text2, position.Start);
+        }
+
+        static public Parse.Parser<Token> GetUnknownToken()
+        {
+            return
+                from position in Parse.Positioned
+                from text in Parse.Until(Parse.Any, OneManySkip()).Text()
+                select new Token(TokenType.UnKnown, text, position.Start);
         }
 
         static public char? ToEspaceChar(string str)
@@ -290,92 +201,6 @@ namespace MarineLang.LexicalAnalysis
             return null;
         }
 
-        static public Token GetFloatLiteralToken(IndexedCharInput input)
-        {
-            var indexedChar = input.Current;
-            var backUpIndex = input.Index;
-            var buf = "";
-
-            var head = GetIntLiteralToken()(input)?.text;
-            if (head == null)
-                return null;
-
-            buf += head;
-
-            if (
-                input.IsEnd ||
-                input.Current.c != '.' ||
-                input.MoveNext() == false
-            )
-            {
-                input.SetIndex(backUpIndex);
-                return null;
-            }
-            buf += '.';
-
-            var tail = GetIntLiteralToken()(input)?.text;
-            if (tail == null)
-            {
-                input.SetIndex(backUpIndex);
-                return null;
-            }
-            buf += tail;
-
-            return new Token(TokenType.Float, buf, indexedChar.position);
-
-        }
-
-        static public Token GetUnknownToken(IndexedCharInput input)
-        {
-            var indexedChar = input.Current;
-            var buf = input.Current.c.ToString();
-
-            while (input.MoveNext())
-            {
-                if (ManySkip(input))
-                    break;
-                buf += input.Current.c;
-            }
-            return new Token(TokenType.UnKnown, buf, indexedChar.position);
-
-        }
-
-        static Func<IndexedCharInput, Token> GetTokenTest(TokenType tokenType, Func<int, char, TestResult> test)
-        {
-
-            return input =>
-            {
-                var backUpIndex = input.Index;
-                var firstIndexedChar = input.Current;
-                var buf = "";
-                var isContinue = false;
-
-                while (input.IsEnd == false)
-                {
-                    var indexedChar = input.Current;
-                    var testResult = test(input.Index - backUpIndex, indexedChar.c);
-                    if (testResult == TestResult.End)
-                        break;
-
-                    isContinue = testResult == TestResult.Continue;
-
-                    buf += indexedChar.c;
-                    input.MoveNext();
-                }
-
-                if (string.IsNullOrEmpty(buf))
-                    return null;
-
-                if (isContinue)
-                {
-                    input.SetIndex(backUpIndex);
-                    return null;
-                }
-
-                return new Token(tokenType, buf, firstIndexedChar.position);
-            };
-        }
-
         static bool IsLowerLetter(char c)
         {
             return char.IsLetter(c) && char.IsLower(c);
@@ -389,13 +214,6 @@ namespace MarineLang.LexicalAnalysis
         static bool IsIdChar(char c)
         {
             return char.IsDigit(c) || IsLowerLetter(c) || c == '_';
-        }
-
-        enum TestResult
-        {
-            Pass,
-            End,
-            Continue
         }
     }
 }
