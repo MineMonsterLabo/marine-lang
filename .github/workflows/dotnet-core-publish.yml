@@ -21,7 +21,7 @@ jobs:
         dotnet-version: 3.1.301
 
     - name: Update Nuget
-      run: nuget update -self
+      run: sudo nuget update -self
 
     - name: Submodule Init
       run: git submodule update -i
