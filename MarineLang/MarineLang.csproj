@@ -1,23 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>elipmoc</Authors>
     <Company>MineMonsterLabo</Company>
     <Description>Unityで簡易でパワフルなスクリプト言語
 (Simple and powerful scripting language in Unity)</Description>
     <Copyright>elipmoc</Copyright>
-    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/MineMonsterLabo/marine-lang</PackageProjectUrl>
     <Title>MarineLang</Title>
-    <PackageLicenseUrl>https://github.com/MineMonsterLabo/marine-lang/blob/develop/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/MineMonsterLabo/marine-lang</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>script scripting</PackageTags>
 
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +24,12 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
+
+  <Target Name="Change Version" AfterTargets="GitInfo" DependsOnTargets="GitInfo">
+    <PropertyGroup>
+      <PackageVersion>$(GitBaseVersionMajor).$(GitSemVerMinor).$(GitSemVerPatch)-alpha</PackageVersion>
+    </PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\MineUtil\MineUtil\MineUtil.csproj" />
