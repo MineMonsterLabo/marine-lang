@@ -20,7 +20,7 @@ echo "release version hash ${COMMIT_COUNT}"
 
 # dotnet pack MarineLang/MarineLang.csproj -c Release -o build/artifacts -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:PackageVersion="${TAG_VERSION}.${COMMIT_COUNT}"
 # dotnet pack MarineLang/MarineLang.csproj --include-source --include-symbols -o build/artifacts -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:PackageVersion="${TAG_VERSION}.${COMMIT_COUNT}"
-nuget pack MarineLang/MarineLang.csproj -IncludeReferencedProjects -Symbols -SymbolPackageFormat snupkg -OutputFileNamesWithoutVersion
+nuget pack MarineLang/MarineLang.csproj -Build -IncludeReferencedProjects -Symbols -SymbolPackageFormat snupkg -OutputFileNamesWithoutVersion
 
 echo "package created"
 
