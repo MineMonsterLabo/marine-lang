@@ -4,7 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>elipmoc</Authors>
     <Company>MineMonsterLabo</Company>
-    <Version>0.1.0-alpha</Version>
     <Description>Unityで簡易でパワフルなスクリプト言語
 (Simple and powerful scripting language in Unity)</Description>
     <Copyright>elipmoc</Copyright>
@@ -15,9 +14,17 @@
     <RepositoryUrl>https://github.com/MineMonsterLabo/marine-lang</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>script scripting</PackageTags>
+
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="GitInfo" Version="2.1.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
