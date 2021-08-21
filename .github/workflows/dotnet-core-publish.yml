@@ -12,16 +12,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+    - uses: actions/checkout@v1
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.301
 
     - name: Update Nuget
-      run: nuget update -self
+      run: sudo nuget update -self
 
     - name: Submodule Init
       run: git submodule update -i
