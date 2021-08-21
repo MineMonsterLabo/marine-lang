@@ -25,14 +25,29 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
-  <Target Name="Change Version" AfterTargets="GitInfo" DependsOnTargets="GitInfo">
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <Target Name="ChangeVersion" BeforeTargets="Build" DependsOnTargets="GitInfo">
     <PropertyGroup>
+      <Version>$(GitBaseVersionMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
       <PackageVersion>$(GitBaseVersionMajor).$(GitSemVerMinor).$(GitSemVerPatch)-alpha</PackageVersion>
     </PropertyGroup>
   </Target>
 
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <ItemGroup>
+      <_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)"/>
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
-    <ProjectReference Include="..\MineUtil\MineUtil\MineUtil.csproj" />
+    <ProjectReference Include="..\MineUtil\MineUtil\MineUtil.csproj" PrivateAssets="All"/>
   </ItemGroup>
 
 </Project>
