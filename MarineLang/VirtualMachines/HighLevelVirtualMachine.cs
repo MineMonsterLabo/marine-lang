@@ -33,6 +33,11 @@ namespace MarineLang.VirtualMachines
             GlobalVariableRegister("action_object_generator", new ActionObjectGenerator(this));
         }
 
+        public bool ContainsMarineFunc(IEnumerable<string> namespaceStrings,string funcName)
+        {
+            return ILGeneratedData?.namespaceTable?.ContainFunc(namespaceStrings, funcName) ?? false;
+        }
+
         public bool ContainsMarineFunc(string funcName)
         {
             return ILGeneratedData?.namespaceTable?.ContainFunc(funcName) ?? false;
