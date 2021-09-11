@@ -86,12 +86,11 @@ namespace MarineLang.SyntaxAnalysis
                         Parse.Except(Parse.End)
                         .NamedError(ErrorCode.SyntaxNonFuncParen)
                     )
-
                     .Bind(funcNameToken =>
-                         ParseVariableList().Try()
+                         ParseVariableList()
                          .NamedError(ErrorCode.SyntaxNonFuncParen, funcNameToken.rangePosition)
                          .Bind(varList =>
-                            ParserExtensions.Try(ParseFuncBody(TokenType.End))
+                            ParseFuncBody(Parse.Or(ParseToken(TokenType.End), ParseToken(TokenType.Func)))
                             .Map(pair => FuncDefinitionAst.Create(headToken, funcNameToken.text, varList, pair.statementAsts, pair.endToken))
                          )
                      )
@@ -102,7 +101,7 @@ namespace MarineLang.SyntaxAnalysis
                     .Left(
                         ParseToken(TokenType.End)
                         .NamedError(ErrorCode.SyntaxNonEndWord)
-                    ).Debug()
+                    )
                     (input);
             };
         }
@@ -137,10 +136,10 @@ namespace MarineLang.SyntaxAnalysis
                 };
         }
 
-        public Parse.Parser<Block> ParseFuncBody(TokenType endTokenType)
+        public Parse.Parser<Block> ParseFuncBody(Parse.Parser<Token> parser)
         {
             return
-                from statementAsts in Parse.UntilStackConsumeError(ParseStatement, ParseToken(endTokenType).NoConsume())
+                from statementAsts in Parse.UntilStackConsumeError(ParseStatement, parser.NoConsume())
                 from endToken in Parse.LastCurrent.NoConsume()
                 select new Block
                 {
@@ -730,7 +729,7 @@ namespace MarineLang.SyntaxAnalysis
                         ParseToken(TokenType.OrOp).Map(_ => new VariableAst[] { }),
                         ParseActionVariableList()
                     ),
-                    ParseFuncBody(TokenType.RightCurlyBracket),
+                    ParseFuncBody(ParseToken(TokenType.RightCurlyBracket)),
                     ParseToken(TokenType.RightCurlyBracket)
                 )
                 .Map(pair =>
