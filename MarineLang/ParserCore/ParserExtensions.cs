@@ -13,8 +13,8 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                if (result.TryGetError(out var parseErrorInfo))
-                    return result.Error<T>(func(result.Remain.RangePosition));
+                if (result.Result.IsError)
+                    return result.ReplaceError<T>(func(result.Remain.RangePosition));
                 return result;
             };
         }
@@ -40,10 +40,9 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                input = result.Remain;
-                if (result.TryGetError(out var parseErrorInfo))
-                    return result.Error<TT>(parseErrorInfo);
-                return parser2(input);
+                if (result.Result.IsError)
+                    return result.CastError<TT>();
+                return result.ChainRight(parser2(result.Remain));
             };
         }
 
@@ -52,15 +51,11 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                input = result.Remain;
                 if (result.Result.IsOk)
                 {
-                    var result2 = parser2(result.Remain);
-                    input = result2.Remain;
-                    if (result2.Result.IsError)
-                        return result2.Error<T>(result2.Result.RawError);
+                    return result.ChainLeft(parser2(result.Remain));
                 }
-                return new ParseResult<T, I>(result.Result, input);
+                return result;
             };
         }
 
@@ -69,9 +64,9 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                if (result.TryGetError(out var parseErrorInfo))
-                    return ParseResult.Error<TT, I>(parseErrorInfo, result.Remain);
-                return func(result.Result.RawValue)(result.Remain);
+                if (result.Result.IsError)
+                    return result.CastError<TT>();
+                return result.ChainRight(func(result.Result.RawValue)(result.Remain));
             };
         }
 
@@ -88,9 +83,9 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                if (result.TryGetError(out var parseErrorInfo))
-                    return result.Error<TT>(parseErrorInfo);
-                return new ParseResult<TT, I>(func(result.Result.RawValue), result.Remain);
+                if (result.Result.IsError)
+                    return result.CastError<TT>();
+                return result.SetResult(func(result.Result.RawValue));
             };
         }
 
@@ -105,7 +100,7 @@ namespace MarineLang.ParserCore
             {
                 var result = parser(input);
                 if (result.Result.IsError)
-                    return result.Ok(func(result));
+                    return ParseResult.NewOk(func(result), result.Remain);
                 return result;
             };
         }
@@ -122,8 +117,8 @@ namespace MarineLang.ParserCore
                 {
                     var parseResult = parser(input);
 
-                    if (parseResult.TryGetError(out var parseErrorInfo))
-                        return ParseResult.Error<T, I>(parseErrorInfo, input);
+                    if (parseResult.Result.IsError)
+                        return parseResult.SetRemain(input);
 
                     return parseResult;
                 };
@@ -131,7 +126,7 @@ namespace MarineLang.ParserCore
 
         public static Parse<I>.Parser<T> NoConsume<T, I>(this Parse<I>.Parser<T> parser)
         {
-            return input => new ParseResult<T, I>(parser(input).Result, input);
+            return input => parser(input).SetRemain(input);
         }
 
         public static Parse<I>.Parser<T> Default<T, I>(this Parse<I>.Parser<T> parser, T defaultValue)
@@ -141,7 +136,7 @@ namespace MarineLang.ParserCore
                 var parseResult = parser(input);
                 if (parseResult.Result.IsError)
                 {
-                    return parseResult.Ok(defaultValue);
+                    return ParseResult.NewOk(defaultValue, parseResult.Remain);
                 }
                 return parseResult;
             };
@@ -152,25 +147,26 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var list = new List<T>();
+                var parseResult = ParseResult.NewOk(default(T), input);
+
                 foreach (var parser in parsers)
                 {
-                    var parseResult = parser(input);
-                    input = parseResult.Remain;
-                    if (parseResult.TryGetError(out var parseErrorInfo))
+                    parseResult = parseResult.ChainRight(parser(parseResult.Remain));
+                    if (parseResult.Result.IsError)
                     {
-                        return parseResult.Error<List<T>>(parseErrorInfo);
+                        return parseResult.CastError<List<T>>();
                     }
                     list.Add(parseResult.Result.Unwrap());
                 }
-                return ParseResult.Ok(list, input);
+                return parseResult.Ok(list);
             };
         }
 
-        public static Parse<I>.Parser<T> Where<T, I>(this Parse<I>.Parser<T> parser,Func<T,bool> predicate)
+        public static Parse<I>.Parser<T> Where<T, I>(this Parse<I>.Parser<T> parser, Func<T, bool> predicate)
         {
             return parser.BindResult(
-                t => predicate(t) ? 
-                    Result.Ok<T, ParseErrorInfo>(t) : 
+                t => predicate(t) ?
+                    Result.Ok<T, ParseErrorInfo>(t) :
                     Result.Error<T, ParseErrorInfo>(new ParseErrorInfo())
             );
         }
@@ -178,6 +174,15 @@ namespace MarineLang.ParserCore
         public static Parse<I>.Parser<string> Text<I>(this Parse<I>.Parser<IEnumerable<char>> parser)
         {
             return parser.Map(string.Concat);
+        }
+
+        public static Parse<I>.Parser<T> Debug<T, I>(this Parse<I>.Parser<T> parser)
+        {
+            return input =>
+            {
+                var result = parser(input);
+                return result;
+            };
         }
     }
 }

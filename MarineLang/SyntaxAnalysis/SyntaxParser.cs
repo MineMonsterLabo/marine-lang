@@ -60,10 +60,10 @@ namespace MarineLang.SyntaxAnalysis
         Parse.Parser<ProgramAst> InternalParseProgram()
         {
             return
-                Parse.ManyUntilEnd(
+                Parse.ManyUntilEndStackConsumeError(
                    Parse.Or(
                        ParseMacroFuncDefinitions(),
-                       ParseFuncDefinition.Try().Map(funcDefinition => new[] { funcDefinition })
+                       ParseFuncDefinition.Map(funcDefinition => new[] { funcDefinition })
                    )
                 )
                 .Map(funcDefinitions => funcDefinitions.SelectMany(x => x).ToArray())
@@ -86,15 +86,18 @@ namespace MarineLang.SyntaxAnalysis
                         Parse.Except(Parse.End)
                         .NamedError(ErrorCode.SyntaxNonFuncParen)
                     )
-
                     .Bind(funcNameToken =>
-                         ParseVariableList().Try()
+                         ParseVariableList()
                          .NamedError(ErrorCode.SyntaxNonFuncParen, funcNameToken.rangePosition)
                          .Bind(varList =>
-                            ParserExtensions.Try(ParseFuncBody(TokenType.End))
+                            ParseFuncBody(Parse.Or(ParseToken(TokenType.End), ParseToken(TokenType.Func)))
                             .Map(pair => FuncDefinitionAst.Create(headToken, funcNameToken.text, varList, pair.statementAsts, pair.endToken))
                          )
                      )
+                    .Left(
+                        Parse.Except(ParseToken(TokenType.Func).NoConsume())
+                        .NamedError(ErrorCode.SyntaxNonExpectedFuncWord)
+                    )
                     .Left(
                         ParseToken(TokenType.End)
                         .NamedError(ErrorCode.SyntaxNonEndWord)
@@ -133,10 +136,10 @@ namespace MarineLang.SyntaxAnalysis
                 };
         }
 
-        public Parse.Parser<Block> ParseFuncBody(TokenType endTokenType)
+        public Parse.Parser<Block> ParseFuncBody(Parse.Parser<Token> parser)
         {
             return
-                from statementAsts in Parse.Until(ParseStatement, ParseToken(endTokenType).NoConsume())
+                from statementAsts in Parse.UntilStackConsumeError(ParseStatement, parser.NoConsume())
                 from endToken in Parse.LastCurrent.NoConsume()
                 select new Block
                 {
@@ -338,42 +341,53 @@ namespace MarineLang.SyntaxAnalysis
             return Parse.Or(ParseStaticTerm().Try(), expr);
         }
 
+        public Parse.Parser<ExprAst> ParseDotTermExpr(ExprAst instance)
+        {
+           return from expr in
+                Parse.Or<ExprAst>(
+                    from awaitToken in ParseToken(TokenType.Await)
+                    select AwaitAst.Create(awaitToken, instance)
+                    ,
+                    from funcCall in ParseFuncCall().Try()
+                    select InstanceFuncCallAst.Create(instance, funcCall)
+                    ,
+                    from variable in ParseVariable
+                    select InstanceFieldAst.Create(instance, variable)
+                )
+            select expr;
+        }
+
         public Parse.Parser<ExprAst> ParseDotTerms(ExprAst instance)
         {
-            var dotTermParser =
-                from dotOpToken in ParseToken(TokenType.DotOp)
-                from expr in
-                        Parse.Or<ExprAst>(
-                            from awaitToken in ParseToken(TokenType.Await)
-                            select AwaitAst.Create(awaitToken, instance),
-                            from funcCall in ParseFuncCall().Try()
-                            select InstanceFuncCallAst.Create(instance, funcCall),
-                            from variable in ParseVariable
-                            select InstanceFieldAst.Create(instance, variable)
-                        )
-                select expr;
+            var dotParser = ParseToken(TokenType.DotOp);
 
             return input =>
             {
-                while (input.IsEnd == false)
+                var parseResult = ParseResult.NewOk(instance, input);
+
+                while (parseResult.Remain.IsEnd == false)
                 {
-                    var result = dotTermParser(input);
-                    input = result.Remain;
+                    var parseResult2 = dotParser(parseResult.Remain);
 
-                    if (result.Result.IsError)
-                        break;
-                    instance = result.Result.RawValue;
-                    if (input.IsEnd)
+                    if (parseResult2.Result.IsError)
                         break;
 
-                    var result2 = ParseIndexers(false)(input);
-                    input = result2.Remain;
+                    parseResult = parseResult.ChainLeft(parseResult2);
 
-                    if (result2.Result.IsError)
-                        return result2.Error<ExprAst>(result2.Result.RawError);
-                    instance = result2.Result.RawValue.Aggregate(instance, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
+                    parseResult = parseResult.ChainRight(ParseDotTermExpr(parseResult.Result.RawValue)(parseResult.Remain));
+
+                    if (parseResult.Remain.IsEnd || parseResult.Result.IsError)
+                        break;
+
+                    var parseResult3 = parseResult.ChainRight(ParseIndexers(false)(parseResult.Remain));
+
+                    if (parseResult3.Result.IsError)
+                        return parseResult3.CastError<ExprAst>();
+                    var instance2 = parseResult3.Result.RawValue.Aggregate(parseResult.Result.RawValue, (acc, x) => GetIndexerAst.Create(acc, x.Item2, x.Item3));
+
+                    parseResult = parseResult3.Ok(instance2);
                 }
-                return ParseResult.Ok(instance, input);
+                return parseResult;
             };
         }
 
@@ -687,20 +701,19 @@ namespace MarineLang.SyntaxAnalysis
                        input =>
                        {
                            var semicolonResult = ParseToken(TokenType.Semicolon)(input);
-                           input = semicolonResult.Remain;
                            if (semicolonResult.Result.IsError)
-                               return semicolonResult.Ok(
-                                   ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, exprs.Length)
+                               return ParseResult.NewOk(
+                                   ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, exprs.Length),
+                                   semicolonResult.Remain
                                );
 
-                           var sizeResult = ParseInt(input);
-                           input = sizeResult.Remain;
+                           var sizeResult = semicolonResult.ChainRight(ParseInt(semicolonResult.Remain));
 
                            var result =
                               from size in sizeResult.Result
                               select ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, (int)size.value);
 
-                           return new ParseResult<ArrayLiteralAst.ArrayLiteralExprs, Token>(result, input);
+                           return sizeResult.SetResult(result);
                        }
                     ),
                     ParseToken(TokenType.RightBracket)
@@ -716,7 +729,7 @@ namespace MarineLang.SyntaxAnalysis
                         ParseToken(TokenType.OrOp).Map(_ => new VariableAst[] { }),
                         ParseActionVariableList()
                     ),
-                    ParseFuncBody(TokenType.RightCurlyBracket),
+                    ParseFuncBody(ParseToken(TokenType.RightCurlyBracket)),
                     ParseToken(TokenType.RightCurlyBracket)
                 )
                 .Map(pair =>

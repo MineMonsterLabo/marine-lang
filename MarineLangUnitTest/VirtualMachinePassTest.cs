@@ -684,9 +684,9 @@ end", 1)]
             var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
             var parseResult = parser.Parse(lexer.GetTokens("fun hoge() ret 5 end"));
 
-            vm.LoadProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.programAst);
             parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 3 end"));
-            vm.LoadProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.programAst);
             vm.Compile();
 
             Assert.Equal(5, vm.Run<int>("hoge").Eval());
@@ -694,7 +694,7 @@ end", 1)]
 
             vm.ClearAllPrograms();
             parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 30 end"));
-            vm.LoadProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.programAst);
             vm.Compile();
 
             Assert.Equal(30, vm.Run<int>("fuga").Eval());
@@ -710,16 +710,16 @@ end", 1)]
             var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
 
             var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 25 end"));
-            vm.LoadProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.programAst);
 
             parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret 2525 end"));
-            vm.LoadProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.programAst);
 
             parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
-            vm.LoadProgram(new[] { "hoge" }, parseResult.Unwrap());
+            vm.LoadProgram(new[] { "hoge" }, parseResult.programAst);
 
             parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new[] { "hoge", "fuga" }, parseResult.Unwrap());
+            vm.LoadProgram(new[] { "hoge", "fuga" }, parseResult.programAst);
 
             vm.Compile();
 
@@ -738,13 +738,13 @@ end", 1)]
 
             var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
             var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end"));
-            vm.LoadProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.programAst);
 
             parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
-            vm.LoadProgram(new[] { "hoge" }, parseResult.Unwrap());
+            vm.LoadProgram(new[] { "hoge" }, parseResult.programAst);
 
             parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new[] { "aaa","ppp" }, parseResult.Unwrap());
+            vm.LoadProgram(new[] { "aaa","ppp" }, parseResult.programAst);
 
             vm.Compile();
 
@@ -761,13 +761,13 @@ end", 1)]
             var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
 
             var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
-            vm.LoadProgram(new[] { "hoge" }, parseResult.Unwrap());
+            vm.LoadProgram(new[] { "hoge" }, parseResult.programAst);
 
             parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new[] { "aaa", "ppp" }, parseResult.Unwrap());
+            vm.LoadProgram(new[] { "aaa", "ppp" }, parseResult.programAst);
 
             parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end"));
-            vm.LoadProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.programAst);
 
             vm.Compile();
 

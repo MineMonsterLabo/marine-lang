@@ -4,6 +4,7 @@ using System.IO;
 using MarineLang.LexicalAnalysis;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
+using System.Linq;
 
 namespace Example
 {
@@ -50,16 +51,19 @@ namespace Example
             }
             Console.WriteLine("");
 
-            var parserResult = new SyntaxAnalyzer().Parse(tokens);
+            var syntaxParseResult = new SyntaxAnalyzer().Parse(tokens);
 
-            if (parserResult.IsError)
+            if (syntaxParseResult.IsError)
             {
                 Console.WriteLine("パースエラー");
-                Console.WriteLine(parserResult.RawError.FullErrorMessage);
+                foreach (var parseErrorInfo in syntaxParseResult.parseErrorInfos)
+                {
+                    Console.WriteLine(parseErrorInfo.FullErrorMessage);
+                }
                 return;
             }
 
-            vm.LoadProgram(parserResult.RawValue);
+            vm.LoadProgram(syntaxParseResult.programAst);
             vm.Compile();
         }
 
