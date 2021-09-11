@@ -12,6 +12,23 @@ namespace MarineLang.VirtualMachines
             return funcILIndexDict.ContainsKey(funcName);
         }
 
+        public bool ContainFunc(IEnumerable<string> namespaceStrings, string funcName)
+        {
+            return ContainFunc(namespaceStrings.GetEnumerator(), funcName);
+        }
+
+        public bool ContainFunc(IEnumerator<string> namespaceStrings, string funcName)
+        {
+            if (namespaceStrings.MoveNext())
+            {
+                return
+                    childrenNamespaceTableDict.ContainsKey(namespaceStrings.Current) &&
+                    childrenNamespaceTableDict[namespaceStrings.Current].ContainFunc(namespaceStrings, funcName);
+            }
+
+            return funcILIndexDict.ContainsKey(funcName);
+        }
+
         public IEnumerable<NamespaceTable> GetChildrenNamespaces()
         {
             return childrenNamespaceTableDict.Values;
