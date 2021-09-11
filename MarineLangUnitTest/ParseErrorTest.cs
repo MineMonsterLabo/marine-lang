@@ -27,6 +27,14 @@ namespace MarineLangUnitTest
             Assert.Equal(new RangePosition(new Position(startLine, startColumn), new Position(endLine, endColumn)), error.ErrorRangePosition);
         }
 
+        internal void ErrorCheckHelper(SyntaxParseResult result,int errorIndex, int startLine, int startColumn, int endLine, int endColumn, ErrorCode expectedErrorCode)
+        {
+            Assert.True(result.IsError);
+            var error = result.parseErrorInfos.ElementAt(errorIndex);
+            Assert.Equal(expectedErrorCode, error.ErrorCode);
+            Assert.Equal(new RangePosition(new Position(startLine, startColumn), new Position(endLine, endColumn)), error.ErrorRangePosition);
+        }
+
         [Theory]
         [InlineData("func", 1, 1,1,5)]
         [InlineData(" func", 1, 2,1,6)]
@@ -114,6 +122,29 @@ hoge(111) end", 2, 1, 2, 5)]
         public void ErrorNonLetEqual(string str, int startLine, int startColumn, int endLine, int endColumn)
         {
             ErrorCheckHelper(str, startLine, startColumn, endLine, endColumn, ErrorCode.SyntaxNonLetEqual);
+        }
+
+        [Theory]
+        [InlineData("fun hoge() ret 77 fun fuga() ret 55")]
+        public void MultiErrorTest1(string str)
+        {
+            var result = ParseHelper(str);
+            Assert.Equal(2, result.parseErrorInfos.Count());
+
+            ErrorCheckHelper(result, 0, 1, 19, 1, 22, ErrorCode.SyntaxNonExpectedFuncWord);
+            ErrorCheckHelper(result, 1, 1, 34, 1, 36, ErrorCode.SyntaxNonEndWord);
+        }
+
+        [Theory]
+        [InlineData("fun hoge() let ret")]
+        public void MultiErrorTest2(string str)
+        {
+            var result = ParseHelper(str);
+            Assert.Equal(3, result.parseErrorInfos.Count());
+
+            ErrorCheckHelper(result, 0, 1, 16, 1, 19, ErrorCode.SyntaxNonLetVarName);
+            ErrorCheckHelper(result, 1, 1, 16, 1, 19, ErrorCode.SyntaxNonRetExpr);
+            ErrorCheckHelper(result, 2, 1, 16, 1, 19, ErrorCode.SyntaxNonEndWord);
         }
 
     }
