@@ -28,10 +28,10 @@ namespace MarineLangUnitTest.Helper
             var tokens = lexer.GetTokens(str).ToArray();
             var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
-                throw new Exception(parseResult.UnwrapError().FullErrorMessage);
+                throw new Exception(string.Concat(parseResult.parseErrorInfos.Select(x => x.FullErrorMessage)));
             var vm = new HighLevelVirtualMachine();
 
-            vm.LoadProgram(parseResult.Unwrap());
+            vm.LoadProgram(parseResult.programAst);
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Ret123)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Hello)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Plus)));

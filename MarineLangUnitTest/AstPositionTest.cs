@@ -1,16 +1,13 @@
 ﻿using MarineLang.LexicalAnalysis;
 using MarineLang.Models;
-using MarineLang.Models.Asts;
-using MarineLang.Models.Errors;
 using MarineLang.SyntaxAnalysis;
-using MineUtil;
 using Xunit;
 
 namespace MarineLangUnitTest
 {
     public class AstPositionTest
     {
-        public IResult<ProgramAst, ParseErrorInfo> ParseHelper(string str)
+        public SyntaxParseResult ParseHelper(string str)
         {
             var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
@@ -41,9 +38,9 @@ end", 2, 1, 7, 4)]
             var result = ParseHelper(str);
 
             Assert.False(result.IsError);
-            Assert.NotNull(result.Unwrap());
-            Assert.Equal(new Position(startLine, startColumn), result.Unwrap().Range.Start);
-            Assert.Equal(new Position(endLine, endColumn), result.Unwrap().Range.End);
+            Assert.NotNull(result.programAst);
+            Assert.Equal(new Position(startLine, startColumn), result.programAst.Range.Start);
+            Assert.Equal(new Position(endLine, endColumn), result.programAst.Range.End);
         }
     }
 }

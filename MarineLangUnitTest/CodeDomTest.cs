@@ -2,16 +2,14 @@
 using MarineLang.LexicalAnalysis;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
-using MarineLang.Models.Errors;
 using MarineLang.SyntaxAnalysis;
-using MineUtil;
 using Xunit;
 
 namespace MarineLangUnitTest
 {
     public class CodeDomTest
     {
-        public IResult<ProgramAst, ParseErrorInfo> ParseHelper(string str)
+        public SyntaxParseResult ParseHelper(string str)
         {
             var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();

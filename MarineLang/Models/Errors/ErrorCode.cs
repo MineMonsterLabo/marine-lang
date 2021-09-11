@@ -4,6 +4,7 @@ namespace MarineLang.Models.Errors
 {
     public enum ErrorCode
     {
+        SyntaxNonExpectedFuncWord,
         SyntaxNonEndWord,
         SyntaxNonFuncWord,
         SyntaxNonFuncName,
@@ -25,6 +26,8 @@ namespace MarineLang.Models.Errors
         {
             switch (errorCode)
             {
+                case ErrorCode.SyntaxNonExpectedFuncWord:
+                    return "関数をendで終わらせてからfunを指定してください";
                 case ErrorCode.SyntaxNonEndWord:
                     return "関数の終わりにendがありません";
                 case ErrorCode.SyntaxNonFuncWord:

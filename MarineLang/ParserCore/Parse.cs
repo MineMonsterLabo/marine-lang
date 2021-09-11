@@ -21,10 +21,14 @@ namespace MarineLang.ParserCore
 
                     while (parseResult.Remain.IsEnd == false)
                     {
-                        parseResult = parseResult.ChainRight(parser(parseResult.Remain));
+                        var parseResult2 = parseResult.ChainRight(parser(parseResult.Remain));
 
-                        if (parseResult.Result.IsError)
+                        if (parseResult2.Result.IsError)
+                        {
+                            parseResult = parseResult.SetRemain(parseResult2.Remain);
                             break;
+                        }
+                        parseResult = parseResult2;
                         list.Add(parseResult.Result.Unwrap());
                     }
                     return parseResult.Ok(list);
@@ -44,6 +48,34 @@ namespace MarineLang.ParserCore
                         parseResult = parseResult.ChainRight(parser(parseResult.Remain));
                         if (parseResult.Result.IsError)
                             return parseResult.CastError<List<T>>();
+                        list.Add(parseResult.Result.Unwrap());
+                    }
+                    return parseResult.Ok(list);
+                };
+        }
+
+        public static Parser<List<T>> ManyUntilEndStackConsumeError<T>(Parser<T> parser)
+        {
+            return
+                input =>
+                {
+                    var list = new List<T>();
+                    var parseResult = ParseResult.NewOk(default(T), input);
+
+                    while (parseResult.Remain.IsEnd == false)
+                    {
+                        var parseResult2 = parseResult.ChainRight(parser(parseResult.Remain));
+
+                        if (parseResult2.Result.IsError && parseResult.Remain.Index == parseResult2.Remain.Index)
+                            return parseResult2.CastError<List<T>>();
+
+                        if (parseResult2.Result.IsError)
+                        {
+                            parseResult = parseResult2.Ok(parseResult.Result.RawValue);
+                            continue;
+                        }
+
+                        parseResult = parseResult2;
                         list.Add(parseResult.Result.Unwrap());
                     }
                     return parseResult.Ok(list);
@@ -164,15 +196,29 @@ namespace MarineLang.ParserCore
 
                 while (parseResult.Remain.IsEnd == false)
                 {
-                     parseResult = parseResult.ChainLeft(separateParser(parseResult.Remain));
-                    if (isFirst == false && parseResult.Result.IsError)
+                    var parseResult2 = parseResult.ChainLeft(separateParser(parseResult.Remain));
+
+                    if (isFirst == false && parseResult2.Result.IsError)
+                    {
+                        parseResult = parseResult.SetRemain(parseResult2.Remain);
                         break;
-                    parseResult = parseResult.ChainRight(parser(parseResult.Remain));
-                    if (parseResult.Result.IsError && isFirst == false)
-                        return parseResult.CastError<T[]>();
+                    }
+
+                    parseResult2 = parseResult.ChainRight(parser(parseResult2.Remain));
+
+                    if (parseResult2.Result.IsError && isFirst == false)
+                        return parseResult2.CastError<T[]>();
+
                     isFirst = false;
-                    if (parseResult.Result.IsError)
+                    
+                    if (parseResult2.Result.IsError)
+                    {
+                        parseResult = parseResult.SetRemain(parseResult2.Remain);
                         break;
+                    }
+                    
+                    parseResult = parseResult2;
+
                     list.Add(parseResult.Result.Unwrap());
                 }
                 return parseResult.Ok(list.ToArray());
@@ -206,16 +252,56 @@ namespace MarineLang.ParserCore
 
                 while (parseResult.Remain.IsEnd == false)
                 {
-                    parseResult = parseResult.ChainLeft(until(parseResult.Remain));
-                    if (parseResult.Result.IsOk)
+                    var untilParseResult = parseResult.ChainLeft(until(parseResult.Remain));
+                    if (untilParseResult.Result.IsOk)
                     {
+                        parseResult = untilParseResult;
                         break;
                     }
+
+                    parseResult = parseResult.SetRemain(untilParseResult.Remain);
 
                     parseResult = parseResult.ChainRight(parser(parseResult.Remain));
 
                     if (parseResult.Result.IsError)
                         return parseResult.CastError<List<T>>();
+
+                    list.Add(parseResult.Result.Unwrap());
+                }
+                return parseResult.Ok(list);
+            };
+        }
+
+        public static Parser<List<T>> UntilStackConsumeError<T, TT>(Parser<T> parser, Parser<TT> until)
+        {
+            return input =>
+            {
+                var list = new List<T>();
+                var parseResult = ParseResult.NewOk(default(T), input);
+
+                while (parseResult.Remain.IsEnd == false)
+                {
+                    var untilParseResult = parseResult.ChainLeft(until(parseResult.Remain));
+                    if (untilParseResult.Result.IsOk)
+                    {
+                        parseResult = untilParseResult;
+                        break;
+                    }
+
+                    parseResult = parseResult.SetRemain(untilParseResult.Remain);
+
+                    var parseResult2 = parseResult.ChainRight(parser(parseResult.Remain));
+
+                    if (parseResult2.Result.IsError && parseResult.Remain.Index == parseResult2.Remain.Index)
+                        return parseResult.CastError<List<T>>();
+
+                    if (parseResult2.Result.IsError)
+                    {
+                        parseResult = parseResult2.Ok(parseResult.Result.RawValue);
+                        continue;
+                    }
+
+                    parseResult = parseResult2;
 
                     list.Add(parseResult.Result.Unwrap());
                 }
@@ -236,7 +322,7 @@ namespace MarineLang.ParserCore
                 var result = except(input);
                 if (result.Result.IsOk)
                     return result.Error<Unit>(new ParseErrorInfo());
-                return result.Ok(Unit.Value);
+                return ParseResult.NewOk(Unit.Value,result.Remain);
             };
         }
 

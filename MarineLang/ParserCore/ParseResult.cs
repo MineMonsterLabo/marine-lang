@@ -12,6 +12,7 @@ namespace MarineLang.ParserCore
         IParseResult<TT, I> Ok<TT>(TT value);
         IParseResult<TT, I> CastError<TT>();
         IParseResult<TT, I> Error<TT>(ParseErrorInfo error);
+        IParseResult<TT, I> ReplaceError<TT>(ParseErrorInfo error);
         IEnumerable<ParseErrorInfo> ErrorStack { get; }
         IParseResult<T, I> ChainLeft<TT>(IParseResult<TT, I> next);
         IParseResult<TT, I> ChainRight<TT>(IParseResult<TT, I> next);
@@ -65,7 +66,7 @@ namespace MarineLang.ParserCore
             );
         }
 
-        public static IParseResult<T, I> NewOk<T>(T value, IInput<I> remain)
+        public static IParseResult<T, I> NewOk(T value, IInput<I> remain)
         {
             return new ParseResult<T, I>(
                 MineUtil.Result.Ok<T, ParseErrorInfo>(value),
@@ -80,6 +81,15 @@ namespace MarineLang.ParserCore
                 MineUtil.Result.Error<TT, ParseErrorInfo>(error),
                 Remain,
                 ErrorStack.Concat(new[] { error })
+            );
+        }
+
+        public IParseResult<TT, I> ReplaceError<TT>(ParseErrorInfo error)
+        {
+            return new ParseResult<TT, I>(
+                MineUtil.Result.Error<TT, ParseErrorInfo>(error),
+                Remain,
+                ErrorStack.Take(ErrorStack.Count()-1).Concat(new[] { error })
             );
         }
 

@@ -14,7 +14,7 @@ namespace MarineLang.ParserCore
             {
                 var result = parser(input);
                 if (result.Result.IsError)
-                    return result.Error<T>(func(result.Remain.RangePosition));
+                    return result.ReplaceError<T>(func(result.Remain.RangePosition));
                 return result;
             };
         }
@@ -100,7 +100,7 @@ namespace MarineLang.ParserCore
             {
                 var result = parser(input);
                 if (result.Result.IsError)
-                    return ParseResult.NewOk(func(result),result.Remain);
+                    return ParseResult.NewOk(func(result), result.Remain);
                 return result;
             };
         }
@@ -162,11 +162,11 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parse<I>.Parser<T> Where<T, I>(this Parse<I>.Parser<T> parser,Func<T,bool> predicate)
+        public static Parse<I>.Parser<T> Where<T, I>(this Parse<I>.Parser<T> parser, Func<T, bool> predicate)
         {
             return parser.BindResult(
-                t => predicate(t) ? 
-                    Result.Ok<T, ParseErrorInfo>(t) : 
+                t => predicate(t) ?
+                    Result.Ok<T, ParseErrorInfo>(t) :
                     Result.Error<T, ParseErrorInfo>(new ParseErrorInfo())
             );
         }
@@ -174,6 +174,15 @@ namespace MarineLang.ParserCore
         public static Parse<I>.Parser<string> Text<I>(this Parse<I>.Parser<IEnumerable<char>> parser)
         {
             return parser.Map(string.Concat);
+        }
+
+        public static Parse<I>.Parser<T> Debug<T, I>(this Parse<I>.Parser<T> parser)
+        {
+            return input =>
+            {
+                var result = parser(input);
+                return result;
+            };
         }
     }
 }

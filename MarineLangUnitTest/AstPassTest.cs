@@ -1,15 +1,12 @@
 using MarineLang.LexicalAnalysis;
-using MarineLang.Models.Asts;
-using MarineLang.Models.Errors;
 using MarineLang.SyntaxAnalysis;
-using MineUtil;
 using Xunit;
 
 namespace MarineLangUnitTest
 {
     public class AstPassTest
     {
-        public IResult<ProgramAst,ParseErrorInfo> ParseHelper(string str)
+        public SyntaxParseResult ParseHelper(string str)
         {
             var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
@@ -31,8 +28,8 @@ namespace MarineLangUnitTest
             var result = ParseHelper(str);
 
             Assert.False(result.IsError);
-            Assert.NotNull(result.RawValue);
-            Assert.Empty(result.RawValue.funcDefinitionAsts);
+            Assert.NotNull(result.programAst);
+            Assert.Empty(result.programAst.funcDefinitionAsts);
         }
 
         [Theory]
@@ -46,9 +43,9 @@ namespace MarineLangUnitTest
             var result = ParseHelper(str);
 
             Assert.False(result.IsError);
-            Assert.NotNull(result.Unwrap());
-            Assert.Single(result.Unwrap().funcDefinitionAsts);
-            var funcDefinitionAst = result.Unwrap().funcDefinitionAsts[0];
+            Assert.NotNull(result.programAst);
+            Assert.Single(result.programAst.funcDefinitionAsts);
+            var funcDefinitionAst = result.programAst.funcDefinitionAsts[0];
             Assert.Equal("hoge_fuga", funcDefinitionAst.funcName);
             Assert.Empty(funcDefinitionAst.statementAsts);
         }
@@ -64,9 +61,9 @@ namespace MarineLangUnitTest
             var result = ParseHelper(str);
 
             Assert.False(result.IsError);
-            Assert.NotNull(result.Unwrap());
-            Assert.Single(result.Unwrap().funcDefinitionAsts);
-            var funcDefinitionAst = result.Unwrap().funcDefinitionAsts[0];
+            Assert.NotNull(result.programAst);
+            Assert.Single(result.programAst.funcDefinitionAsts);
+            var funcDefinitionAst = result.programAst.funcDefinitionAsts[0];
             Assert.Equal("hoge_fuga", funcDefinitionAst.funcName);
             Assert.Single(funcDefinitionAst.statementAsts);
             Assert.Equal(
@@ -83,9 +80,9 @@ namespace MarineLangUnitTest
             var result = ParseHelper(str);
 
             Assert.False(result.IsError);
-            Assert.NotNull(result.Unwrap());
-            Assert.Single(result.Unwrap().funcDefinitionAsts);
-            var funcDefinitionAst = result.Unwrap().funcDefinitionAsts[0];
+            Assert.NotNull(result.programAst);
+            Assert.Single(result.programAst.funcDefinitionAsts);
+            var funcDefinitionAst = result.programAst.funcDefinitionAsts[0];
             Assert.Equal("func", funcDefinitionAst.funcName);
             Assert.Single(funcDefinitionAst.statementAsts);
             Assert.Equal(

@@ -4,7 +4,6 @@ using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
 using MarineLang.ParserCore;
 using MineUtil;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -61,10 +60,10 @@ namespace MarineLang.SyntaxAnalysis
         Parse.Parser<ProgramAst> InternalParseProgram()
         {
             return
-                Parse.ManyUntilEnd(
+                Parse.ManyUntilEndStackConsumeError(
                    Parse.Or(
                        ParseMacroFuncDefinitions(),
-                       ParseFuncDefinition.Try().Map(funcDefinition => new[] { funcDefinition })
+                       ParseFuncDefinition.Map(funcDefinition => new[] { funcDefinition })
                    )
                 )
                 .Map(funcDefinitions => funcDefinitions.SelectMany(x => x).ToArray())
@@ -97,9 +96,13 @@ namespace MarineLang.SyntaxAnalysis
                          )
                      )
                     .Left(
+                        Parse.Except(ParseToken(TokenType.Func).NoConsume())
+                        .NamedError(ErrorCode.SyntaxNonExpectedFuncWord)
+                    )
+                    .Left(
                         ParseToken(TokenType.End)
                         .NamedError(ErrorCode.SyntaxNonEndWord)
-                    )
+                    ).Debug()
                     (input);
             };
         }
@@ -137,7 +140,7 @@ namespace MarineLang.SyntaxAnalysis
         public Parse.Parser<Block> ParseFuncBody(TokenType endTokenType)
         {
             return
-                from statementAsts in Parse.Until(ParseStatement, ParseToken(endTokenType).NoConsume())
+                from statementAsts in Parse.UntilStackConsumeError(ParseStatement, ParseToken(endTokenType).NoConsume())
                 from endToken in Parse.LastCurrent.NoConsume()
                 select new Block
                 {
@@ -700,8 +703,9 @@ namespace MarineLang.SyntaxAnalysis
                        {
                            var semicolonResult = ParseToken(TokenType.Semicolon)(input);
                            if (semicolonResult.Result.IsError)
-                               return semicolonResult.Ok(
-                                   ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, exprs.Length)
+                               return ParseResult.NewOk(
+                                   ArrayLiteralAst.ArrayLiteralExprs.Create(exprs, exprs.Length),
+                                   semicolonResult.Remain
                                );
 
                            var sizeResult = semicolonResult.ChainRight(ParseInt(semicolonResult.Remain));

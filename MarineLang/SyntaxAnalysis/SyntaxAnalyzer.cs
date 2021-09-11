@@ -3,7 +3,6 @@ using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
 using MarineLang.Inputs;
-using MineUtil;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,10 +20,26 @@ namespace MarineLang.SyntaxAnalysis
             marineParser = new SyntaxParser(pluginContainer);
         }
 
-        public IResult<ProgramAst, ParseErrorInfo> Parse(IEnumerable<Token> tokens)
+        public SyntaxParseResult Parse(IEnumerable<Token> tokens)
         {
             var input = TokenInput.Create(tokens.ToArray());
-            return marineParser.ParseProgram(input).Result;
+            var result = marineParser.ParseProgram(input);
+            return new SyntaxParseResult(result.Result.RawValue,result.ErrorStack);
+        }
+    }
+
+    public class SyntaxParseResult
+    {
+        public readonly ProgramAst programAst;
+        public readonly IEnumerable<ParseErrorInfo> parseErrorInfos;
+
+        public bool IsError => parseErrorInfos.Any();
+        public bool IsOk => !IsError;
+
+        public SyntaxParseResult(ProgramAst programAst, IEnumerable<ParseErrorInfo> parseErrorInfos)
+        {
+            this.programAst = programAst;
+            this.parseErrorInfos = parseErrorInfos;
         }
     }
 }
