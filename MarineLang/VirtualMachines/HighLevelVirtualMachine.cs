@@ -33,7 +33,7 @@ namespace MarineLang.VirtualMachines
             GlobalVariableRegister("action_object_generator", new ActionObjectGenerator(this));
         }
 
-        public bool ContainsMarineFunc(IEnumerable<string> namespaceStrings,string funcName)
+        public bool ContainsMarineFunc(IEnumerable<string> namespaceStrings, string funcName)
         {
             return ILGeneratedData?.namespaceTable?.ContainFunc(namespaceStrings, funcName) ?? false;
         }
@@ -85,8 +85,9 @@ namespace MarineLang.VirtualMachines
 
         public void Compile()
         {
-            ILGeneratedData 
-                = new ILGenerator(marineProgramUnitList).Generate(methodInfoDict, staticTypeDict, globalVariableDict.Keys.ToArray());
+            ILGeneratedData
+                = new ILGenerator(marineProgramUnitList).Generate(methodInfoDict, staticTypeDict,
+                    globalVariableDict.Keys.ToArray());
         }
 
         public void ClearAllPrograms()
@@ -100,7 +101,8 @@ namespace MarineLang.VirtualMachines
             return Run<RET>(marineFuncName, args.AsEnumerable());
         }
 
-        public MarineValue<RET> Run<RET>(IEnumerable<string> namespaceStrings, string marineFuncName, params object[] args)
+        public MarineValue<RET> Run<RET>(IEnumerable<string> namespaceStrings, string marineFuncName,
+            params object[] args)
         {
             return Run<RET>(namespaceStrings, marineFuncName, args.AsEnumerable());
         }
@@ -120,7 +122,8 @@ namespace MarineLang.VirtualMachines
             return new MarineValue<RET>(Run(Enumerable.Empty<string>(), marineFuncName, args));
         }
 
-        public MarineValue<RET> Run<RET>(IEnumerable<string> namespaceStrings, string marineFuncName, IEnumerable<object> args)
+        public MarineValue<RET> Run<RET>(IEnumerable<string> namespaceStrings, string marineFuncName,
+            IEnumerable<object> args)
         {
             return new MarineValue<RET>(Run(namespaceStrings, marineFuncName, args));
         }
@@ -163,7 +166,7 @@ namespace MarineLang.VirtualMachines
         public string CreateDumpWithString()
         {
             DumpSerializer serializer = new DumpSerializer();
-            return serializer.Serialize(globalVariableDict);
+            return serializer.Serialize(methodInfoDict, staticTypeDict, globalVariableDict);
         }
 
         private IEnumerable<object> YieldRun(LowLevelVirtualMachine lowLevelVirtualMachine)
