@@ -16,6 +16,20 @@ namespace MarineLang.VirtualMachines.Dumps.Models
         public Dictionary<string, TypeDumpModel> Types { get; } = new Dictionary<string, TypeDumpModel>();
     }
 
+    public class TypReferenceDumpModel
+    {
+        public string QualifiedName { get; }
+        public string FullName { get; }
+        public string Name { get; }
+
+        public TypReferenceDumpModel(string qualifiedName, string fullName, string name)
+        {
+            QualifiedName = qualifiedName;
+            FullName = fullName;
+            Name = name;
+        }
+    }
+
     public class TypeDumpModel
     {
         public Dictionary<string, List<MemberDumpModel>> Members { get; } =
@@ -119,15 +133,11 @@ namespace MarineLang.VirtualMachines.Dumps.Models
         }
     }
 
-    public class TypReferenceDumpModel
+    public static class DumpModelExtensions
     {
-        public string AssemblyName { get; }
-        public string FullName { get; }
-
-        public TypReferenceDumpModel(string assemblyName, string fullName)
+        public static TypeDumpModel GetTypeDumpModel(this TypReferenceDumpModel model, MarineDumpModel dumpModel)
         {
-            AssemblyName = assemblyName;
-            FullName = fullName;
+            return dumpModel.Types[model.FullName];
         }
     }
 }

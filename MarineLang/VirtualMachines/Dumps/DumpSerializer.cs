@@ -37,7 +37,7 @@ namespace MarineLang.VirtualMachines.Dumps
             if (type.FullName != null && !marineDumpModel.Types.ContainsKey(type.FullName))
                 Analyze(marineDumpModel, type);
 
-            return new TypReferenceDumpModel(type.Assembly.GetName().Name, type.FullName);
+            return new TypReferenceDumpModel(type.AssemblyQualifiedName, type.FullName, type.Name);
         }
 
         private void Analyze(MarineDumpModel marineDumpModel, Type type)
@@ -79,9 +79,8 @@ namespace MarineLang.VirtualMachines.Dumps
 
         private FieldDumpModel Analyze(MarineDumpModel marineDumpModel, FieldInfo fieldInfo)
         {
-            FieldDumpModel fieldDumpModel = new FieldDumpModel(AnalyzeReference(marineDumpModel, fieldInfo.FieldType),
+            return new FieldDumpModel(AnalyzeReference(marineDumpModel, fieldInfo.FieldType),
                 fieldInfo.IsInitOnly, fieldInfo.IsStatic);
-            return fieldDumpModel;
         }
 
         private PropertyDumpModel Analyze(MarineDumpModel marineDumpModel, PropertyInfo propertyInfo)
@@ -115,11 +114,9 @@ namespace MarineLang.VirtualMachines.Dumps
         private ParameterDumpModel Analyze(MarineDumpModel marineDumpModel, ParameterInfo parameterInfo)
         {
             bool isRef = parameterInfo.ParameterType.IsByRef && !parameterInfo.IsOut;
-            ParameterDumpModel parameterDumpModel = new ParameterDumpModel(
+            return new ParameterDumpModel(
                 AnalyzeReference(marineDumpModel, parameterInfo.ParameterType), parameterInfo.IsIn, parameterInfo.IsOut,
-                isRef, parameterInfo.RawDefaultValue);
-
-            return parameterDumpModel;
+                isRef, parameterInfo.HasDefaultValue ? parameterInfo.DefaultValue : null);
         }
     }
 }
