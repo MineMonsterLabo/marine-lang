@@ -42,7 +42,7 @@ namespace MarineLang.VirtualMachines.Dumps
 
         private void Analyze(MarineDumpModel marineDumpModel, Type type)
         {
-            TypeDumpModel typeDumpModel = marineDumpModel.Types[type.FullName] = new TypeDumpModel();
+            TypeDumpModel typeDumpModel = marineDumpModel.Types[type.FullName] = new TypeDumpModel(ConvertKind(type));
             foreach (MemberInfo memberInfo in type.GetMembers())
             {
                 var member = Analyze(marineDumpModel, memberInfo);
@@ -54,6 +54,29 @@ namespace MarineLang.VirtualMachines.Dumps
                 else
                     typeDumpModel.Members[memberInfo.Name] = new List<MemberDumpModel> { member };
             }
+        }
+
+        private TypeDumpKind ConvertKind(Type type)
+        {
+            if (type.GetConstructor(Type.EmptyTypes) == null && type.IsClass && type.IsAbstract && type.IsSealed)
+                return TypeDumpKind.StaticType;
+
+            if (type.IsClass && type.IsAbstract)
+                return TypeDumpKind.AbstractClass;
+
+            if (type.IsClass)
+                return TypeDumpKind.Class;
+
+            if (type.IsInterface)
+                return TypeDumpKind.Interface;
+
+            if (type.IsPrimitive)
+                return TypeDumpKind.Primitive;
+
+            if (type.IsValueType)
+                return TypeDumpKind.Struct;
+
+            return TypeDumpKind.Enum;
         }
 
         private MemberDumpModel Analyze(MarineDumpModel marineDumpModel, MemberInfo memberInfo)

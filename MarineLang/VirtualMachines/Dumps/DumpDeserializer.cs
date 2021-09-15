@@ -47,7 +47,7 @@ namespace MarineLang.VirtualMachines.Dumps
 
         private TypeDumpModel DeserializeType(JObject jObject)
         {
-            TypeDumpModel dumpModel = new TypeDumpModel();
+            TypeDumpModel dumpModel = new TypeDumpModel((TypeDumpKind)jObject.Value<int>("Kind"));
             JObject members = (JObject)jObject["Members"];
             foreach (var member in members)
             {

@@ -30,10 +30,28 @@ namespace MarineLang.VirtualMachines.Dumps.Models
         }
     }
 
+    public enum TypeDumpKind
+    {
+        Class,
+        AbstractClass,
+        StaticType,
+        Struct,
+        Primitive,
+        Interface,
+        Enum
+    }
+
     public class TypeDumpModel
     {
+        public TypeDumpKind Kind { get; }
+
         public Dictionary<string, List<MemberDumpModel>> Members { get; } =
             new Dictionary<string, List<MemberDumpModel>>();
+
+        public TypeDumpModel(TypeDumpKind kind)
+        {
+            Kind = kind;
+        }
     }
 
     public enum MemberDumpKind
