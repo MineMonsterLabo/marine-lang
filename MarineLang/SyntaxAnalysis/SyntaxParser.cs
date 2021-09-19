@@ -600,7 +600,7 @@ namespace MarineLang.SyntaxAnalysis
                              ParseExpr()
                              .Map(expr => ReAssignmentIndexerAst.Create(getIndexerAst, expr));
 
-                     return Parse.ErrorReturn<StatementAst>(new ParseErrorInfo());
+                     return Parse.ErrorReturn<StatementAst>(new ParseErrorInfo("ParseInstanceFieldAssignment"+ exprAst));
                  });
         }
 
@@ -621,7 +621,7 @@ namespace MarineLang.SyntaxAnalysis
                 .BindResult(token =>
                  (int.TryParse(token.text, out int value)) ?
                      Result.Ok<ValueAst, ParseErrorInfo>(ValueAst.Create(value, token)) :
-                     Result.Error<ValueAst, ParseErrorInfo>(new ParseErrorInfo())
+                     Result.Error<ValueAst, ParseErrorInfo>(new ParseErrorInfo("InternalParseInt"))
              );
         }
 
@@ -631,7 +631,7 @@ namespace MarineLang.SyntaxAnalysis
                .BindResult(token =>
                     (float.TryParse(token.text, out float value)) ?
                         Result.Ok<ValueAst, ParseErrorInfo>(ValueAst.Create(value, token)) :
-                        Result.Error<ValueAst, ParseErrorInfo>(new ParseErrorInfo())
+                        Result.Error<ValueAst, ParseErrorInfo>(new ParseErrorInfo("InternalParseFloat"))
                 );
         }
 
@@ -739,10 +739,7 @@ namespace MarineLang.SyntaxAnalysis
 
         public Parse.Parser<Token> ParseToken(TokenType tokenType)
         {
-            return Parse.Verify(token =>
-            {
-                return token.tokenType == tokenType;
-            });
+            return Parse.Expected(token => token.tokenType, tokenType);
         }
     }
 }

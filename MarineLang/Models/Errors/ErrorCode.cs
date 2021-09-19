@@ -31,7 +31,7 @@ namespace MarineLang.Models.Errors
                 case ErrorCode.SyntaxNonEndWord:
                     return "関数の終わりにendがありません";
                 case ErrorCode.SyntaxNonFuncWord:
-                    return "関数定義が間違っています";
+                    return "関数定義にはfunが必要です";
                 case ErrorCode.SyntaxNonFuncName:
                     return "関数定義に関数名がありません";
                 case ErrorCode.SyntaxNonFuncParen:

@@ -167,7 +167,7 @@ namespace MarineLang.ParserCore
             return parser.BindResult(
                 t => predicate(t) ?
                     Result.Ok<T, ParseErrorInfo>(t) :
-                    Result.Error<T, ParseErrorInfo>(new ParseErrorInfo())
+                    Result.Error<T, ParseErrorInfo>(new ParseErrorInfo("Where"))
             );
         }
 

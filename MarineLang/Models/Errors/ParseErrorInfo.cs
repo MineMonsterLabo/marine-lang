@@ -22,13 +22,6 @@
             ErrorCode = errorCode;
         }
 
-        public ParseErrorInfo(string prefixErrorMessage, RangePosition errorRangePosition = default)
-        {
-            this.prefixErrorMessage = prefixErrorMessage;
-            ErrorRangePosition = errorRangePosition;
-            ErrorCode = ErrorCode.Unknown;
-        }
-
         public ParseErrorInfo(ErrorCode errorCode = ErrorCode.Unknown)
         {
             ErrorRangePosition = default;
