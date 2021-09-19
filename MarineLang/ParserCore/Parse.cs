@@ -54,7 +54,7 @@ namespace MarineLang.ParserCore
                 };
         }
 
-        public static Parser<List<T>> ManyUntilEndStackConsumeError<T>(Parser<T> parser)
+        public static Parser<List<T>> ManyUntilEndStackError<T>(Parser<T> parser)
         {
             return
                 input =>
@@ -67,7 +67,10 @@ namespace MarineLang.ParserCore
                         var parseResult2 = parseResult.ChainRight(parser(parseResult.Remain));
 
                         if (parseResult2.Result.IsError && parseResult.Remain.Index == parseResult2.Remain.Index)
-                            return parseResult2.CastError<List<T>>();
+                        {
+                            parseResult = parseResult2.Ok(parseResult.Result.RawValue);
+                            break;
+                        }
 
                         if (parseResult2.Result.IsError)
                         {
@@ -297,7 +300,7 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<List<T>> UntilStackConsumeError<T, TT>(Parser<T> parser, Parser<TT> until)
+        public static Parser<List<T>> UntilStackError<T, TT>(Parser<T> parser, Parser<TT> until)
         {
             return input =>
             {
@@ -318,7 +321,10 @@ namespace MarineLang.ParserCore
                     var parseResult2 = parseResult.ChainRight(parser(parseResult.Remain));
 
                     if (parseResult2.Result.IsError && parseResult.Remain.Index == parseResult2.Remain.Index)
-                        return parseResult.CastError<List<T>>();
+                    {
+                        parseResult = parseResult2.Ok(parseResult.Result.RawValue);
+                        break;
+                    }
 
                     if (parseResult2.Result.IsError)
                     {
@@ -383,5 +389,6 @@ namespace MarineLang.ParserCore
 
         public static readonly Parser<I> Current = input => ParseResult.NewOk(input.Current, input.Advance());
         public static readonly Parser<I> LastCurrent = input => ParseResult.NewOk(input.LastCurrent, input.Advance());
+        public static readonly Parser<IInput<I>> Remain = input => ParseResult.NewOk(input, input);
     }
 }

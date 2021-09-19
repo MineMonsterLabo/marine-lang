@@ -124,6 +124,20 @@ namespace MarineLang.ParserCore
                 };
         }
 
+        public static Parse<I>.Parser<T> Try<T, I>(this Parse<I>.Parser<T> parser, IInput<I> remain)
+        {
+            return
+                input =>
+                {
+                    var parseResult = parser(input);
+
+                    if (parseResult.Result.IsError)
+                        return parseResult.SetRemain(remain);
+
+                    return parseResult;
+                };
+        }
+
         public static Parse<I>.Parser<T> NoConsume<T, I>(this Parse<I>.Parser<T> parser)
         {
             return input => parser(input).SetRemain(input);
@@ -174,6 +188,15 @@ namespace MarineLang.ParserCore
         public static Parse<I>.Parser<string> Text<I>(this Parse<I>.Parser<IEnumerable<char>> parser)
         {
             return parser.Map(string.Concat);
+        }
+
+        public static Parse<I>.Parser<T> StackError<T, I>(this Parse<I>.Parser<T> parser, T value)
+        {
+            return input =>
+            {
+                var result = parser(input);
+                return result.Result.IsError ? result.Ok(value) : result;
+            };
         }
 
         public static Parse<I>.Parser<T> Debug<T, I>(this Parse<I>.Parser<T> parser)
