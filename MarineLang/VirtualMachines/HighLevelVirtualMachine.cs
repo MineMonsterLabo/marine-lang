@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using MarineLang.BuildInObjects;
 using MarineLang.Models.Asts;
+using MarineLang.Models.Errors;
 using MarineLang.VirtualMachines.Dumps;
 using MarineLang.VirtualMachines.MarineILs;
 
@@ -138,19 +139,32 @@ namespace MarineLang.VirtualMachines
             var lowLevelVirtualMachine = new LowLevelVirtualMachine();
             lowLevelVirtualMachine.onStepILCallback = StepEvent;
             lowLevelVirtualMachine.Init();
-            lowLevelVirtualMachine.nextILIndex
-                = ILGeneratedData.namespaceTable.GetFuncILIndex(namespaceStrings, marineFuncName).Index;
-            foreach (var val in globalVariableDict.Values)
-                lowLevelVirtualMachine.Push(val);
-            lowLevelVirtualMachine.stackBaseCount = lowLevelVirtualMachine.GetStackCurrent();
-            foreach (var arg in args)
-                lowLevelVirtualMachine.Push(arg);
-            lowLevelVirtualMachine.Push(lowLevelVirtualMachine.stackBaseCount);
-            lowLevelVirtualMachine.Push(lowLevelVirtualMachine.nextILIndex + 1);
-            lowLevelVirtualMachine.Run(ILGeneratedData);
-            if (lowLevelVirtualMachine.yieldFlag)
-                return new MarineValue(YieldRun(lowLevelVirtualMachine));
-            return new MarineValue(lowLevelVirtualMachine.Pop());
+
+            try
+            {
+                lowLevelVirtualMachine.nextILIndex
+                    = ILGeneratedData.namespaceTable.GetFuncILIndex(namespaceStrings, marineFuncName).Index;
+                foreach (var val in globalVariableDict.Values)
+                    lowLevelVirtualMachine.Push(val);
+                lowLevelVirtualMachine.stackBaseCount = lowLevelVirtualMachine.GetStackCurrent();
+                foreach (var arg in args)
+                    lowLevelVirtualMachine.Push(arg);
+                lowLevelVirtualMachine.Push(lowLevelVirtualMachine.stackBaseCount);
+                lowLevelVirtualMachine.Push(lowLevelVirtualMachine.nextILIndex + 1);
+                lowLevelVirtualMachine.Run(ILGeneratedData);
+                if (lowLevelVirtualMachine.yieldFlag)
+                    return new MarineValue(YieldRun(lowLevelVirtualMachine));
+                return new MarineValue(lowLevelVirtualMachine.Pop());
+            }
+            catch (MarineRuntimeException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                var currentIL = ILGeneratedData.marineILs[lowLevelVirtualMachine.nextILIndex];
+                throw new MarineRuntimeException(new RuntimeErrorInfo(e.Message, errorPosition: currentIL.ILDebugInfo.position), e);
+            }
         }
 
         public void CreateDumpWithFile()

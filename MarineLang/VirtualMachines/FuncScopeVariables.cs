@@ -57,7 +57,7 @@ namespace MarineLang.VirtualMachines
                     return new StackIndex(idx2, false);
             }
 
-            throw new System.Exception("変数がそんざいしません");
+            throw new System.Exception("変数が存在しません");
         }
 
         public StackIndex CreateUnnamedLocalVariableIdx()
