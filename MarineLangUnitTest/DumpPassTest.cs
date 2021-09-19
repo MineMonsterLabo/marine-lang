@@ -47,33 +47,33 @@ namespace MarineLangUnitTest
             var fieldDumper =
                 fuga.Members.First(e => e.Key == nameof(VmCreateHelper.Fuga.member1)).Value.First() as FieldDumpModel;
             Assert.Equal(MemberDumpKind.Field, fieldDumper.Kind);
-            Assert.Equal(typeof(int).FullName, fieldDumper.TypeRef.FullName);
+            Assert.Equal(typeof(int).FullName, fieldDumper.TypeName.FullName);
 
             PropertyDumpModel propertyDumper =
                 fuga.Members.First(e => e.Key == nameof(VmCreateHelper.Fuga.Member2)).Value
                     .First() as PropertyDumpModel;
             Assert.Equal(MemberDumpKind.Property, propertyDumper.Kind);
-            Assert.Equal(typeof(string).FullName, propertyDumper.TypeRef.FullName);
+            Assert.Equal(typeof(string).FullName, propertyDumper.TypeName.FullName);
 
             MethodDumpModel methodDumper =
                 fuga.Members.First(e => e.Key == nameof(VmCreateHelper.Fuga.Plus)).Value.First() as MethodDumpModel;
             Assert.Equal(MemberDumpKind.Method, methodDumper.Kind);
-            Assert.Equal(typeof(int).FullName, methodDumper.TypeRef.FullName);
+            Assert.Equal(typeof(int).FullName, methodDumper.TypeName.FullName);
             Assert.Equal(2, methodDumper.Parameters.Count);
-            Assert.True(methodDumper.Parameters.All(e => e.Value.TypeRef.FullName == typeof(int).FullName));
+            Assert.True(methodDumper.Parameters.All(e => e.Value.TypeName.FullName == typeof(int).FullName));
 
             MethodDumpModel methodDumper2 =
                 fuga.Members.First(e => e.Key == nameof(VmCreateHelper.Fuga.DefaultAndRef)).Value.First() as
                     MethodDumpModel;
             Assert.Equal(MemberDumpKind.Method, methodDumper2.Kind);
-            Assert.Equal(typeof(int).FullName, methodDumper2.TypeRef.FullName);
+            Assert.Equal(typeof(int).FullName, methodDumper2.TypeName.FullName);
             Assert.Equal(2, methodDumper2.Parameters.Count);
             Assert.True(methodDumper2.Parameters.ElementAt(0).Value.IsRef);
             Assert.False(methodDumper2.Parameters.ElementAt(0).Value.IsOut);
             Assert.Equal(typeof(int).MakeByRefType().FullName,
-                methodDumper2.Parameters.ElementAt(0).Value.TypeRef.FullName);
+                methodDumper2.Parameters.ElementAt(0).Value.TypeName.FullName);
             Assert.True(methodDumper2.Parameters.ElementAt(1).Value.IsOptional);
-            Assert.Equal(typeof(int).FullName, methodDumper2.Parameters.ElementAt(1).Value.TypeRef.FullName);
+            Assert.Equal(typeof(int).FullName, methodDumper2.Parameters.ElementAt(1).Value.TypeName.FullName);
             Assert.Equal(1234, Convert.ToInt32(methodDumper2.Parameters.ElementAt(1).Value.DefaultValue));
         }
 

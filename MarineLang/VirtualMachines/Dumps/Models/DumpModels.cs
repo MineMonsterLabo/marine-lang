@@ -77,13 +77,13 @@ namespace MarineLang.VirtualMachines.Dumps.Models
     {
         public override MemberDumpKind Kind => MemberDumpKind.Field;
 
-        public TypeNameDumpModel TypeRef { get; }
+        public TypeNameDumpModel TypeName { get; }
 
         public bool IsInitOnly { get; }
 
-        public FieldDumpModel(TypeNameDumpModel typeRef, bool isInitOnly, bool isStatic) : base(isStatic)
+        public FieldDumpModel(TypeNameDumpModel typeName, bool isInitOnly, bool isStatic) : base(isStatic)
         {
-            TypeRef = typeRef;
+            TypeName = typeName;
 
             IsInitOnly = isInitOnly;
         }
@@ -93,7 +93,7 @@ namespace MarineLang.VirtualMachines.Dumps.Models
     {
         public override MemberDumpKind Kind => MemberDumpKind.Property;
 
-        public TypeNameDumpModel TypeRef { get; }
+        public TypeNameDumpModel TypeName { get; }
 
         public bool CanRead { get; }
         public bool CanWrite { get; }
@@ -103,10 +103,10 @@ namespace MarineLang.VirtualMachines.Dumps.Models
         public Dictionary<string, ParameterDumpModel> Parameters { get; } =
             new Dictionary<string, ParameterDumpModel>();
 
-        public PropertyDumpModel(TypeNameDumpModel typeRef, bool canRead, bool canWrite, bool isStatic) :
+        public PropertyDumpModel(TypeNameDumpModel typeName, bool canRead, bool canWrite, bool isStatic) :
             base(isStatic)
         {
-            TypeRef = typeRef;
+            TypeName = typeName;
 
             CanRead = canRead;
             CanWrite = canWrite;
@@ -117,14 +117,14 @@ namespace MarineLang.VirtualMachines.Dumps.Models
     {
         public override MemberDumpKind Kind => MemberDumpKind.Method;
 
-        public TypeNameDumpModel TypeRef { get; }
+        public TypeNameDumpModel TypeName { get; }
 
         public Dictionary<string, ParameterDumpModel> Parameters { get; } =
             new Dictionary<string, ParameterDumpModel>();
 
-        public MethodDumpModel(TypeNameDumpModel typeRef, bool isStatic) : base(isStatic)
+        public MethodDumpModel(TypeNameDumpModel typeName, bool isStatic) : base(isStatic)
         {
-            TypeRef = typeRef;
+            TypeName = typeName;
         }
     }
 
@@ -137,11 +137,11 @@ namespace MarineLang.VirtualMachines.Dumps.Models
         public bool IsOptional => DefaultValue != null;
         public object DefaultValue { get; }
 
-        public TypeNameDumpModel TypeRef { get; }
+        public TypeNameDumpModel TypeName { get; }
 
-        public ParameterDumpModel(TypeNameDumpModel typeRef, bool isIn, bool isOut, bool isRef, object defaultValue)
+        public ParameterDumpModel(TypeNameDumpModel typeName, bool isIn, bool isOut, bool isRef, object defaultValue)
         {
-            TypeRef = typeRef;
+            TypeName = typeName;
 
             IsIn = isIn;
             IsOut = isOut;
