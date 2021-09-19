@@ -4,25 +4,25 @@ namespace MarineLang.VirtualMachines.Dumps.Models
 {
     public class MarineDumpModel
     {
-        public Dictionary<string, TypReferenceDumpModel> StaticTypes { get; } =
-            new Dictionary<string, TypReferenceDumpModel>();
+        public Dictionary<string, TypeNameDumpModel> StaticTypes { get; } =
+            new Dictionary<string, TypeNameDumpModel>();
 
         public Dictionary<string, MethodDumpModel> GlobalMethods { get; } =
             new Dictionary<string, MethodDumpModel>();
 
-        public Dictionary<string, TypReferenceDumpModel> GlobalVariables { get; } =
-            new Dictionary<string, TypReferenceDumpModel>();
+        public Dictionary<string, TypeNameDumpModel> GlobalVariables { get; } =
+            new Dictionary<string, TypeNameDumpModel>();
 
         public Dictionary<string, TypeDumpModel> Types { get; } = new Dictionary<string, TypeDumpModel>();
     }
 
-    public class TypReferenceDumpModel
+    public class TypeNameDumpModel
     {
         public string QualifiedName { get; }
         public string FullName { get; }
         public string Name { get; }
 
-        public TypReferenceDumpModel(string qualifiedName, string fullName, string name)
+        public TypeNameDumpModel(string qualifiedName, string fullName, string name)
         {
             QualifiedName = qualifiedName;
             FullName = fullName;
@@ -77,11 +77,11 @@ namespace MarineLang.VirtualMachines.Dumps.Models
     {
         public override MemberDumpKind Kind => MemberDumpKind.Field;
 
-        public TypReferenceDumpModel TypeRef { get; }
+        public TypeNameDumpModel TypeRef { get; }
 
         public bool IsInitOnly { get; }
 
-        public FieldDumpModel(TypReferenceDumpModel typeRef, bool isInitOnly, bool isStatic) : base(isStatic)
+        public FieldDumpModel(TypeNameDumpModel typeRef, bool isInitOnly, bool isStatic) : base(isStatic)
         {
             TypeRef = typeRef;
 
@@ -93,7 +93,7 @@ namespace MarineLang.VirtualMachines.Dumps.Models
     {
         public override MemberDumpKind Kind => MemberDumpKind.Property;
 
-        public TypReferenceDumpModel TypeRef { get; }
+        public TypeNameDumpModel TypeRef { get; }
 
         public bool CanRead { get; }
         public bool CanWrite { get; }
@@ -103,7 +103,7 @@ namespace MarineLang.VirtualMachines.Dumps.Models
         public Dictionary<string, ParameterDumpModel> Parameters { get; } =
             new Dictionary<string, ParameterDumpModel>();
 
-        public PropertyDumpModel(TypReferenceDumpModel typeRef, bool canRead, bool canWrite, bool isStatic) :
+        public PropertyDumpModel(TypeNameDumpModel typeRef, bool canRead, bool canWrite, bool isStatic) :
             base(isStatic)
         {
             TypeRef = typeRef;
@@ -117,12 +117,12 @@ namespace MarineLang.VirtualMachines.Dumps.Models
     {
         public override MemberDumpKind Kind => MemberDumpKind.Method;
 
-        public TypReferenceDumpModel TypeRef { get; }
+        public TypeNameDumpModel TypeRef { get; }
 
         public Dictionary<string, ParameterDumpModel> Parameters { get; } =
             new Dictionary<string, ParameterDumpModel>();
 
-        public MethodDumpModel(TypReferenceDumpModel typeRef, bool isStatic) : base(isStatic)
+        public MethodDumpModel(TypeNameDumpModel typeRef, bool isStatic) : base(isStatic)
         {
             TypeRef = typeRef;
         }
@@ -137,9 +137,9 @@ namespace MarineLang.VirtualMachines.Dumps.Models
         public bool IsOptional => DefaultValue != null;
         public object DefaultValue { get; }
 
-        public TypReferenceDumpModel TypeRef { get; }
+        public TypeNameDumpModel TypeRef { get; }
 
-        public ParameterDumpModel(TypReferenceDumpModel typeRef, bool isIn, bool isOut, bool isRef, object defaultValue)
+        public ParameterDumpModel(TypeNameDumpModel typeRef, bool isIn, bool isOut, bool isRef, object defaultValue)
         {
             TypeRef = typeRef;
 
@@ -153,9 +153,10 @@ namespace MarineLang.VirtualMachines.Dumps.Models
 
     public static class DumpModelExtensions
     {
-        public static TypeDumpModel GetTypeDumpModel(this TypReferenceDumpModel model, MarineDumpModel dumpModel)
+        public static TypeDumpModel GetTypeDumpModel(this TypeNameDumpModel typeNameDumpModel,
+            MarineDumpModel dumpModel)
         {
-            return dumpModel.Types[model.FullName];
+            return dumpModel.Types[typeNameDumpModel.FullName];
         }
     }
 }

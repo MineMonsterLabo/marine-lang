@@ -10,8 +10,8 @@ namespace MarineLang.VirtualMachines.Dumps
 {
     public class DumpSerializer
     {
-        public string Serialize(IDictionary<string, MethodInfo> methodInfoDict,
-            IDictionary<string, Type> staticTypeDict, IDictionary<string, object> globalVariableDict)
+        public string Serialize(IReadOnlyDictionary<string, MethodInfo> methodInfoDict,
+            IReadOnlyDictionary<string, Type> staticTypeDict, IReadOnlyDictionary<string, object> globalVariableDict)
         {
             MarineDumpModel dumpModel = new MarineDumpModel();
             foreach (var type in staticTypeDict)
@@ -32,12 +32,12 @@ namespace MarineLang.VirtualMachines.Dumps
             return JObject.FromObject(dumpModel).ToString(Formatting.Indented);
         }
 
-        private TypReferenceDumpModel AnalyzeReference(MarineDumpModel marineDumpModel, Type type)
+        private TypeNameDumpModel AnalyzeReference(MarineDumpModel marineDumpModel, Type type)
         {
             if (type.FullName != null && !marineDumpModel.Types.ContainsKey(type.FullName))
                 Analyze(marineDumpModel, type);
 
-            return new TypReferenceDumpModel(type.AssemblyQualifiedName, type.FullName, type.Name);
+            return new TypeNameDumpModel(type.AssemblyQualifiedName, type.FullName, type.Name);
         }
 
         private void Analyze(MarineDumpModel marineDumpModel, Type type)

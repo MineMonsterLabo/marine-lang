@@ -39,9 +39,9 @@ namespace MarineLang.VirtualMachines.Dumps
             return dumpModel;
         }
 
-        private TypReferenceDumpModel DeserializeTypeReference(JObject jObject)
+        private TypeNameDumpModel DeserializeTypeReference(JObject jObject)
         {
-            return new TypReferenceDumpModel(jObject.Value<string>("QualifiedName"), jObject.Value<string>("FullName"),
+            return new TypeNameDumpModel(jObject.Value<string>("QualifiedName"), jObject.Value<string>("FullName"),
                 jObject.Value<string>("Name"));
         }
 
