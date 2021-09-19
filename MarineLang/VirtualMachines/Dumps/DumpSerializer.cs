@@ -1,100 +1,145 @@
-﻿using MarineLang.VirtualMachines.Dumps.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MarineLang.VirtualMachines.Dumps.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MarineLang.VirtualMachines.Dumps
 {
     public class DumpSerializer
     {
-        public string Serialize(IDictionary<string, object> globalVariableDict)
+        public string Serialize(IReadOnlyDictionary<string, MethodInfo> methodInfoDict,
+            IReadOnlyDictionary<string, Type> staticTypeDict, IReadOnlyDictionary<string, object> globalVariableDict)
         {
-            JObject dumps = new JObject();
-            foreach (KeyValuePair<string, object> pair in globalVariableDict)
+            MarineDumpModel dumpModel = new MarineDumpModel();
+            foreach (var type in staticTypeDict)
             {
-                dumps[pair.Key] = JObject.FromObject(SerializeClass(pair.Value));
+                dumpModel.StaticTypes.Add(type.Key, AnalyzeReference(dumpModel, type.Value));
             }
 
-            return dumps.ToString(Formatting.Indented);
-        }
-
-        private ClassDumpModel SerializeClass(object value)
-        {
-            var type = value.GetType();
-            return new ClassDumpModel(SerializeType(type), SerializeMembers(type.GetMembers()));
-        }
-
-        private MemberDumpModel[] SerializeMembers(MemberInfo[] members)
-        {
-            List<MemberDumpModel> memberList = new List<MemberDumpModel>();
-            foreach (MemberInfo member in members)
+            foreach (KeyValuePair<string, MethodInfo> method in methodInfoDict)
             {
-                switch (member)
-                {
-                    case FieldInfo fieldInfo:
-                        memberList.Add(SerializeField(fieldInfo));
-                        break;
-
-                    case PropertyInfo propertyInfo:
-                        memberList.Add(SerializeProperty(propertyInfo));
-                        break;
-
-                    case MethodInfo methodInfo:
-                        if (methodInfo.IsSpecialName)
-                            continue;
-
-                        memberList.Add(SerializeMethod(methodInfo));
-                        break;
-
-                    default:
-                        continue;
-                }
+                dumpModel.GlobalMethods.Add(method.Key, Analyze(dumpModel, method.Value));
             }
 
-            return memberList.ToArray();
-        }
-
-        private FieldDumpModel SerializeField(FieldInfo fieldInfo)
-        {
-            return new FieldDumpModel(fieldInfo.Name, SerializeType(fieldInfo.FieldType), fieldInfo.IsInitOnly, fieldInfo.IsStatic);
-        }
-
-        private PropertyDumpModel SerializeProperty(PropertyInfo propertyInfo)
-        {
-            bool isIndexer = propertyInfo.GetIndexParameters().Length > 0;
-            bool isStatic = propertyInfo.GetAccessors().Any(e => e.IsStatic);
-            if (isIndexer)
-                return new PropertyDumpModel(propertyInfo.Name, SerializeType(propertyInfo.PropertyType), propertyInfo.CanRead, propertyInfo.CanWrite, SerializeParameters(propertyInfo.GetIndexParameters()), isStatic);
-            else
-                return new PropertyDumpModel(propertyInfo.Name, SerializeType(propertyInfo.PropertyType), propertyInfo.CanRead, propertyInfo.CanWrite, isStatic);
-        }
-
-        private MethodDumpModel SerializeMethod(MethodInfo methodInfo)
-        {
-            return new MethodDumpModel(methodInfo.Name, SerializeType(methodInfo.ReturnType), SerializeParameters(methodInfo.GetParameters()), methodInfo.IsStatic);
-        }
-
-        private ParameterDumpModel[] SerializeParameters(ParameterInfo[] parameters)
-        {
-            List<ParameterDumpModel> parameterList = new List<ParameterDumpModel>();
-            foreach (ParameterInfo parameter in parameters)
+            foreach (KeyValuePair<string, object> variable in globalVariableDict)
             {
-                bool isRef = parameter.ParameterType.IsByRef && !parameter.IsOut;
-                if (parameter.IsOptional)
-                    parameterList.Add(new ParameterDumpModel(parameter.Name, SerializeType(parameter.ParameterType), parameter.IsIn, parameter.IsOut, isRef, parameter.RawDefaultValue));
+                dumpModel.GlobalVariables.Add(variable.Key, AnalyzeReference(dumpModel, variable.Value.GetType()));
+            }
+
+            return JObject.FromObject(dumpModel).ToString(Formatting.Indented);
+        }
+
+        private TypeNameDumpModel AnalyzeReference(MarineDumpModel marineDumpModel, Type type)
+        {
+            if (type.FullName != null && !marineDumpModel.Types.ContainsKey(type.FullName))
+                Analyze(marineDumpModel, type);
+
+            return new TypeNameDumpModel(type.AssemblyQualifiedName, type.FullName, type.Name);
+        }
+
+        private void Analyze(MarineDumpModel marineDumpModel, Type type)
+        {
+            TypeDumpModel typeDumpModel = marineDumpModel.Types[type.FullName] = new TypeDumpModel(ConvertKind(type));
+            foreach (MemberInfo memberInfo in type.GetMembers())
+            {
+                var member = Analyze(marineDumpModel, memberInfo);
+                if (member == null)
+                    continue;
+
+                if (typeDumpModel.Members.ContainsKey(memberInfo.Name))
+                    typeDumpModel.Members[memberInfo.Name].Add(member);
                 else
-                    parameterList.Add(new ParameterDumpModel(parameter.Name, SerializeType(parameter.ParameterType), parameter.IsIn, parameter.IsOut, isRef));
+                    typeDumpModel.Members[memberInfo.Name] = new List<MemberDumpModel> { member };
             }
-
-            return parameterList.ToArray();
         }
 
-        private TypeDumpModel SerializeType(Type type)
+        private TypeDumpKind ConvertKind(Type type)
         {
-            return new TypeDumpModel(type.AssemblyQualifiedName, type.FullName, type.Name);
+            if (type.GetConstructor(Type.EmptyTypes) == null && type.IsClass && type.IsAbstract && type.IsSealed)
+                return TypeDumpKind.StaticType;
+
+            if (type.IsClass && type.IsAbstract)
+                return TypeDumpKind.AbstractClass;
+
+            if (type.IsClass)
+                return TypeDumpKind.Class;
+
+            if (type.IsInterface)
+                return TypeDumpKind.Interface;
+
+            if (type.IsPrimitive)
+                return TypeDumpKind.Primitive;
+
+            if (type.IsValueType)
+                return TypeDumpKind.Struct;
+
+            return TypeDumpKind.Enum;
+        }
+
+        private MemberDumpModel Analyze(MarineDumpModel marineDumpModel, MemberInfo memberInfo)
+        {
+            switch (memberInfo)
+            {
+                case FieldInfo fieldInfo:
+                    return Analyze(marineDumpModel, fieldInfo);
+
+                case PropertyInfo propertyInfo:
+                    return Analyze(marineDumpModel, propertyInfo);
+
+                case MethodInfo methodInfo:
+                    if (methodInfo.IsSpecialName)
+                        return null;
+
+                    return Analyze(marineDumpModel, methodInfo);
+
+                default:
+                    return null;
+            }
+        }
+
+        private FieldDumpModel Analyze(MarineDumpModel marineDumpModel, FieldInfo fieldInfo)
+        {
+            return new FieldDumpModel(AnalyzeReference(marineDumpModel, fieldInfo.FieldType),
+                fieldInfo.IsInitOnly, fieldInfo.IsStatic);
+        }
+
+        private PropertyDumpModel Analyze(MarineDumpModel marineDumpModel, PropertyInfo propertyInfo)
+        {
+            bool isStatic = propertyInfo.GetAccessors().Any(e => e.IsStatic);
+            PropertyDumpModel propertyDumpModel = new PropertyDumpModel(
+                AnalyzeReference(marineDumpModel, propertyInfo.PropertyType), propertyInfo.CanRead,
+                propertyInfo.CanWrite, isStatic);
+            foreach (var parameter in propertyInfo.GetIndexParameters())
+            {
+                propertyDumpModel.Parameters.Add(parameter.Name, Analyze(marineDumpModel, parameter));
+            }
+
+            return propertyDumpModel;
+        }
+
+        private MethodDumpModel Analyze(MarineDumpModel marineDumpModel, MethodInfo methodInfo)
+        {
+            MethodDumpModel methodDumpModel =
+                new MethodDumpModel(AnalyzeReference(marineDumpModel, methodInfo.ReturnType), methodInfo.IsStatic);
+            int idx = 0;
+            foreach (ParameterInfo parameterInfo in methodInfo.GetParameters())
+            {
+                methodDumpModel.Parameters.Add(parameterInfo.Name ?? $"p{idx++}",
+                    Analyze(marineDumpModel, parameterInfo));
+            }
+
+            return methodDumpModel;
+        }
+
+        private ParameterDumpModel Analyze(MarineDumpModel marineDumpModel, ParameterInfo parameterInfo)
+        {
+            bool isRef = parameterInfo.ParameterType.IsByRef && !parameterInfo.IsOut;
+            return new ParameterDumpModel(
+                AnalyzeReference(marineDumpModel, parameterInfo.ParameterType), parameterInfo.IsIn, parameterInfo.IsOut,
+                isRef, parameterInfo.HasDefaultValue ? parameterInfo.DefaultValue : null);
         }
     }
 }
