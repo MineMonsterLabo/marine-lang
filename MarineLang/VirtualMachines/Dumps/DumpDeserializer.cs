@@ -18,7 +18,7 @@ namespace MarineLang.VirtualMachines.Dumps
 
             foreach (var staticType in staticTypes)
             {
-                dumpModel.StaticTypes[staticType.Key] = DeserializeTypeReference((JObject)staticType.Value);
+                dumpModel.StaticTypes[staticType.Key] = DeserializeTypeName((JObject)staticType.Value);
             }
 
             foreach (var method in globalMethods)
@@ -28,7 +28,7 @@ namespace MarineLang.VirtualMachines.Dumps
 
             foreach (var variable in globalVariables)
             {
-                dumpModel.GlobalVariables[variable.Key] = DeserializeTypeReference((JObject)variable.Value);
+                dumpModel.GlobalVariables[variable.Key] = DeserializeTypeName((JObject)variable.Value);
             }
 
             foreach (var type in types)
@@ -39,7 +39,7 @@ namespace MarineLang.VirtualMachines.Dumps
             return dumpModel;
         }
 
-        private TypeNameDumpModel DeserializeTypeReference(JObject jObject)
+        private TypeNameDumpModel DeserializeTypeName(JObject jObject)
         {
             return new TypeNameDumpModel(jObject.Value<string>("QualifiedName"), jObject.Value<string>("FullName"),
                 jObject.Value<string>("Name"));
@@ -85,13 +85,13 @@ namespace MarineLang.VirtualMachines.Dumps
 
         private FieldDumpModel DeserializeField(JObject jObject)
         {
-            return new FieldDumpModel(DeserializeTypeReference((JObject)jObject["TypeRef"]),
+            return new FieldDumpModel(DeserializeTypeName((JObject)jObject["TypeName"]),
                 jObject.Value<bool>("IsInitOnly"), jObject.Value<bool>("IsStatic"));
         }
 
         private PropertyDumpModel DeserializeProperty(JObject jObject)
         {
-            PropertyDumpModel dumpModel = new PropertyDumpModel(DeserializeTypeReference((JObject)jObject["TypeRef"]),
+            PropertyDumpModel dumpModel = new PropertyDumpModel(DeserializeTypeName((JObject)jObject["TypeName"]),
                 jObject.Value<bool>("CanRead"), jObject.Value<bool>("CanWrite"), jObject.Value<bool>("IsStatic"));
             JObject parameters = (JObject)(jObject["Parameters"] ?? new JObject());
             foreach (var parameter in parameters)
@@ -104,7 +104,7 @@ namespace MarineLang.VirtualMachines.Dumps
 
         private MethodDumpModel DeserializeMethod(JObject jObject)
         {
-            MethodDumpModel dumpModel = new MethodDumpModel(DeserializeTypeReference((JObject)jObject["TypeRef"]),
+            MethodDumpModel dumpModel = new MethodDumpModel(DeserializeTypeName((JObject)jObject["TypeName"]),
                 jObject.Value<bool>("IsStatic"));
             JObject parameters = (JObject)(jObject["Parameters"] ?? new JObject());
             foreach (var parameter in parameters)
@@ -117,7 +117,7 @@ namespace MarineLang.VirtualMachines.Dumps
 
         private ParameterDumpModel DeserializeParameter(JObject jObject)
         {
-            return new ParameterDumpModel(DeserializeTypeReference((JObject)jObject["TypeRef"]),
+            return new ParameterDumpModel(DeserializeTypeName((JObject)jObject["TypeName"]),
                 jObject.Value<bool>("IsIn"), jObject.Value<bool>("IsOut"), jObject.Value<bool>("IsRef"),
                 jObject.Value<object>("DefaultValue"));
         }
