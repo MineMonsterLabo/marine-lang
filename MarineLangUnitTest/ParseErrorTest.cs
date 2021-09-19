@@ -147,5 +147,31 @@ hoge(111) end", 2, 1, 2, 5)]
             ErrorCheckHelper(result, 2, 1, 16, 1, 19, ErrorCode.SyntaxNonEndWord);
         }
 
+        [Theory]
+        [InlineData("fun hoge() 333. end fun fuga() end")]
+        [InlineData("fun hoge() for i = 1 , 10 , 1{ end fun fuga() end")]
+        [InlineData("fun hoge() for i = 1 , 10 ,  end fun fuga() end")]
+        [InlineData("fun hoge() for end fun fuga() end")]
+        [InlineData("fun hoge() foreach val in [1,2,3]{ end fun fuga() end")]
+        [InlineData("fun hoge() while i<10{ end fun fuga() end")]
+        [InlineData("fun hoge() while i<10 end fun fuga() end")]
+        [InlineData("fun hoge() while  end fun fuga() end")]
+        [InlineData("fun hoge() if true { end fun fuga() end")]
+        [InlineData("fun hoge() if true {1} else{ end fun fuga() end")]
+        [InlineData("fun hoge() hoge:: end fun fuga() end")]
+        [InlineData("fun hoge() 4+ end fun fuga() end")]
+        [InlineData("fun hoge() wait_wait5().await. end fun fuga() end")]
+        [InlineData("fun hoge() let fuga = create_fuga() fuga.member1 =  end fun fuga() end")]
+        [InlineData("fun hoge() StaticType.member1 =  end fun fuga() end")]
+        public void MultiErrorTest3(string str)
+        {
+            var result = ParseHelper(str);
+
+            Assert.Single(result.parseErrorInfos);
+            Assert.Equal(2, result.programAst.funcDefinitionAsts.Length);
+            Assert.Equal("hoge", result.programAst.funcDefinitionAsts[0].funcName);
+            Assert.Equal("fuga", result.programAst.funcDefinitionAsts[1].funcName);
+        }
+
     }
 }
