@@ -1,92 +1,125 @@
-﻿using MarineLang.VirtualMachines.Dumps.Models;
-using Newtonsoft.Json.Linq;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using MarineLang.VirtualMachines.Dumps.Models;
+using Newtonsoft.Json.Linq;
 
 namespace MarineLang.VirtualMachines.Dumps
 {
     public class DumpDeserializer
     {
-        public IReadOnlyDictionary<string, ClassDumpModel> Deserialize(string json)
+        public MarineDumpModel Deserialize(string json)
         {
-            Dictionary<string, ClassDumpModel> pairs = new Dictionary<string, ClassDumpModel>();
-
+            MarineDumpModel dumpModel = new MarineDumpModel();
             JObject jObject = JObject.Parse(json);
-            foreach (KeyValuePair<string, JToken> pair in jObject)
+            JObject staticTypes = (JObject)jObject["StaticTypes"] ?? new JObject();
+            JObject globalMethods = (JObject)jObject["GlobalMethods"] ?? new JObject();
+            JObject globalVariables = (JObject)jObject["GlobalVariables"] ?? new JObject();
+            JObject types = (JObject)jObject["Types"] ?? new JObject();
+
+            foreach (var staticType in staticTypes)
             {
-                pairs.Add(pair.Key, DeserializeClass(pair.Value as JObject));
+                dumpModel.StaticTypes[staticType.Key] = DeserializeTypeName((JObject)staticType.Value);
             }
 
-            return new ReadOnlyDictionary<string, ClassDumpModel>(pairs);
-        }
-
-        private ClassDumpModel DeserializeClass(JObject classData)
-        {
-            return new ClassDumpModel(DeserializeType(classData["Type"] as JObject), DeserializeMembers(classData["Members"] as JArray));
-        }
-
-        private MemberDumpModel[] DeserializeMembers(JArray membersData)
-        {
-            List<MemberDumpModel> memberList = new List<MemberDumpModel>();
-            foreach (JToken member in membersData)
+            foreach (var method in globalMethods)
             {
-                MemberDumpKind kind = (MemberDumpKind)member.Value<int>("Kind");
-                switch (kind)
+                dumpModel.GlobalMethods[method.Key] = DeserializeMethod((JObject)method.Value);
+            }
+
+            foreach (var variable in globalVariables)
+            {
+                dumpModel.GlobalVariables[variable.Key] = DeserializeTypeName((JObject)variable.Value);
+            }
+
+            foreach (var type in types)
+            {
+                dumpModel.Types[type.Key] = DeserializeType((JObject)type.Value);
+            }
+
+            return dumpModel;
+        }
+
+        private TypeNameDumpModel DeserializeTypeName(JObject jObject)
+        {
+            return new TypeNameDumpModel(jObject.Value<string>("QualifiedName"), jObject.Value<string>("FullName"),
+                jObject.Value<string>("Name"));
+        }
+
+        private TypeDumpModel DeserializeType(JObject jObject)
+        {
+            TypeDumpModel dumpModel = new TypeDumpModel((TypeDumpKind)jObject.Value<int>("Kind"));
+            JObject members = (JObject)jObject["Members"];
+            foreach (var member in members)
+            {
+                List<MemberDumpModel> list = new List<MemberDumpModel>();
+                JArray jArray = (JArray)member.Value ?? new JArray();
+                foreach (var value in jArray)
                 {
-                    case MemberDumpKind.Field:
-                        memberList.Add(DeserializeField(member as JObject));
-                        break;
-
-                    case MemberDumpKind.Property:
-                        memberList.Add(DeserializeProperty(member as JObject));
-                        break;
-
-                    case MemberDumpKind.Method:
-                        memberList.Add(DeserializeMethod(member as JObject));
-                        break;
+                    list.Add(DeserializeMember((JObject)value));
                 }
+
+                dumpModel.Members[member.Key] = list;
             }
 
-            return memberList.ToArray();
+            return dumpModel;
         }
 
-        private FieldDumpModel DeserializeField(JObject fieldData)
+        private MemberDumpModel DeserializeMember(JObject jObject)
         {
-            return new FieldDumpModel(fieldData.Value<string>("Name"), DeserializeType(fieldData["Type"] as JObject), fieldData.Value<bool>("IsInitOnly"), fieldData.Value<bool>("IsStatic"));
-        }
-
-        private PropertyDumpModel DeserializeProperty(JObject propertyData)
-        {
-            bool isIndexer = propertyData.Value<bool>("IsIndexer");
-            if (isIndexer)
-                return new PropertyDumpModel(propertyData.Value<string>("Name"), DeserializeType(propertyData["Type"] as JObject), propertyData.Value<bool>("CanRead"), propertyData.Value<bool>("CanWrite"), DeserializeParameters(propertyData["IndexerParameters"] as JArray), propertyData.Value<bool>("IsStatic"));
-            else
-                return new PropertyDumpModel(propertyData.Value<string>("Name"), DeserializeType(propertyData["Type"] as JObject), propertyData.Value<bool>("CanRead"), propertyData.Value<bool>("CanWrite"), propertyData.Value<bool>("IsStatic"));
-        }
-
-        private MethodDumpModel DeserializeMethod(JObject methodData)
-        {
-            return new MethodDumpModel(methodData.Value<string>("Name"), DeserializeType(methodData["RetType"] as JObject), DeserializeParameters(methodData["Parameters"] as JArray), methodData.Value<bool>("IsStatic"));
-        }
-
-        private ParameterDumpModel[] DeserializeParameters(JArray parametersData)
-        {
-            List<ParameterDumpModel> parameterList = new List<ParameterDumpModel>();
-            foreach (JToken parameter in parametersData)
+            var kind = (MemberDumpKind)jObject.Value<int>("Kind");
+            switch (kind)
             {
-                bool isOptional = parameter.Value<bool>("IsOptional");
-                if (isOptional)
-                    parameterList.Add(new ParameterDumpModel(parameter.Value<string>("Name"), DeserializeType(parameter["Type"] as JObject), parameter.Value<bool>("IsIn"), parameter.Value<bool>("IsOut"), parameter.Value<bool>("IsRef"), parameter.Value<object>("DefaultValue")));
-                else
-                    parameterList.Add(new ParameterDumpModel(parameter.Value<string>("Name"), DeserializeType(parameter["Type"] as JObject), parameter.Value<bool>("IsIn"), parameter.Value<bool>("IsOut"), parameter.Value<bool>("IsRef")));
-            }
+                case MemberDumpKind.Field:
+                    return DeserializeField(jObject);
 
-            return parameterList.ToArray();
+                case MemberDumpKind.Property:
+                    return DeserializeProperty(jObject);
+
+                case MemberDumpKind.Method:
+                    return DeserializeMethod(jObject);
+
+                default:
+                    throw new NotSupportedException();
+            }
         }
 
-        private TypeDumpModel DeserializeType(JObject typeData)
+        private FieldDumpModel DeserializeField(JObject jObject)
         {
-            return new TypeDumpModel(typeData.Value<string>("QualifiedName"), typeData.Value<string>("FullName"), typeData.Value<string>("Name"));
+            return new FieldDumpModel(DeserializeTypeName((JObject)jObject["TypeName"]),
+                jObject.Value<bool>("IsInitOnly"), jObject.Value<bool>("IsStatic"));
+        }
+
+        private PropertyDumpModel DeserializeProperty(JObject jObject)
+        {
+            PropertyDumpModel dumpModel = new PropertyDumpModel(DeserializeTypeName((JObject)jObject["TypeName"]),
+                jObject.Value<bool>("CanRead"), jObject.Value<bool>("CanWrite"), jObject.Value<bool>("IsStatic"));
+            JObject parameters = (JObject)(jObject["Parameters"] ?? new JObject());
+            foreach (var parameter in parameters)
+            {
+                dumpModel.Parameters[parameter.Key] = DeserializeParameter((JObject)parameter.Value);
+            }
+
+            return dumpModel;
+        }
+
+        private MethodDumpModel DeserializeMethod(JObject jObject)
+        {
+            MethodDumpModel dumpModel = new MethodDumpModel(DeserializeTypeName((JObject)jObject["TypeName"]),
+                jObject.Value<bool>("IsStatic"));
+            JObject parameters = (JObject)(jObject["Parameters"] ?? new JObject());
+            foreach (var parameter in parameters)
+            {
+                dumpModel.Parameters[parameter.Key] = DeserializeParameter((JObject)parameter.Value);
+            }
+
+            return dumpModel;
+        }
+
+        private ParameterDumpModel DeserializeParameter(JObject jObject)
+        {
+            return new ParameterDumpModel(DeserializeTypeName((JObject)jObject["TypeName"]),
+                jObject.Value<bool>("IsIn"), jObject.Value<bool>("IsOut"), jObject.Value<bool>("IsRef"),
+                jObject.Value<object>("DefaultValue"));
         }
     }
 }
