@@ -14,5 +14,10 @@
             this.text = text;
             this.position = position;
         }
+
+        public override string ToString()
+        {
+            return $"Token \"{text}\" ";
+        }
     }
 }
