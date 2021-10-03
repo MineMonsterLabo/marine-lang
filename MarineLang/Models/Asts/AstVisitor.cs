@@ -18,6 +18,7 @@
         public virtual T Visit(YieldAst ast) { return default; }
         public virtual T Visit(BreakAst ast) { return default; }
         public virtual T Visit(ExprAst ast) { return default; }
+        public virtual T Visit(ErrorExprAst ast) { return default; }
         public virtual T Visit(ValueAst ast) { return default; }
         public virtual T Visit(VariableAst ast) { return default; }
         public virtual T Visit(BinaryOpAst ast) { return default; }

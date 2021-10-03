@@ -98,6 +98,17 @@ namespace MarineLang.SyntaxAnalysis
                         Parse.Except(ParseToken(TokenType.Func).NoConsume())
                         .NamedError(ErrorCode.SyntaxNonExpectedFuncWord)
                     )
+                    .SwallowIfError(
+                        Parse.Many(
+                            Parse.Except(
+                                Parse.Or(
+                                    ParseToken(TokenType.End),
+                                    ParseToken(TokenType.Func).NoConsume()
+                                )
+                            )
+                            .Right(Parse.Any) 
+                        )
+                    )
                     .Left(
                         ParseToken(TokenType.End)
                         .NamedError(ErrorCode.SyntaxNonEndWord)
@@ -430,7 +441,7 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 Parse.Or(
-                    ParseParenExpr().Try(),
+                    ParseParenExpr(),
                     ParseTopLevelFuncCall(),
                     ParseFloat.Try(),
                     ParseInt.Try(),
@@ -447,7 +458,17 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
              ParseToken(TokenType.LeftParen)
-             .Right(ParseExpr())
+             .Right(
+                 ParseExpr()
+                 .SwallowIfError(
+                     Parse.Many(
+                         Parse.Except(
+                             ParseToken(TokenType.RightParen).NoConsume()
+                         )
+                     )
+                 )
+                 .StackError(ErrorExprAst.Create())
+             )
              .Left(ParseToken(TokenType.RightParen));
         }
 
@@ -677,8 +698,17 @@ namespace MarineLang.SyntaxAnalysis
         {
             return
                 Parse.Tuple(
-                    ParseToken(TokenType.LeftParen),
-                    Parse.Separated(ParseExpr(), ParseToken(TokenType.Comma)),
+                    ParseToken(TokenType.LeftParen)
+                    ,
+                    Parse.Separated(ParseExpr(), ParseToken(TokenType.Comma))
+                    .SwallowIfError(
+                        Parse.Many(
+                            Parse.Except(
+                                 ParseToken(TokenType.RightParen).NoConsume()
+                            )
+                        )
+                    ).StackError(new ExprAst[] { })
+                    ,
                     ParseToken(TokenType.RightParen)
                 );
         }

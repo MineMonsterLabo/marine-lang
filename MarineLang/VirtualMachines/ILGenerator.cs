@@ -249,6 +249,10 @@ namespace MarineLang.VirtualMachines
                 AwaitILGenerate(exprAst.GetAwaitAst(), generateArgs);
             else if (exprAst.GetUnaryOpAst() != null)
                 UnaryOpILGenerate(exprAst.GetUnaryOpAst(), generateArgs);
+            else
+            {
+                throw new Exception("IL生成に失敗");
+            }
         }
 
         void FuncCallILGenerate(FuncCallAst funcCallAst, GenerateArgs generateArgs)
