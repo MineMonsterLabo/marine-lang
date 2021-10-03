@@ -163,6 +163,14 @@ hoge(111) end", 2, 1, 2, 5)]
         [InlineData("fun hoge() wait_wait5().await. end fun fuga() end")]
         [InlineData("fun hoge() let fuga = create_fuga() fuga.member1 =  end fun fuga() end")]
         [InlineData("fun hoge() StaticType.member1 =  end fun fuga() end")]
+        [InlineData("fun hoge() test(4,)  end fun fuga() end")]
+        [InlineData("fun hoge() test(4,3.)  end fun fuga() end")]
+        [InlineData("fun hoge() test(4,3+)  end fun fuga() end")]
+        [InlineData("fun hoge() let a=(4+)  end fun fuga() end")]
+        [InlineData("fun hoge() let a=(4  end fun fuga() end")]
+        [InlineData("fun hoge() let a=(4.)  end fun fuga() end")]
+        [InlineData("fun hoge() if (3.) {1} end fun fuga() end")]
+
         public void MultiErrorTest3(string str)
         {
             var result = ParseHelper(str);
@@ -171,6 +179,18 @@ hoge(111) end", 2, 1, 2, 5)]
             Assert.Equal(2, result.programAst.funcDefinitionAsts.Length);
             Assert.Equal("hoge", result.programAst.funcDefinitionAsts[0].funcName);
             Assert.Equal("fuga", result.programAst.funcDefinitionAsts[1].funcName);
+        }
+        
+        [Theory]
+        [InlineData("fun hoge() test(4,3  end fun fuga() end")]
+        [InlineData("fun hoge() if (3 {1} end fun fuga() end")]
+
+        public void MultiErrorTest4(string str)
+        {
+            var result = ParseHelper(str);
+
+            Assert.Single(result.programAst.funcDefinitionAsts);
+            Assert.Equal("fuga", result.programAst.funcDefinitionAsts[0].funcName);
         }
 
     }
