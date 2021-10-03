@@ -464,7 +464,7 @@ namespace MarineLang.SyntaxAnalysis
                      Parse.Many(
                          Parse.Except(
                              ParseToken(TokenType.RightParen).NoConsume()
-                         )
+                         ).Right(Parse.Any)
                      )
                  )
                  .StackError(ErrorExprAst.Create())
@@ -705,7 +705,7 @@ namespace MarineLang.SyntaxAnalysis
                         Parse.Many(
                             Parse.Except(
                                  ParseToken(TokenType.RightParen).NoConsume()
-                            )
+                            ).Right(Parse.Any)
                         )
                     ).StackError(new ExprAst[] { })
                     ,
