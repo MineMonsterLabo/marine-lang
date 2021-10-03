@@ -193,5 +193,16 @@ hoge(111) end", 2, 1, 2, 5)]
             Assert.Equal("fuga", result.programAst.funcDefinitionAsts[0].funcName);
         }
 
+        [Theory]
+        [InlineData("fun hoge() if ( {} end fun fuga() end")]
+
+        public void MultiErrorTest5(string str)
+        {
+            var result = ParseHelper(str);
+
+            Assert.Single(result.programAst.funcDefinitionAsts);
+            Assert.Equal("hoge", result.programAst.funcDefinitionAsts[0].funcName);
+        }
+
     }
 }
