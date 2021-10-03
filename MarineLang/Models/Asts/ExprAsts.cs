@@ -78,12 +78,38 @@ namespace MarineLang.Models.Asts
             return this as UnaryOpAst;
         }
 
+        public ErrorExprAst GetErrorExprAst()
+        {
+            return this as ErrorExprAst;
+        }
+
         public virtual IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
         {
             return Enumerable.Empty<T>().Append(astVisitor.Visit(this));
         }
 
         public abstract IEnumerable<IAst> GetChildrenWithThis();
+    }
+
+    public class ErrorExprAst : ExprAst
+    {
+        public override RangePosition Range => new RangePosition();
+        public override ExprPriority ExprPriority => ExprPriority.Primary;
+
+        public static ErrorExprAst Create()
+        {
+            return new ErrorExprAst();
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return Enumerable.Empty<IAst>().Append(this);
+        }
     }
 
     public class ValueAst : ExprAst

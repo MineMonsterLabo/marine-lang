@@ -199,6 +199,15 @@ namespace MarineLang.ParserCore
             };
         }
 
+        public static Parse<I>.Parser<T> SwallowIfError<T,TT, I>(this Parse<I>.Parser<T> parser, Parse<I>.Parser<TT> swallowParser)
+        {
+            return input =>
+            {
+                var result = parser(input);
+                return result.Result.IsError ? result.SetRemain(swallowParser(result.Remain).Remain) : result;
+            };
+        }
+
         public static Parse<I>.Parser<T> Debug<T, I>(this Parse<I>.Parser<T> parser)
         {
             return input =>
