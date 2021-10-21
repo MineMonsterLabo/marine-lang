@@ -40,6 +40,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+      
+    - name: Submodule Init
+      run: git submodule update -i
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
