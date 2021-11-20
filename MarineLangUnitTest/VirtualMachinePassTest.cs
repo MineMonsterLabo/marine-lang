@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using MarineLang.SyntaxAnalysis;
 using MarineLangUnitTest.Helper;
@@ -670,6 +671,36 @@ end", 1)]
         [InlineData("fun main() ret TestColor.blue == TestColor.green end", false)]
         [InlineData("fun main() ret TestColor.red == TestColor.red end", true)]
         public void EnumTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Fact]
+        public void DictionaryCreateTest1()
+        {
+            var vm = Create("fun main() ret ${} end");
+            Assert.NotNull(vm);
+            var ret = vm.Run<Dictionary<string,object>>("main").Value;
+            Assert.Empty(ret);
+        }
+
+        [Fact]
+        public void DictionaryCreateTest2()
+        {
+            var vm = Create("fun main() ret ${a:33,b:true} end");
+            Assert.NotNull(vm);
+            var ret = vm.Run<Dictionary<string, object>>("main").Value;
+            Assert.True(ret.ContainsKey("a"));
+            Assert.Equal(33,ret["a"]);
+            Assert.True(ret.ContainsKey("b"));
+            Assert.Equal(true, ret["b"]);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret ${a:33,b:true}[\"a\"] end", 33)]
+        [InlineData("fun main() let dict = ${a:33,b:11} ret dict[\"a\"]+ dict[\"b\"] end", 44)]
+        [InlineData("fun main() let dict = ${ f:{ |a,b| ret ${c:a+b} } } ret dict[\"f\"].invoke([10,5]).value[\"c\"] end", 15)]
+        public void DictionaryCreateTest3<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
         }
