@@ -33,5 +33,6 @@
         public virtual T Visit(ArrayLiteralAst ast) { return default; }
         public virtual T Visit(ActionAst ast) { return default; }
         public virtual T Visit(FuncCallAst ast) { return default; }
+        public virtual T Visit(DictionaryConstructAst ast) { return default; }
     }
 }

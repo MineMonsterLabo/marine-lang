@@ -49,6 +49,8 @@
         ForEach,
         In,
         TwoColon,
+        Colon,
+        Dollar,
         UnKnown,
     }
 
@@ -136,6 +138,10 @@
                     return "in";
                 case TokenType.TwoColon:
                     return "::";
+                case TokenType.Colon:
+                    return ":";
+                case TokenType.Dollar:
+                    return "$";
             }
             return null;
         }

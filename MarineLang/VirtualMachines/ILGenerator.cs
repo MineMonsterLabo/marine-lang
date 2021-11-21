@@ -249,6 +249,8 @@ namespace MarineLang.VirtualMachines
                 AwaitILGenerate(exprAst.GetAwaitAst(), generateArgs);
             else if (exprAst.GetUnaryOpAst() != null)
                 UnaryOpILGenerate(exprAst.GetUnaryOpAst(), generateArgs);
+            else if (exprAst.GetDictionaryConstructAst() != null)
+                DictionaryConstructILGenerate(exprAst.GetDictionaryConstructAst(), generateArgs);
             else
             {
                 throw new Exception("IL生成に失敗");
@@ -494,6 +496,26 @@ namespace MarineLang.VirtualMachines
         {
             ExprILGenerate(unaryOpAst.expr, generateArgs);
             marineILs.Add(new UnaryOpIL(unaryOpAst.opToken.tokenType));
+        }
+
+        void DictionaryConstructILGenerate(DictionaryConstructAst dictionaryConstructAst, GenerateArgs generateArgs)
+        {
+            var type = typeof(Dictionary<string, object>);
+            var methodBases = type.GetConstructors().Cast<MethodBase>();
+            var dictVarIdx = generateArgs.variables.CreateUnnamedLocalVariableIdx();
+
+            marineILs.Add(
+                new StaticCSharpFuncCallIL(type, methodBases.ToArray(), "New",0, new ILDebugInfo(dictionaryConstructAst.Range.Start))
+            );
+            marineILs.Add(new StoreIL(dictVarIdx));
+            foreach (var keyValuePair in dictionaryConstructAst.dict)
+            {
+                marineILs.Add(new LoadIL(dictVarIdx));
+                marineILs.Add(new PushValueIL(keyValuePair.Key));
+                ExprILGenerate(keyValuePair.Value, generateArgs);
+                marineILs.Add(new InstanceCSharpFuncCallIL("Add", 2));
+            }
+            marineILs.Add(new LoadIL(dictVarIdx));
         }
 
         void ReAssignmentVariableILGenerate(ReAssignmentVariableAst reAssignmentAst, GenerateArgs generateArgs)

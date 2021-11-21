@@ -52,7 +52,6 @@ namespace MarineLang.VirtualMachines.MarineILs
         {
             var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
 
-            var funcNameClone = funcName;
             var types = args.Select(arg => arg.GetType()).ToArray();
 
             var methodBase = MethodBaseResolver.Select(methodBases, types);

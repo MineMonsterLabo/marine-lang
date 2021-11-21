@@ -97,16 +97,20 @@ term           =
                  string_literal |
                  array_literal |
                  action_literal |
-                 variable ;
+                 variable |
+                 dict_cons;
 action_literal = '{' , action_variable_list , func_body , '}' ;
 func_call      = id , param_list ;
 indexers       = ( '[' , expr , ']' )+ ;
 param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
 variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;
 action_variable_list  = '|' , [ variable , { ',' , variable } ] , '|' ;
-array_literal  = '[' [ expr , { ',' , expr } ] , [ ';' , int_literal ] , ']'
+array_literal  = '[' [ expr , { ',' , expr } ] , [ ';' , int_literal ] , ']' ;
 macro          = macro_name , ? トークン文字列群 ? ;
-
+dict_cons_literal 
+               = dollar , '{' , [ dict_cons_key_value , { ',' dict_cons_key_value } ] , '}' ;
+dict_cons_key_value
+               = id , colon , expr ;
 トークン
 
 float_literal  = int_literal , '.' , int_literal ;
@@ -125,6 +129,8 @@ binary_op      = '<' | '<=' | '>' | '>=' | '&&' | '||' | '==' | '!=' | '+' | '-'
 unary_op       = '-' | '!' ;
 macro_name     = '#' , {lower_letter | upper_letter | digit} ;
 two_colon      = '::' ;
+colon          = ':' ;
+dollar         = '$' ;
 
 スキップ
 

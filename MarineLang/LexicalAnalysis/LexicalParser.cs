@@ -28,6 +28,8 @@ namespace MarineLang.LexicalAnalysis
                 GetStringToken(TokenType.LessEqualOp),
                 GetStringToken(TokenType.NotEqualOp),
                 GetStringToken(TokenType.TwoColon),
+                GetStringToken(TokenType.Colon),
+                GetStringToken(TokenType.Dollar),
                 GetStringTokenTailDelimiter(TokenType.Await),
                 GetStringTokenTailDelimiter(TokenType.Yield),
                 GetStringTokenTailDelimiter(TokenType.Break),

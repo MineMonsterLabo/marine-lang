@@ -450,7 +450,8 @@ namespace MarineLang.SyntaxAnalysis
                     ParseString.Try(),
                     ParseArrayLiteral().Try(),
                     ParseActionLiteral().Try(),
-                    ParseVariable.Try()
+                    ParseVariable.Try(),
+                    ParseDictConsLiteral().Try()
                 );
         }
 
@@ -756,6 +757,39 @@ namespace MarineLang.SyntaxAnalysis
                     ),
                     ParseToken(TokenType.RightBracket)
                 ).Map(tuple => ArrayLiteralAst.Create(tuple.Item1, tuple.Item2, tuple.Item3));
+        }
+
+        public Parse.Parser<DictionaryConstructAst> ParseDictConsLiteral()
+        {
+           var parseDictConsKeyValues = 
+                Parse.Separated(ParseDictConsKeyValue(), ParseToken(TokenType.Comma))
+                .SwallowIfError(
+                    Parse.Many(
+                        Parse.Except(
+                            ParseToken(TokenType.RightCurlyBracket).NoConsume()
+                        ).Right(Parse.Any)
+                    )
+                ).StackError(new (string id, ExprAst exprAst)[] { });
+
+            return 
+                from start in ParseToken(TokenType.Dollar)
+                from _ in ParseToken(TokenType.LeftCurlyBracket)
+                from dictConsKeyValues in parseDictConsKeyValues
+                from end in ParseToken(TokenType.RightCurlyBracket)
+                select
+                    DictionaryConstructAst.Create(
+                        start,
+                        end,
+                        dictConsKeyValues.ToDictionary(item=>item.id,item=>item.exprAst)
+                    );
+        }
+
+        public Parse.Parser<(string id, ExprAst exprAst)> ParseDictConsKeyValue()
+        {
+            return
+                from idToken in ParseToken(TokenType.Id)
+                from exprAst in ParseToken(TokenType.Colon).Right(ParseExpr())
+                select (id: idToken.text, exprAst: exprAst);
         }
 
         public Parse.Parser<ActionAst> ParseActionLiteral()
