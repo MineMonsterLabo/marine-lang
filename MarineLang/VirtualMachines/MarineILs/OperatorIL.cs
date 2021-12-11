@@ -104,9 +104,9 @@ namespace MarineLang.VirtualMachines.MarineILs
 
                     break;
                 case TokenType.EqualOp:
-                    return leftValue.Equals(rightValue);
+                    return leftValue?.Equals(rightValue) ?? null == rightValue;
                 case TokenType.NotEqualOp:
-                    return !leftValue.Equals(rightValue);
+                    return (!leftValue?.Equals(rightValue)) ?? null != rightValue; ;
                 case TokenType.OrOp:
                     return (bool)leftValue || (bool)rightValue;
                 case TokenType.AndOp:

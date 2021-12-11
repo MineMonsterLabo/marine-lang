@@ -30,6 +30,7 @@ namespace MarineLang.LexicalAnalysis
                 GetStringToken(TokenType.TwoColon),
                 GetStringToken(TokenType.Colon),
                 GetStringToken(TokenType.Dollar),
+                GetStringToken(TokenType.Null),
                 GetStringTokenTailDelimiter(TokenType.Await),
                 GetStringTokenTailDelimiter(TokenType.Yield),
                 GetStringTokenTailDelimiter(TokenType.Break),

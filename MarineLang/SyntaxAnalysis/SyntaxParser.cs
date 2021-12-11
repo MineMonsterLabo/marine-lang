@@ -31,6 +31,7 @@ namespace MarineLang.SyntaxAnalysis
         public Parse.Parser<ValueAst> ParseBool { get; }
         public Parse.Parser<ValueAst> ParseChar { get; }
         public Parse.Parser<ValueAst> ParseString { get; }
+        public Parse.Parser<ValueAst> ParseNull { get; }
         public Parse.Parser<VariableAst> ParseVariable { get; }
         public Parse.Parser<YieldAst> ParseYield { get; }
         public Parse.Parser<BreakAst> ParseBreak { get; }
@@ -47,6 +48,7 @@ namespace MarineLang.SyntaxAnalysis
             ParseBool = InternalParseBool();
             ParseChar = InternalParseChar();
             ParseString = InternalParseString();
+            ParseNull = InternalParseNull();
             ParseVariable = InternalParseVariable();
             ParseYield = InternalParseYield();
             ParseBreak = InternalParseBreak();
@@ -448,6 +450,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParseBool.Try(),
                     ParseChar.Try(),
                     ParseString.Try(),
+                    ParseNull,
                     ParseArrayLiteral().Try(),
                     ParseActionLiteral().Try(),
                     ParseVariable.Try(),
@@ -686,6 +689,12 @@ namespace MarineLang.SyntaxAnalysis
                 var value = text.Length == 2 ? "" : text.Substring(1, text.Length - 2);
                 return ValueAst.Create(value, token);
             });
+        }
+
+        Parse.Parser<ValueAst> InternalParseNull()
+        {
+            return ParseToken(TokenType.Null)
+              .Map(token => ValueAst.Create(null, token));
         }
 
         Parse.Parser<VariableAst> InternalParseVariable()
