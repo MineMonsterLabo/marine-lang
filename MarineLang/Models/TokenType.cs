@@ -42,6 +42,7 @@
         Char,
         String,
         Float,
+        Null,
         End,
         Return,
         While,
@@ -142,6 +143,8 @@
                     return ":";
                 case TokenType.Dollar:
                     return "$";
+                case TokenType.Null:
+                    return "null";
             }
             return null;
         }
