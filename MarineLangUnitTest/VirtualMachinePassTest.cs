@@ -804,5 +804,18 @@ end", 1)]
 
             Assert.Equal(188, vm.Run<int>("aaa").Eval());
         }
+
+        [Theory]
+        [InlineData("fun main() ret null end", null)]
+        [InlineData("fun main() ret null == null end", true)]
+        [InlineData("fun main() ret null != null end", false)]
+        [InlineData("fun main() ret null == 444 end", false)]
+        [InlineData("fun main() ret null != 444 end", true)]
+        [InlineData("fun main() ret 333 == null end", false)]
+        [InlineData("fun main() ret 333 != null end", true)]
+        public void NullTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
     }
 }
