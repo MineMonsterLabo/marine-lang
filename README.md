@@ -95,6 +95,7 @@ term           =
                  bool_literal | 
                  char_literal | 
                  string_literal |
+                 null_literal |
                  array_literal |
                  action_literal |
                  variable |
@@ -131,6 +132,7 @@ macro_name     = '#' , {lower_letter | upper_letter | digit} ;
 two_colon      = '::' ;
 colon          = ':' ;
 dollar         = '$' ;
+null_literal           = 'null' ;
 
 スキップ
 
