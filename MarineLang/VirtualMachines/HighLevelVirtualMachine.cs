@@ -91,6 +91,29 @@ namespace MarineLang.VirtualMachines
                     globalVariableDict.Keys.ToArray());
         }
 
+        public void ClearNamespacePrograms(string[] namespaceStrings)
+        {
+            ILGeneratedData = null;
+
+            var index
+                = marineProgramUnitList.FindIndex(e => e.namespaceStrings.SequenceEqual(namespaceStrings));
+            while (index != -1)
+            {
+                marineProgramUnitList.RemoveAt(index);
+
+                index
+                    = marineProgramUnitList.FindIndex(e => e.namespaceStrings.SequenceEqual(namespaceStrings));
+            }
+        }
+
+        public void ClearProgram(ProgramAst programAst)
+        {
+            ILGeneratedData = null;
+
+            var index = marineProgramUnitList.FindIndex(e => e.programAst == programAst);
+            marineProgramUnitList.RemoveAt(index);
+        }
+
         public void ClearAllPrograms()
         {
             ILGeneratedData = null;
@@ -163,7 +186,8 @@ namespace MarineLang.VirtualMachines
             catch (Exception e)
             {
                 var currentIL = ILGeneratedData.marineILs[lowLevelVirtualMachine.nextILIndex];
-                throw new MarineRuntimeException(new RuntimeErrorInfo(e.Message, errorPosition: currentIL.ILDebugInfo.position), e);
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(e.Message, errorPosition: currentIL.ILDebugInfo.position), e);
             }
         }
 
