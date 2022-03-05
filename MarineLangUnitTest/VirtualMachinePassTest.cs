@@ -729,23 +729,26 @@ end", 1)]
             vm.ClearAllPrograms();
 
             var removeNamespace = new[] { "test", "hoge" };
-            var removeParseResult = parser.Parse(lexer.GetTokens("fun hoge() ret 9 end"));
-            vm.LoadProgram(removeParseResult.programAst);
+            parseResult = parser.Parse(lexer.GetTokens("fun hoge() ret 9 end"));
+            var removeProgramId = vm.LoadProgram(parseResult.programAst);
             parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 30 end"));
-            vm.LoadProgram(removeNamespace, parseResult.programAst);
+            var removeProgramId2 = vm.LoadProgram(removeNamespace, parseResult.programAst);
             parseResult = parser.Parse(lexer.GetTokens("fun piyo() ret 1 end"));
             vm.LoadProgram(parseResult.programAst);
             parseResult = parser.Parse(lexer.GetTokens("fun test() ret 100 end"));
-            vm.LoadProgram(removeNamespace, parseResult.programAst);
+            var removeProgramId3 = vm.LoadProgram(removeNamespace, parseResult.programAst);
             vm.Compile();
 
+            var programUnit = vm.GetProgramUnit(removeProgramId2);
             Assert.Equal(9, vm.Run<int>("hoge").Eval());
             Assert.Equal(30, vm.Run<int>(removeNamespace, "fuga").Eval());
             Assert.Equal(1, vm.Run<int>("piyo").Eval());
             Assert.Equal(100, vm.Run<int>(removeNamespace, "test").Eval());
+            Assert.NotNull(programUnit);
+            Assert.Equal(programUnit.namespaceStrings, removeNamespace);
 
 
-            vm.ClearProgram(removeParseResult.programAst);
+            vm.ClearProgram(removeProgramId);
             vm.Compile();
 
             Assert.Throws<NullReferenceException>(() => Assert.Equal(9, vm.Run<int>("hoge").Eval()));
@@ -753,7 +756,8 @@ end", 1)]
             Assert.Equal(1, vm.Run<int>("piyo").Eval());
             Assert.Equal(100, vm.Run<int>(removeNamespace, "test").Eval());
 
-            vm.ClearNamespacePrograms(removeNamespace);
+            vm.ClearProgram(removeProgramId2);
+            vm.ClearProgram(removeProgramId3);
             vm.Compile();
 
             Assert.Throws<NullReferenceException>(() => Assert.Equal(9, vm.Run<int>("hoge").Eval()));
