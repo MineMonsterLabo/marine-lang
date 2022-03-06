@@ -1,21 +1,9 @@
-﻿using MarineLang.Models;
-using MarineLang.Models.Errors;
+﻿using MarineLang.Models.Errors;
 
 namespace MarineLang.VirtualMachines.MarineILs
 {
-    public class ILDebugInfo
-    {
-        public readonly Position position;
-
-        public ILDebugInfo(Position position)
-        {
-            this.position = position;
-        }
-    }
-
     public interface IMarineIL
     {
-        ILDebugInfo ILDebugInfo { get; }
         void Run(LowLevelVirtualMachine vm);
     }
 
@@ -25,9 +13,9 @@ namespace MarineLang.VirtualMachines.MarineILs
         {
             throw new MarineRuntimeException(
                   new RuntimeErrorInfo(
+                      marineIL,
                       errorMessage,
-                      errorCode,
-                      marineIL.ILDebugInfo?.position
+                      errorCode
                   )
               );
         }

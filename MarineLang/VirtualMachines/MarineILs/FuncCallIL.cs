@@ -11,7 +11,6 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly MethodInfo methodInfo;
         public readonly int argCount;
-        public ILDebugInfo ILDebugInfo => null;
 
         public CSharpFuncCallIL(MethodInfo methodInfo, int argCount)
         {
@@ -37,15 +36,13 @@ namespace MarineLang.VirtualMachines.MarineILs
         public readonly MethodBase[] methodBases;
         public readonly string funcName;
         public readonly int argCount;
-        public ILDebugInfo ILDebugInfo { get; }
 
-        public StaticCSharpFuncCallIL(Type type, MethodBase[] methodBases, string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
+        public StaticCSharpFuncCallIL(Type type, MethodBase[] methodBases, string funcName, int argCount)
         {
             this.type = type;
             this.funcName = funcName;
             this.argCount = argCount;
             this.methodBases = methodBases;
-            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -80,13 +77,11 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly string funcName;
         public readonly int argCount;
-        public ILDebugInfo ILDebugInfo { get; }
 
-        public InstanceCSharpFuncCallIL(string funcName, int argCount, ILDebugInfo iLDebugInfo = null)
+        public InstanceCSharpFuncCallIL(string funcName, int argCount)
         {
             this.funcName = funcName;
             this.argCount = argCount;
-            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -124,7 +119,6 @@ namespace MarineLang.VirtualMachines.MarineILs
         public readonly string funcName;
         public readonly int argCount;
         public readonly FuncILIndex funcILIndex;
-        public ILDebugInfo ILDebugInfo => null;
 
         public MarineFuncCallIL(string funcName, FuncILIndex funcILIndex, int argCount)
         {

@@ -364,8 +364,7 @@ namespace MarineLang.VirtualMachines
             foreach (var arg in funcCallAst.args)
                 ExprILGenerate(arg, generateArgs);
             marineILs.Add(
-                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length,
-                    new ILDebugInfo(funcCallAst.Range.Start))
+                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length)
             );
         }
 
@@ -385,7 +384,7 @@ namespace MarineLang.VirtualMachines
 
             marineILs.Add(
                 new StaticCSharpFuncCallIL(type, methodBases.ToArray(), csharpFuncName,
-                    funcCallAst.args.Length, new ILDebugInfo(funcCallAst.Range.Start))
+                    funcCallAst.args.Length)
             );
         }
 
@@ -394,8 +393,7 @@ namespace MarineLang.VirtualMachines
             ExprILGenerate(instanceFieldAst.instanceExpr, generateArgs);
             marineILs.Add(
                 new InstanceCSharpFieldLoadIL(
-                    instanceFieldAst.variableAst.VarName,
-                    new ILDebugInfo(instanceFieldAst.variableAst.Range.Start)
+                    instanceFieldAst.variableAst.VarName
                 )
             );
         }
@@ -416,8 +414,7 @@ namespace MarineLang.VirtualMachines
                 marineILs.Add(
                     new StaticCSharpFieldLoadIL(
                         type,
-                        staticFieldAst.variableAst.VarName,
-                        new ILDebugInfo(staticFieldAst.Range.Start)
+                        staticFieldAst.variableAst.VarName
                     )
                 );
             }
@@ -428,7 +425,7 @@ namespace MarineLang.VirtualMachines
             ExprILGenerate(getIndexerAst.instanceExpr, generateArgs);
             ExprILGenerate(getIndexerAst.indexExpr, generateArgs);
             marineILs.Add(
-                new InstanceCSharpIndexerLoadIL(new ILDebugInfo(getIndexerAst.instanceExpr.Range.End))
+                new InstanceCSharpIndexerLoadIL()
             );
         }
 
@@ -505,7 +502,7 @@ namespace MarineLang.VirtualMachines
             var dictVarIdx = generateArgs.variables.CreateUnnamedLocalVariableIdx();
 
             marineILs.Add(
-                new StaticCSharpFuncCallIL(type, methodBases.ToArray(), "New",0, new ILDebugInfo(dictionaryConstructAst.Range.Start))
+                new StaticCSharpFuncCallIL(type, methodBases.ToArray(), "New",0)
             );
             marineILs.Add(new StoreIL(dictVarIdx));
             foreach (var keyValuePair in dictionaryConstructAst.dict)
@@ -547,8 +544,7 @@ namespace MarineLang.VirtualMachines
             ExprILGenerate(reAssignmentAst.getIndexerAst.indexExpr, generateArgs);
             ExprILGenerate(reAssignmentAst.assignmentExpr, generateArgs);
             marineILs.Add(
-                new InstanceCSharpIndexerStoreIL(
-                    new ILDebugInfo(reAssignmentAst.getIndexerAst.instanceExpr.Range.End)));
+                new InstanceCSharpIndexerStoreIL());
         }
 
         void AssignmentILGenerate(AssignmentVariableAst assignmentAst, GenerateArgs generateArgs)
@@ -565,8 +561,7 @@ namespace MarineLang.VirtualMachines
             ExprILGenerate(fieldAssignmentAst.expr, generateArgs);
             marineILs.Add(
                 new InstanceCSharpFieldStoreIL(
-                    fieldAssignmentAst.instanceFieldAst.variableAst.VarName,
-                    new ILDebugInfo(fieldAssignmentAst.instanceFieldAst.variableAst.Range.Start)
+                    fieldAssignmentAst.instanceFieldAst.variableAst.VarName
                 )
             );
         }
@@ -576,8 +571,7 @@ namespace MarineLang.VirtualMachines
             ExprILGenerate(staticFieldAssignmentAst.expr, generateArgs);
             marineILs.Add(
                 new StaticCSharpFieldStoreIL(staticTypeDict[staticFieldAssignmentAst.staticFieldAst.ClassName],
-                    staticFieldAssignmentAst.staticFieldAst.variableAst.VarName,
-                    new ILDebugInfo(staticFieldAssignmentAst.Range.Start)
+                    staticFieldAssignmentAst.staticFieldAst.variableAst.VarName
                 )
             );
         }

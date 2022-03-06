@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MarineLang.VirtualMachines.MarineILs;
+using System;
 using System.Runtime.Serialization;
 
 namespace MarineLang.Models.Errors
@@ -8,15 +9,14 @@ namespace MarineLang.Models.Errors
     {
         readonly string prefixErrorMessage = "";
 
-        public readonly Position? errorPosition;
-
-        public string ErrorMessage => prefixErrorMessage + ErrorCode.ToErrorMessage() + $" \n {errorPosition} \nerror code: {(int)ErrorCode}";
+        public readonly IMarineIL marineIL;
+        public string ErrorMessage => $"[{marineIL.ToString()}]:{prefixErrorMessage} {ErrorCode.ToErrorMessage()} \nerror code: {(int)ErrorCode}";
         public ErrorCode ErrorCode { get; }
 
-        public RuntimeErrorInfo(string prefixErrorMessage, ErrorCode errorCode = ErrorCode.Unknown, Position? errorPosition = null)
+        public RuntimeErrorInfo(IMarineIL marineIL, string prefixErrorMessage, ErrorCode errorCode = ErrorCode.Unknown)
         {
+            this.marineIL = marineIL;
             this.prefixErrorMessage = prefixErrorMessage;
-            this.errorPosition = errorPosition;
             ErrorCode = errorCode;
         }
     }

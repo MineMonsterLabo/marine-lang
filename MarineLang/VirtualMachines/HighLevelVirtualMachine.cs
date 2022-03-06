@@ -181,7 +181,7 @@ namespace MarineLang.VirtualMachines
             {
                 var currentIL = ILGeneratedData.marineILs[lowLevelVirtualMachine.nextILIndex];
                 throw new MarineRuntimeException(
-                    new RuntimeErrorInfo(e.Message, errorPosition: currentIL.ILDebugInfo.position), e);
+                    new RuntimeErrorInfo(currentIL,e.Message), e);
             }
         }
 

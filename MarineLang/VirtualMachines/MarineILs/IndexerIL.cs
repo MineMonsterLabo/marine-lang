@@ -7,14 +7,6 @@ namespace MarineLang.VirtualMachines.MarineILs
 {
     public struct InstanceCSharpIndexerLoadIL : IMarineIL
     {
-        public ILDebugInfo ILDebugInfo { get; }
-
-
-        public InstanceCSharpIndexerLoadIL(ILDebugInfo iLDebugInfo = null)
-        {
-            ILDebugInfo = iLDebugInfo;
-        }
-
         public void Run(LowLevelVirtualMachine vm)
         {
             var indexValue = vm.Pop();
@@ -50,13 +42,6 @@ namespace MarineLang.VirtualMachines.MarineILs
 
     public struct InstanceCSharpIndexerStoreIL : IMarineIL
     {
-        public ILDebugInfo ILDebugInfo { get; }
-
-        public InstanceCSharpIndexerStoreIL(ILDebugInfo iLDebugInfo = null)
-        {
-            ILDebugInfo = iLDebugInfo;
-        }
-
         public void Run(LowLevelVirtualMachine vm)
         {
             var storeValue = vm.Pop();

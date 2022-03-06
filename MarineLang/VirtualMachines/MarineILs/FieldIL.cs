@@ -10,13 +10,11 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly Type type;
         public readonly string fieldName;
-        public ILDebugInfo ILDebugInfo { get; }
 
-        public StaticCSharpFieldLoadIL(Type type, string fieldName, ILDebugInfo iLDebugInfo = null)
+        public StaticCSharpFieldLoadIL(Type type, string fieldName)
         {
             this.type = type;
             this.fieldName = fieldName;
-            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -57,12 +55,10 @@ namespace MarineLang.VirtualMachines.MarineILs
     public struct InstanceCSharpFieldLoadIL : IMarineIL
     {
         public readonly string fieldName;
-        public ILDebugInfo ILDebugInfo { get; }
 
-        public InstanceCSharpFieldLoadIL(string fieldName, ILDebugInfo iLDebugInfo = null)
+        public InstanceCSharpFieldLoadIL(string fieldName)
         {
             this.fieldName = fieldName;
-            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -75,7 +71,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             if (fieldInfo != null)
             {
                 if (ClassAccessibilityChecker.CheckMember(fieldInfo) == false)
-                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
+                    this.ThrowRuntimeError($"'{fieldName}'", ErrorCode.RuntimeMemberAccessPrivate);
 
                 vm.Push(fieldInfo.GetValue(instance));
             }
@@ -84,10 +80,10 @@ namespace MarineLang.VirtualMachines.MarineILs
                 PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
                     BindingFlags.Public | BindingFlags.Instance);
                 if (propertyInfo == null)
-                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberNotFound);
+                    this.ThrowRuntimeError($"'{fieldName}'", ErrorCode.RuntimeMemberNotFound);
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo) == false)
-                    this.ThrowRuntimeError($"({fieldName})", ErrorCode.RuntimeMemberAccessPrivate);
+                    this.ThrowRuntimeError($"'{fieldName}'", ErrorCode.RuntimeMemberAccessPrivate);
 
                 vm.Push(propertyInfo.GetValue(instance));
             }
@@ -95,7 +91,7 @@ namespace MarineLang.VirtualMachines.MarineILs
 
         public override string ToString()
         {
-            return typeof(InstanceCSharpFieldLoadIL).Name + " '" + fieldName;
+            return typeof(InstanceCSharpFieldLoadIL).Name + " " + fieldName;
         }
     }
 
@@ -103,13 +99,11 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly Type type;
         public readonly string fieldName;
-        public ILDebugInfo ILDebugInfo { get; }
 
-        public StaticCSharpFieldStoreIL(Type type, string fieldName, ILDebugInfo iLDebugInfo = null)
+        public StaticCSharpFieldStoreIL(Type type, string fieldName)
         {
             this.type = type;
             this.fieldName = fieldName;
-            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -144,19 +138,17 @@ namespace MarineLang.VirtualMachines.MarineILs
 
         public override string ToString()
         {
-            return typeof(StaticCSharpFieldStoreIL).Name + " '" + type.FullName + "." + fieldName + "'";
+            return typeof(StaticCSharpFieldStoreIL).Name + " " + type.FullName + "." + fieldName;
         }
     }
 
     public struct InstanceCSharpFieldStoreIL : IMarineIL
     {
         public readonly string fieldName;
-        public ILDebugInfo ILDebugInfo { get; }
 
-        public InstanceCSharpFieldStoreIL(string fieldName, ILDebugInfo iLDebugInfo = null)
+        public InstanceCSharpFieldStoreIL(string fieldName)
         {
             this.fieldName = fieldName;
-            ILDebugInfo = iLDebugInfo;
         }
 
         public void Run(LowLevelVirtualMachine vm)
