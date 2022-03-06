@@ -13,10 +13,12 @@ namespace MarineLang.VirtualMachines
 {
     public class HighLevelVirtualMachine
     {
+        uint marineProgramUnitId = uint.MinValue;
+
         readonly Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
         readonly Dictionary<string, Type> staticTypeDict = new Dictionary<string, Type>();
         readonly SortedDictionary<string, object> globalVariableDict = new SortedDictionary<string, object>();
-        readonly List<MarineProgramUnit> marineProgramUnitList = new List<MarineProgramUnit>();
+        readonly Dictionary<uint, MarineProgramUnit> marineProgramUnitList = new Dictionary<uint, MarineProgramUnit>();
 
         public ILGeneratedData ILGeneratedData { get; private set; }
         public IReadOnlyDictionary<string, MethodInfo> GlobalFuncDict => methodInfoDict;
@@ -74,27 +76,42 @@ namespace MarineLang.VirtualMachines
             globalVariableDict.Add(name, val);
         }
 
-        public void LoadProgram(string[] namespaceStrings, ProgramAst programAst)
+        public uint LoadProgram(string[] namespaceStrings, ProgramAst programAst)
         {
-            marineProgramUnitList.Add(new MarineProgramUnit(namespaceStrings, programAst));
+            marineProgramUnitList.Add(marineProgramUnitId, new MarineProgramUnit(namespaceStrings, programAst));
+
+            return marineProgramUnitId++;
         }
 
-        public void LoadProgram(ProgramAst programAst)
+        public uint LoadProgram(ProgramAst programAst)
         {
-            marineProgramUnitList.Add(new MarineProgramUnit(new string[] { }, programAst));
+            marineProgramUnitList.Add(marineProgramUnitId, new MarineProgramUnit(new string[] { }, programAst));
+
+            return marineProgramUnitId++;
         }
 
         public void Compile()
         {
             ILGeneratedData
-                = new ILGenerator(marineProgramUnitList).Generate(methodInfoDict, staticTypeDict,
+                = new ILGenerator(marineProgramUnitList.Values).Generate(methodInfoDict, staticTypeDict,
                     globalVariableDict.Keys.ToArray());
+        }
+
+        public void ClearProgram(uint programId)
+        {
+            ILGeneratedData = null;
+            marineProgramUnitList.Remove(programId);
         }
 
         public void ClearAllPrograms()
         {
             ILGeneratedData = null;
             marineProgramUnitList.Clear();
+        }
+
+        public MarineProgramUnit GetProgramUnit(uint programId)
+        {
+            return marineProgramUnitList[programId];
         }
 
         public MarineValue<RET> Run<RET>(string marineFuncName, params object[] args)
@@ -163,7 +180,8 @@ namespace MarineLang.VirtualMachines
             catch (Exception e)
             {
                 var currentIL = ILGeneratedData.marineILs[lowLevelVirtualMachine.nextILIndex];
-                throw new MarineRuntimeException(new RuntimeErrorInfo(e.Message, errorPosition: currentIL.ILDebugInfo.position), e);
+                throw new MarineRuntimeException(
+                    new RuntimeErrorInfo(e.Message, errorPosition: currentIL.ILDebugInfo.position), e);
             }
         }
 

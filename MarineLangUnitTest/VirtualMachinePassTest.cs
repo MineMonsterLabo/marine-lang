@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using MarineLang.LexicalAnalysis;
 using MarineLang.SyntaxAnalysis;
-using MarineLangUnitTest.Helper;
+using MarineLang.VirtualMachines;
 using MineUtil;
 using Xunit;
 using static MarineLangUnitTest.Helper.VmCreateHelper;
@@ -12,7 +14,7 @@ namespace MarineLangUnitTest
     {
         internal void RunReturnCheck<RET>(string str, RET expected)
         {
-            var vm = VmCreateHelper.Create(str);
+            var vm = Create(str);
 
             Assert.NotNull(vm);
 
@@ -139,7 +141,7 @@ fun f() let a=3 ret a end
         [InlineData("fun main(a,b) ret plus(a,b) end ")]
         public void CallMarineFuncWithArgs2(string str)
         {
-            var vm = VmCreateHelper.Create(str);
+            var vm = Create(str);
 
             Assert.NotNull(vm);
 
@@ -439,7 +441,7 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
         [InlineData("fun main() yield ret hoge() + 1 end fun hoge() yield ret 5 end ", 6)]
         public void YieldTest<T>(string str, T expected)
         {
-            var vm = VmCreateHelper.Create(str);
+            var vm = Create(str);
 
             Assert.NotNull(vm);
 
@@ -457,7 +459,7 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
         [InlineData("fun main() ret hoge() end fun hoge() ret wait5().await end ", 5)]
         public void AwaitTest<T>(string str, T expected)
         {
-            var vm = VmCreateHelper.Create(str);
+            var vm = Create(str);
 
             Assert.NotNull(vm);
 
@@ -680,7 +682,7 @@ end", 1)]
         {
             var vm = Create("fun main() ret ${} end");
             Assert.NotNull(vm);
-            var ret = vm.Run<Dictionary<string,object>>("main").Value;
+            var ret = vm.Run<Dictionary<string, object>>("main").Value;
             Assert.Empty(ret);
         }
 
@@ -691,7 +693,7 @@ end", 1)]
             Assert.NotNull(vm);
             var ret = vm.Run<Dictionary<string, object>>("main").Value;
             Assert.True(ret.ContainsKey("a"));
-            Assert.Equal(33,ret["a"]);
+            Assert.Equal(33, ret["a"]);
             Assert.True(ret.ContainsKey("b"));
             Assert.Equal(true, ret["b"]);
         }
@@ -699,7 +701,8 @@ end", 1)]
         [Theory]
         [InlineData("fun main() ret ${a:33,b:true}[\"a\"] end", 33)]
         [InlineData("fun main() let dict = ${a:33,b:11} ret dict[\"a\"]+ dict[\"b\"] end", 44)]
-        [InlineData("fun main() let dict = ${ f:{ |a,b| ret ${c:a+b} } } ret dict[\"f\"].invoke([10,5]).value[\"c\"] end", 15)]
+        [InlineData(
+            "fun main() let dict = ${ f:{ |a,b| ret ${c:a+b} } } ret dict[\"f\"].invoke([10,5]).value[\"c\"] end", 15)]
         public void DictionaryCreateTest3<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -708,11 +711,11 @@ end", 1)]
         [Fact]
         public void MultipleLoadProgramTest()
         {
-            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
+            var lexer = new LexicalAnalyzer();
 
             var parser = new SyntaxAnalyzer();
 
-            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
+            var vm = new HighLevelVirtualMachine();
             var parseResult = parser.Parse(lexer.GetTokens("fun hoge() ret 5 end"));
 
             vm.LoadProgram(parseResult.programAst);
@@ -724,21 +727,53 @@ end", 1)]
             Assert.Equal(3, vm.Run<int>("fuga").Eval());
 
             vm.ClearAllPrograms();
+
+            var removeNamespace = new[] { "test", "hoge" };
+            parseResult = parser.Parse(lexer.GetTokens("fun hoge() ret 9 end"));
+            var removeProgramId = vm.LoadProgram(parseResult.programAst);
             parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 30 end"));
+            var removeProgramId2 = vm.LoadProgram(removeNamespace, parseResult.programAst);
+            parseResult = parser.Parse(lexer.GetTokens("fun piyo() ret 1 end"));
             vm.LoadProgram(parseResult.programAst);
+            parseResult = parser.Parse(lexer.GetTokens("fun test() ret 100 end"));
+            var removeProgramId3 = vm.LoadProgram(removeNamespace, parseResult.programAst);
             vm.Compile();
 
-            Assert.Equal(30, vm.Run<int>("fuga").Eval());
+            var programUnit = vm.GetProgramUnit(removeProgramId2);
+            Assert.Equal(9, vm.Run<int>("hoge").Eval());
+            Assert.Equal(30, vm.Run<int>(removeNamespace, "fuga").Eval());
+            Assert.Equal(1, vm.Run<int>("piyo").Eval());
+            Assert.Equal(100, vm.Run<int>(removeNamespace, "test").Eval());
+            Assert.NotNull(programUnit);
+            Assert.Equal(programUnit.namespaceStrings, removeNamespace);
+
+
+            vm.ClearProgram(removeProgramId);
+            vm.Compile();
+
+            Assert.Throws<NullReferenceException>(() => Assert.Equal(9, vm.Run<int>("hoge").Eval()));
+            Assert.Equal(30, vm.Run<int>(removeNamespace, "fuga").Eval());
+            Assert.Equal(1, vm.Run<int>("piyo").Eval());
+            Assert.Equal(100, vm.Run<int>(removeNamespace, "test").Eval());
+
+            vm.ClearProgram(removeProgramId2);
+            vm.ClearProgram(removeProgramId3);
+            vm.Compile();
+
+            Assert.Throws<NullReferenceException>(() => Assert.Equal(9, vm.Run<int>("hoge").Eval()));
+            Assert.Throws<NullReferenceException>(() => Assert.Equal(30, vm.Run<int>(removeNamespace, "fuga").Eval()));
+            Assert.Equal(1, vm.Run<int>("piyo").Eval());
+            Assert.Throws<NullReferenceException>(() => Assert.Equal(100, vm.Run<int>(removeNamespace, "test").Eval()));
         }
 
         [Fact]
         public void MultipleLoadProgramNamespaceTest()
         {
-            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
+            var lexer = new LexicalAnalyzer();
 
             var parser = new SyntaxAnalyzer();
 
-            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
+            var vm = new HighLevelVirtualMachine();
 
             var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 25 end"));
             vm.LoadProgram(parseResult.programAst);
@@ -763,11 +798,11 @@ end", 1)]
         [Fact]
         public void NamespaceAccessTest1()
         {
-            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
+            var lexer = new LexicalAnalyzer();
 
             var parser = new SyntaxAnalyzer();
 
-            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
+            var vm = new HighLevelVirtualMachine();
             var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end"));
             vm.LoadProgram(parseResult.programAst);
 
@@ -775,7 +810,7 @@ end", 1)]
             vm.LoadProgram(new[] { "hoge" }, parseResult.programAst);
 
             parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new[] { "aaa","ppp" }, parseResult.programAst);
+            vm.LoadProgram(new[] { "aaa", "ppp" }, parseResult.programAst);
 
             vm.Compile();
 
@@ -785,11 +820,11 @@ end", 1)]
         [Fact]
         public void NamespaceAccessTest2()
         {
-            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
+            var lexer = new LexicalAnalyzer();
 
             var parser = new SyntaxAnalyzer();
 
-            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
+            var vm = new HighLevelVirtualMachine();
 
             var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
             vm.LoadProgram(new[] { "hoge" }, parseResult.programAst);
