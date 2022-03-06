@@ -11,8 +11,8 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public static void ThrowRuntimeError(this IMarineIL marineIL, string errorMessage, ErrorCode errorCode)
         {
-            throw new MarineRuntimeException(
-                  new RuntimeErrorInfo(
+            throw new MarineILRuntimeException(
+                  new ILRuntimeErrorInfo(
                       marineIL,
                       errorMessage,
                       errorCode

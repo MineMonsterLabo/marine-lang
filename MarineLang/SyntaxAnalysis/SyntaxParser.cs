@@ -182,12 +182,12 @@ namespace MarineLang.SyntaxAnalysis
 
         Parse.Parser<YieldAst> InternalParseYield()
         {
-            return ParseToken(TokenType.Yield).Map(_ => new YieldAst());
+            return ParseToken(TokenType.Yield).Map(YieldAst.Create);
         }
 
         Parse.Parser<BreakAst> InternalParseBreak()
         {
-            return ParseToken(TokenType.Break).Map(_ => new BreakAst());
+            return ParseToken(TokenType.Break).Map(BreakAst.Create);
         }
 
         public Parse.Parser<WhileAst> ParseWhile()

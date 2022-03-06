@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MarineLang.VirtualMachines.MarineILs;
 
 namespace MarineLang.VirtualMachines
@@ -6,6 +7,7 @@ namespace MarineLang.VirtualMachines
     public class LowLevelVirtualMachine
     {
         readonly ILStack iLStack = new ILStack();
+        readonly Stack<DebugContext> debugContextStack = new Stack<DebugContext>();
         ILGeneratedData iLGeneratedData;
 
         public int nextILIndex;
@@ -16,6 +18,8 @@ namespace MarineLang.VirtualMachines
 
         public EventHandler<VirtualMachineStepEventArgs> onStepILCallback;
 
+        public void PushDebugContext(DebugContext debugContext) => debugContextStack.Push(debugContext);
+        public void PopDebugContext() => debugContextStack.Pop();
         public object Pop() => iLStack.Pop();
         public void Push(object v) => iLStack.Push(v);
         public int GetStackCurrent() => iLStack.currentIndex;
@@ -59,6 +63,8 @@ namespace MarineLang.VirtualMachines
             stackBaseCount = -1;
             endFlag = false;
         }
+
+        public DebugContext[] GetDebugContexts() => debugContextStack.ToArray();
 
         void OnStepEvent(IMarineIL il)
         {

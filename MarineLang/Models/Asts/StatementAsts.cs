@@ -103,7 +103,8 @@ namespace MarineLang.Models.Asts
         public Token retToken;
         public ExprAst expr;
 
-        public override RangePosition Range => new RangePosition(retToken.position, expr.Range.End);
+        public override RangePosition Range => 
+            retToken == null ? new RangePosition() : new RangePosition(retToken.position, expr.Range.End);
 
         public static ReturnAst Create(Token retToken, ExprAst expr)
         {
