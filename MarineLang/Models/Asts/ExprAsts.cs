@@ -119,7 +119,8 @@ namespace MarineLang.Models.Asts
 
     public class ValueAst : ExprAst
     {
-        public override RangePosition Range => new RangePosition(token.position, token.PositionEnd);
+        public override RangePosition Range =>
+            token == null ? new RangePosition() : new RangePosition(token.position, token.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public object value;

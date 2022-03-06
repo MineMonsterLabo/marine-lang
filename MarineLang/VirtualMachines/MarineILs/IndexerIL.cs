@@ -7,14 +7,6 @@ namespace MarineLang.VirtualMachines.MarineILs
 {
     public struct InstanceCSharpIndexerLoadIL : IMarineIL
     {
-        public ILDebugInfo ILDebugInfo { get; }
-
-
-        public InstanceCSharpIndexerLoadIL(ILDebugInfo iLDebugInfo = null)
-        {
-            ILDebugInfo = iLDebugInfo;
-        }
-
         public void Run(LowLevelVirtualMachine vm)
         {
             var indexValue = vm.Pop();
@@ -36,7 +28,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     this.ThrowRuntimeError(string.Empty, ErrorCode.RuntimeIndexerNotFound);
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo) == false)
-                    this.ThrowRuntimeError("(Indexer)", ErrorCode.RuntimeMemberAccessPrivate);
+                    this.ThrowRuntimeError("Indexer", ErrorCode.RuntimeMemberAccessPrivate);
 
                 vm.Push(propertyInfo.GetValue(instance, new object[] { indexValue }));
             }
@@ -50,13 +42,6 @@ namespace MarineLang.VirtualMachines.MarineILs
 
     public struct InstanceCSharpIndexerStoreIL : IMarineIL
     {
-        public ILDebugInfo ILDebugInfo { get; }
-
-        public InstanceCSharpIndexerStoreIL(ILDebugInfo iLDebugInfo = null)
-        {
-            ILDebugInfo = iLDebugInfo;
-        }
-
         public void Run(LowLevelVirtualMachine vm)
         {
             var storeValue = vm.Pop();
@@ -79,7 +64,7 @@ namespace MarineLang.VirtualMachines.MarineILs
                     this.ThrowRuntimeError(string.Empty, ErrorCode.RuntimeIndexerNotFound);
 
                 if (ClassAccessibilityChecker.CheckMember(propertyInfo) == false)
-                    this.ThrowRuntimeError("(Indexer)", ErrorCode.RuntimeMemberAccessPrivate);
+                    this.ThrowRuntimeError("Indexer", ErrorCode.RuntimeMemberAccessPrivate);
 
                 propertyInfo.SetValue(instance, storeValue, new object[] { indexValue });
             }

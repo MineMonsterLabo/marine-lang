@@ -4,8 +4,6 @@ namespace MarineLang.VirtualMachines.MarineILs
 {
     public struct MoveNextIL : IMarineIL
     {
-        public ILDebugInfo ILDebugInfo => null;
-
         public void Run(LowLevelVirtualMachine vm)
         {
             var instance = vm.Pop();
@@ -20,8 +18,6 @@ namespace MarineLang.VirtualMachines.MarineILs
 
     public struct GetIterCurrentL : IMarineIL
     {
-        public ILDebugInfo ILDebugInfo => null;
-
         public void Run(LowLevelVirtualMachine vm)
         {
             var instance = vm.Pop();

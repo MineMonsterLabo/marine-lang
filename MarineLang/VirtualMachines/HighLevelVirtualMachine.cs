@@ -76,17 +76,9 @@ namespace MarineLang.VirtualMachines
             globalVariableDict.Add(name, val);
         }
 
-        public uint LoadProgram(string[] namespaceStrings, ProgramAst programAst)
+        public uint LoadProgram(MarineProgramUnit marineProgramUnit)
         {
-            marineProgramUnitList.Add(marineProgramUnitId, new MarineProgramUnit(namespaceStrings, programAst));
-
-            return marineProgramUnitId++;
-        }
-
-        public uint LoadProgram(ProgramAst programAst)
-        {
-            marineProgramUnitList.Add(marineProgramUnitId, new MarineProgramUnit(new string[] { }, programAst));
-
+            marineProgramUnitList.Add(marineProgramUnitId, marineProgramUnit);
             return marineProgramUnitId++;
         }
 
@@ -173,15 +165,19 @@ namespace MarineLang.VirtualMachines
                     return new MarineValue(YieldRun(lowLevelVirtualMachine));
                 return new MarineValue(lowLevelVirtualMachine.Pop());
             }
-            catch (MarineRuntimeException)
+            catch (MarineILRuntimeException e)
             {
-                throw;
+                throw new MarineRuntimeException(
+                   new RuntimeErrorInfo(e.ILRuntimeErrorInfo, lowLevelVirtualMachine.GetDebugContexts())
+                );
             }
             catch (Exception e)
             {
                 var currentIL = ILGeneratedData.marineILs[lowLevelVirtualMachine.nextILIndex];
+                var iLRuntimeErrorInfo = new ILRuntimeErrorInfo(currentIL, e.Message);
                 throw new MarineRuntimeException(
-                    new RuntimeErrorInfo(e.Message, errorPosition: currentIL.ILDebugInfo.position), e);
+                  new RuntimeErrorInfo(iLRuntimeErrorInfo, lowLevelVirtualMachine.GetDebugContexts()), e
+               );
             }
         }
 

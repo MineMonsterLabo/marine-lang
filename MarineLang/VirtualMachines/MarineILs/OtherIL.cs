@@ -2,8 +2,6 @@
 {
     public struct NoOpIL : IMarineIL
     {
-        public ILDebugInfo ILDebugInfo => null;
-
         public void Run(LowLevelVirtualMachine vm)
         {
         }
@@ -17,7 +15,6 @@
     public struct RetIL : IMarineIL
     {
         public readonly int argCount;
-        public ILDebugInfo ILDebugInfo => null;
 
         public RetIL(int argCount)
         {
@@ -51,7 +48,6 @@
     public struct JumpFalseIL : IMarineIL
     {
         public readonly int nextILIndex;
-        public ILDebugInfo ILDebugInfo => null;
 
         public JumpFalseIL(int nextILIndex)
         {
@@ -73,7 +69,6 @@
     public struct JumpIL : IMarineIL
     {
         public readonly int nextILIndex;
-        public ILDebugInfo ILDebugInfo => null;
 
         public JumpIL(int nextILIndex)
         {
@@ -94,7 +89,6 @@
     public struct BreakIL : IMarineIL
     {
         public readonly BreakIndex breakIndex;
-        public ILDebugInfo ILDebugInfo => null;
 
         public BreakIL(BreakIndex breakIndex)
         {
@@ -116,7 +110,6 @@
     {
         public readonly StackIndex stackIndex;
         public readonly object value;
-        public ILDebugInfo ILDebugInfo => null;
 
         public void Run(LowLevelVirtualMachine vm)
         {
@@ -127,7 +120,6 @@
     public struct PushValueIL : IMarineIL
     {
         public readonly object value;
-        public ILDebugInfo ILDebugInfo => null;
 
         public PushValueIL(object value)
         {
@@ -148,7 +140,6 @@
     public struct StoreIL : IMarineIL
     {
         public readonly StackIndex stackIndex;
-        public ILDebugInfo ILDebugInfo => null;
 
         public StoreIL(in StackIndex stackIndex)
         {
@@ -170,7 +161,6 @@
     public struct LoadIL : IMarineIL
     {
         public readonly StackIndex stackIndex;
-        public ILDebugInfo ILDebugInfo => null;
 
         public LoadIL(in StackIndex stackIndex)
         {
@@ -191,8 +181,6 @@
 
     public struct PopIL : IMarineIL
     {
-        public ILDebugInfo ILDebugInfo => null;
-
         public void Run(LowLevelVirtualMachine vm)
         {
             vm.Pop();
@@ -208,7 +196,6 @@
     {
         public readonly int initSize;
         public readonly int size;
-        public ILDebugInfo ILDebugInfo => null;
 
         public CreateArrayIL(int initSize, int? size)
         {
@@ -233,7 +220,6 @@
     public struct StackAllocIL : IMarineIL
     {
         public readonly int size;
-        public ILDebugInfo ILDebugInfo => null;
 
         public StackAllocIL(int size)
         {
@@ -253,8 +239,6 @@
 
     public struct YieldIL : IMarineIL
     {
-        public ILDebugInfo ILDebugInfo => null;
-
         public void Run(LowLevelVirtualMachine vm)
         {
             vm.yieldFlag = true;

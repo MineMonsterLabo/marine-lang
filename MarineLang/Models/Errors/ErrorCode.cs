@@ -53,7 +53,7 @@ namespace MarineLang.Models.Errors
                 case ErrorCode.RuntimeOperatorNotFound:
                     return "演算子が見つかりません";
                 case ErrorCode.Unknown:
-                    return "";
+                    return "不明なエラー";
             }
 
             throw new NotImplementedException();
