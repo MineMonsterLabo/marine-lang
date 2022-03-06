@@ -53,13 +53,13 @@ namespace MarineLang.VirtualMachines.MarineILs
 
             var methodBase = MethodBaseResolver.Select(methodBases, types);
             if (methodBase == null)
-                this.ThrowRuntimeError($"{funcName}", ErrorCode.RuntimeMemberNotFound);
+                this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberNotFound);
 
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodBase.GetParameters().Length - args.Length))
                 .ToArray();
 
             if (ClassAccessibilityChecker.CheckMember(methodBase) == false)
-                this.ThrowRuntimeError($"({funcName})", ErrorCode.RuntimeMemberAccessPrivate);
+                this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberAccessPrivate);
 
             if (methodBase is ConstructorInfo constructorInfo)
                 vm.Push(constructorInfo.Invoke(args2));
@@ -97,20 +97,20 @@ namespace MarineLang.VirtualMachines.MarineILs
                     .ToArray();
             var methodInfo = MethodBaseResolver.Select(methodInfos, types);
             if (methodInfo == null)
-                this.ThrowRuntimeError($"{funcName}", ErrorCode.RuntimeMemberNotFound);
+                this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberNotFound);
 
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
 
             if (ClassAccessibilityChecker.CheckMember(methodInfo) == false)
-                this.ThrowRuntimeError($"{funcName}", ErrorCode.RuntimeMemberAccessPrivate);
+                this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberAccessPrivate);
 
             vm.Push(methodInfo.Invoke(instance, args2));
         }
 
         public override string ToString()
         {
-            return typeof(InstanceCSharpFuncCallIL).Name + " '" + funcName + "' " + argCount;
+            return typeof(InstanceCSharpFuncCallIL).Name + " " + funcName + "," + argCount;
         }
     }
 
@@ -139,7 +139,7 @@ namespace MarineLang.VirtualMachines.MarineILs
 
         public override string ToString()
         {
-            return typeof(MarineFuncCallIL).Name + " '" + funcName + "' " + argCount;
+            return typeof(MarineFuncCallIL).Name + " " + funcName + "," + argCount;
         }
     }
 }

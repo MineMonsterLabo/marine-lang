@@ -163,7 +163,7 @@ namespace MarineLang.VirtualMachines.MarineILs
 
             if (methodInfo == null)
             {
-                this.ThrowRuntimeError($"演算子{opKind}:", ErrorCode.RuntimeOperatorNotFound);
+                this.ThrowRuntimeError($"演算子{opKind}", ErrorCode.RuntimeOperatorNotFound);
             }
 
             return methodInfo.Invoke(null, new[] { leftValue, rightValue });

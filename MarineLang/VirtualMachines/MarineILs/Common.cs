@@ -14,7 +14,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             throw new MarineILRuntimeException(
                   new ILRuntimeErrorInfo(
                       marineIL,
-                      errorMessage,
+                      "'" + errorMessage + "'",
                       errorCode
                   )
               );
