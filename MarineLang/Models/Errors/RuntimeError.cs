@@ -12,7 +12,7 @@ namespace MarineLang.Models.Errors
         readonly string prefixErrorMessage = "";
 
         public IMarineIL MarineIL { get; }
-        public string ErrorMessage => $"[{MarineIL.ToString()}]:{prefixErrorMessage} {ErrorCode.ToErrorMessage()} \nerror code: {(int)ErrorCode}";
+        public string ErrorMessage => $"[{MarineIL.ToString()}]:{prefixErrorMessage} {ErrorCode.ToErrorMessage()} {Environment.NewLine}error code: {(int)ErrorCode}";
         public ErrorCode ErrorCode { get; }
 
         public ILRuntimeErrorInfo(IMarineIL marineIL, string prefixErrorMessage, ErrorCode errorCode = ErrorCode.Unknown)
@@ -29,7 +29,7 @@ namespace MarineLang.Models.Errors
         public ILRuntimeErrorInfo ILRuntimeErrorInfo { get; }
         public DebugContext[] DebugContexts { get; }
 
-        public string ErrorMessage => ILRuntimeErrorInfo.ErrorMessage + "\n" + string.Join("\n", DebugContexts.Select(e => e.ToString()));
+        public string ErrorMessage => ILRuntimeErrorInfo.ErrorMessage + Environment.NewLine + string.Join(Environment.NewLine, DebugContexts.Select(e => e.ToString()));
 
         public RuntimeErrorInfo(ILRuntimeErrorInfo ilRuntimeErrorInfo, DebugContext[] debugContexts)
         {
