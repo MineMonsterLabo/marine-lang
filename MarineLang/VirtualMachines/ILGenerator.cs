@@ -133,8 +133,11 @@ namespace MarineLang.VirtualMachines
                     funcDefinitionAst,
                     new FuncScopeVariables(funcDefinitionAst.args, globalVariableNames)
                 );
+
             for (var i = 0; i < actionFuncDataList.Count; i++)
-                ActionFuncILGenerate(currentProgramUnit,globalNamespaceTable, namespaceTable, actionFuncDataList[i], globalVariableNames);
+                ActionFuncILGenerate(currentProgramUnit, globalNamespaceTable, namespaceTable, actionFuncDataList[i], globalVariableNames);
+
+            actionFuncDataList.Clear();
         }
 
         void FuncDefinitionILGenerate(
@@ -142,10 +145,18 @@ namespace MarineLang.VirtualMachines
             NamespaceTable globalNamespaceTable,
             NamespaceTable namespaceTable,
             FuncDefinitionAst funcDefinitionAst,
-            FuncScopeVariables variables
+            FuncScopeVariables variables,
+            bool isGlobalFunc = false
         )
         {
-            namespaceTable.SetFuncILIndex(funcDefinitionAst.funcName, marineILs.Count);
+            if (isGlobalFunc)
+            {
+                globalNamespaceTable.SetFuncILIndex(funcDefinitionAst.funcName, marineILs.Count);
+            }
+            else
+            {
+                namespaceTable.SetFuncILIndex(funcDefinitionAst.funcName, marineILs.Count);
+            }
 
             bool retFlag = false;
             var stackAllockIndex = marineILs.Count;
@@ -181,9 +192,9 @@ namespace MarineLang.VirtualMachines
 
         void ActionFuncILGenerate(
             MarineProgramUnit currentProgramUnit,
-            NamespaceTable globalNamespaceTable, 
-            NamespaceTable namespaceTable, 
-            ActionFuncData actionFuncData, 
+            NamespaceTable globalNamespaceTable,
+            NamespaceTable namespaceTable,
+            ActionFuncData actionFuncData,
             string[] globalVariableNames)
         {
             var args = new[] { VariableAst.Create(new Token(default, "_action", default)) }
@@ -196,7 +207,7 @@ namespace MarineLang.VirtualMachines
                 actionFuncData.actionAst.statementAsts,
                 null
             );
-            FuncDefinitionILGenerate(currentProgramUnit,globalNamespaceTable, namespaceTable, funcDefinitionAst, variables);
+            FuncDefinitionILGenerate(currentProgramUnit, globalNamespaceTable, namespaceTable, funcDefinitionAst, variables, true);
         }
 
         bool StatementILGenerate(StatementAst statementAst, GenerateArgs generateArgs)

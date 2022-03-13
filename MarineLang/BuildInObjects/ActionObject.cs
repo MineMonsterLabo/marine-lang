@@ -1,4 +1,5 @@
 ﻿using MarineLang.VirtualMachines;
+using System;
 using System.Linq;
 
 namespace MarineLang.BuildInObjects
@@ -44,5 +45,14 @@ namespace MarineLang.BuildInObjects
             return vm.Run(marineFuncName, new object[] { this }.Concat(args));
         }
 
+        public static Func<MarineValue> ToDelegate(ActionObject actionObject)
+        {
+            return () => actionObject.Invoke();
+        }
+
+        public static Func<object[], MarineValue> ToDelegateArg(ActionObject actionObject)
+        {
+            return args => actionObject.Invoke(args);
+        }
     }
 }
