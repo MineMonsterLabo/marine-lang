@@ -841,6 +841,50 @@ end", 1)]
             Assert.Equal(188, vm.Run<int>("aaa").Eval());
         }
 
+        [Fact]
+        public void NamespaceAccessTest3()
+        {
+            var lexer = new LexicalAnalyzer();
+
+            var parser = new SyntaxAnalyzer();
+
+            var vm = new HighLevelVirtualMachine();
+
+            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret {|x| ret x + x } end"));
+            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge", "fuga" }, parseResult.programAst));
+
+            parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret hoge::fuga::aaa().invoke([8]).value end"));
+            vm.LoadProgram(new MarineProgramUnit(new[] { "foobar" }, parseResult.programAst));
+
+            vm.Compile();
+
+            Assert.Equal(16, vm.Run<int>(new[] { "foobar" }, "bbb").Eval());
+        }
+
+        [Fact]
+        public void NamespaceAccessTest4()
+        {
+            var lexer = new LexicalAnalyzer();
+
+            var parser = new SyntaxAnalyzer();
+
+            var vm = new HighLevelVirtualMachine();
+
+            var parseResult = parser.Parse(lexer.GetTokens("fun ccc() ret 10 end"));
+            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge", "fuga" }, parseResult.programAst));
+
+            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret {|x| ret x + ccc() } end"));
+            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge", "fuga" }, parseResult.programAst));
+
+
+            parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret hoge::fuga::aaa().invoke([8]).value end"));
+            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
+
+            vm.Compile();
+
+            Assert.Equal(18, vm.Run<int>("bbb").Eval());
+        }
+
         [Theory]
         [InlineData("fun main() ret null end", null)]
         [InlineData("fun main() ret null == null end", true)]
