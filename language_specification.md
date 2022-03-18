@@ -210,9 +210,9 @@ for i = 1, 10, 1{
 #### 例
 ```
 fun main() 
-    yield
+    yield null
     print("hello")
-    yield
+    yield null
     print("world")
     ret 4
 end
