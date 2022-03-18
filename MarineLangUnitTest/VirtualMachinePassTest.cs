@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Models.Errors;
 using MarineLang.SyntaxAnalysis;
@@ -438,8 +439,8 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
         }
 
         [Theory]
-        [InlineData("fun main() yield ret 4 end ", 4)]
-        [InlineData("fun main() yield ret hoge() + 1 end fun hoge() yield ret 5 end ", 6)]
+        [InlineData("fun main() yield 0 ret 4 end ", 4)]
+        [InlineData("fun main() yield 0 ret hoge() + 1 end fun hoge() yield 0 ret 5 end ", 6)]
         public void YieldTest<T>(string str, T expected)
         {
             var vm = Create(str);
@@ -453,6 +454,30 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
             Assert.Equal(expected, value);
         }
 
+        [Fact]
+        public void YieldTest2()
+        {
+            var vm = Create
+                (
+                    @"
+                        fun main()
+                            yield null
+                            yield 4+5
+                            yield 'c'
+                            ret 123
+                        end
+                    "
+                );
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run("main");
+
+            Assert.True(ret.IsCoroutine);
+
+            Assert.Equal(new object[] { null, 9, 'c', 123}, ret.Coroutine);
+        }
+
         [Theory]
         [InlineData("fun main() ret wait5().await end ", 5)]
         [InlineData("fun main() ret wait_wait5().await.await end ", 5)]
@@ -464,11 +489,34 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
 
             Assert.NotNull(vm);
 
-            var ret = vm.Run<T>("main");
+            var ret = vm.Run("main");
 
             var value = ret.Eval();
 
             Assert.Equal(expected, value);
+        }
+
+        [Fact]
+        public void AwaitTest2()
+        {
+            var vm = Create
+                (
+                    @"
+                        fun main() 
+                            wait5().await 
+                            wait5().await 
+                            ret 6
+                        end
+                    "
+                );
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run("main");
+
+            Assert.True(ret.IsCoroutine);
+
+            Assert.Equal(new object[] { 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6}, ret.Coroutine);
         }
 
         [Theory]
