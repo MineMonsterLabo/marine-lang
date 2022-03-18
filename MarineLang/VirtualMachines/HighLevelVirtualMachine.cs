@@ -199,12 +199,14 @@ namespace MarineLang.VirtualMachines
 
         private IEnumerable<object> YieldRun(LowLevelVirtualMachine lowLevelVirtualMachine)
         {
+            yield return lowLevelVirtualMachine.yieldCurrentRegister;
+
             while (true)
             {
                 lowLevelVirtualMachine.Resume();
                 if (lowLevelVirtualMachine.yieldFlag == false)
                     break;
-                yield return null;
+                yield return lowLevelVirtualMachine.yieldCurrentRegister;
             }
 
             yield return lowLevelVirtualMachine.Pop();

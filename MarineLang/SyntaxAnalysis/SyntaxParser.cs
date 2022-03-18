@@ -33,7 +33,6 @@ namespace MarineLang.SyntaxAnalysis
         public Parse.Parser<ValueAst> ParseString { get; }
         public Parse.Parser<ValueAst> ParseNull { get; }
         public Parse.Parser<VariableAst> ParseVariable { get; }
-        public Parse.Parser<YieldAst> ParseYield { get; }
         public Parse.Parser<BreakAst> ParseBreak { get; }
         public Parse.Parser<ProgramAst> ParseProgram { get; }
         public Parse.Parser<FuncDefinitionAst> ParseFuncDefinition { get; }
@@ -50,7 +49,6 @@ namespace MarineLang.SyntaxAnalysis
             ParseString = InternalParseString();
             ParseNull = InternalParseNull();
             ParseVariable = InternalParseVariable();
-            ParseYield = InternalParseYield();
             ParseBreak = InternalParseBreak();
             ParseStatement = InternalParseStatement();
             ParseFuncDefinition = InternalParseFuncDefinition();
@@ -166,7 +164,7 @@ namespace MarineLang.SyntaxAnalysis
             return
                 Parse.OrConsumedError(
                     ParseBreak.Try(),
-                    ParseYield.Try(),
+                    ParseYield().Try(),
                     ParseWhile(),
                     ParseFor(),
                     ParseForEach(),
@@ -180,9 +178,17 @@ namespace MarineLang.SyntaxAnalysis
                 );
         }
 
-        Parse.Parser<YieldAst> InternalParseYield()
+        Parse.Parser<YieldAst> ParseYield()
         {
-            return ParseToken(TokenType.Yield).Map(YieldAst.Create);
+            return
+                from yieldToken in 
+                    ParseToken(TokenType.Yield)
+                    .Left(
+                        Parse.Except(Parse.End)
+                        .NamedError(ErrorCode.SyntaxNonYieldExpr)
+                    )
+                from expr in ParseExpr().NamedError(ErrorCode.SyntaxNonYieldExpr)
+                select YieldAst.Create(yieldToken, expr);
         }
 
         Parse.Parser<BreakAst> InternalParseBreak()
