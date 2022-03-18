@@ -440,17 +440,18 @@ namespace MarineLang.Models.Asts
     public class YieldAst : StatementAst
     {
         public Token yieldToken;
+        public ExprAst exprAst;
 
-        public override RangePosition Range => new RangePosition(yieldToken.position, yieldToken.PositionEnd);
+        public override RangePosition Range => new RangePosition(yieldToken.position, exprAst.Range.End);
 
-        public static YieldAst Create(Token yieldToken)
+        public static YieldAst Create(Token yieldToken, ExprAst exprAst)
         {
-            return new YieldAst { yieldToken = yieldToken };
+            return new YieldAst { yieldToken = yieldToken, exprAst = exprAst };
         }
 
-        public static YieldAst Create()
+        public static YieldAst Create(ExprAst exprAst)
         {
-            return new YieldAst { };
+            return new YieldAst { exprAst = exprAst };
         }
 
         public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)

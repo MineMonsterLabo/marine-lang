@@ -249,7 +249,7 @@ namespace MarineLang.VirtualMachines
             else if (statementAst.GetForEachAst() != null)
                 ForEachILGenerate(statementAst.GetForEachAst(), generateArgs);
             else if (statementAst.GetYieldAst() != null)
-                marineILs.Add(new YieldIL());
+                YieldILGenerate(statementAst.GetYieldAst(), generateArgs);
             else if (statementAst.GetBreakAst() != null)
                 marineILs.Add(new BreakIL(generateArgs.breakIndex));
 
@@ -261,6 +261,12 @@ namespace MarineLang.VirtualMachines
         {
             ExprILGenerate(returnAst.expr, generateArgs);
             marineILs.Add(new RetIL(generateArgs.argCount));
+        }
+
+        void YieldILGenerate(YieldAst yieldAst, GenerateArgs generateArgs)
+        {
+            ExprILGenerate(yieldAst.exprAst, generateArgs);
+            marineILs.Add(new YieldIL());
         }
 
         void ExprILGenerate(ExprAst exprAst, GenerateArgs generateArgs)
@@ -519,18 +525,16 @@ namespace MarineLang.VirtualMachines
         {
             ExprILGenerate(awaitAst.instanceExpr, generateArgs);
             var iterVariable = generateArgs.variables.CreateUnnamedLocalVariableIdx();
-            var resultVariable = generateArgs.variables.CreateUnnamedLocalVariableIdx();
             marineILs.Add(new StoreIL(iterVariable));
             var jumpIndex = marineILs.Count;
             marineILs.Add(new LoadIL(iterVariable));
             marineILs.Add(new MoveNextIL());
-            marineILs.Add(new JumpFalseIL(jumpIndex + 8));
+            marineILs.Add(new JumpFalseIL(jumpIndex + 7));
             marineILs.Add(new LoadIL(iterVariable));
             marineILs.Add(new GetIterCurrentL());
-            marineILs.Add(new StoreIL(resultVariable));
             marineILs.Add(new YieldIL());
             marineILs.Add(new JumpIL(jumpIndex));
-            marineILs.Add(new LoadIL(resultVariable));
+            marineILs.Add(new PushYieldCurrentRegisterIL());
         }
 
         void UnaryOpILGenerate(UnaryOpAst unaryOpAst, GenerateArgs generateArgs)

@@ -242,6 +242,7 @@
         public void Run(LowLevelVirtualMachine vm)
         {
             vm.yieldFlag = true;
+            vm.yieldCurrentRegister = vm.Pop();
         }
 
         public override string ToString()

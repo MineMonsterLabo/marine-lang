@@ -38,7 +38,7 @@ re_assignment_variable  =  variable , '=' , expr ;
 re_assignment_indexer  
                = term , indexers , '=' , expr ;
 yield_statement
-               = 'yield' ; 
+               = 'yield' , expr ; 
 break_statement
                = 'break' ;
 expr           = if_expr | macro | binary_op_expr ;

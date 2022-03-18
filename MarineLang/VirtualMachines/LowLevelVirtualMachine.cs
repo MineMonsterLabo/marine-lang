@@ -16,6 +16,8 @@ namespace MarineLang.VirtualMachines
         public bool endFlag;
         public bool yieldFlag;
 
+        public object yieldCurrentRegister;
+
         public EventHandler<VirtualMachineStepEventArgs> onStepILCallback;
 
         public void PushDebugContext(DebugContext debugContext) => debugContextStack.Push(debugContext);
