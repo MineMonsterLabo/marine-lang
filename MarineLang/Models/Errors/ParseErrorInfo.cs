@@ -15,25 +15,13 @@ namespace MarineLang.Models.Errors
 
         public ParseErrorInfo(
             string prefixErrorMessage,
-            ErrorCode errorCode = ErrorCode.Unknown,
-            RangePosition errorRangePosition = default
+            RangePosition errorRangePosition,
+            ErrorCode errorCode = ErrorCode.Unknown
         )
         {
             this.prefixErrorMessage = prefixErrorMessage;
             ErrorRangePosition = errorRangePosition;
             ErrorCode = errorCode;
-        }
-
-        public ParseErrorInfo(ErrorCode errorCode = ErrorCode.Unknown)
-        {
-            ErrorRangePosition = default;
-            ErrorCode = errorCode;
-        }
-
-        public ParseErrorInfo()
-        {
-            ErrorRangePosition = default;
-            ErrorCode = ErrorCode.Unknown;
         }
     }
 }
