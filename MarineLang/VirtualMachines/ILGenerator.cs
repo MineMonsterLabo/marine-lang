@@ -324,12 +324,20 @@ namespace MarineLang.VirtualMachines
                 );
                 return;
             }
-            
+
             if (generateArgs.CurrentNamespaceTable.ContainFunc(funcCallAst.FuncName))
                 marineILs.Add(
                     new MarineFuncCallIL(
                         funcCallAst.FuncName,
                         generateArgs.CurrentNamespaceTable.GetFuncILIndex(funcCallAst.FuncName),
+                        funcCallAst.args.Length
+                    )
+                );
+            else if (generateArgs.GlobalNamespaceTable.ContainFunc(funcCallAst.FuncName))
+                marineILs.Add(
+                    new MarineFuncCallIL(
+                        funcCallAst.FuncName,
+                        generateArgs.GlobalNamespaceTable.GetFuncILIndex(funcCallAst.FuncName),
                         funcCallAst.args.Length
                     )
                 );
