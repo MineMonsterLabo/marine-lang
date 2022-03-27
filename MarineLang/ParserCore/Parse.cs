@@ -92,7 +92,7 @@ namespace MarineLang.ParserCore
                 {
                     var result = Many(parser)(input);
                     if (result.Result.IsError == false && result.Result.RawValue.Count == 0)
-                        return result.Error<List<T>>(new ParseErrorInfo("OneMany"));
+                        return result.Error<List<T>>(new ParseErrorInfo("OneMany", input.RangePosition));
                     return result;
                 };
         }
@@ -108,11 +108,11 @@ namespace MarineLang.ParserCore
 
                     for (var i = 0; i < parsers.Length; i++)
                     {
-                        parseResult = parseResult.ChainRight( parsers[i](parseResult.Remain));
+                        parseResult = parseResult.ChainRight(parsers[i](parseResult.Remain));
                         if (parseResult.Result.IsError)
                             return parseResult.CastError<object[]>();
                         if (parseResult.Remain.IsEnd && i + 1 != parsers.Length)
-                            return parseResult.Error<object[]>(new ParseErrorInfo("Parsers"));
+                            return parseResult.Error<object[]>(new ParseErrorInfo("Parsers", input.RangePosition));
                         values[i] = parseResult.Result.Unwrap();
                     }
                     return parseResult.Ok(values);
@@ -213,13 +213,13 @@ namespace MarineLang.ParserCore
                         return parseResult2.CastError<T[]>();
 
                     isFirst = false;
-                    
+
                     if (parseResult2.Result.IsError)
                     {
                         parseResult = parseResult.SetRemain(parseResult2.Remain);
                         break;
                     }
-                    
+
                     parseResult = parseResult2;
 
                     list.Add(parseResult.Result.Unwrap());
@@ -234,7 +234,7 @@ namespace MarineLang.ParserCore
             {
                 if (input.IsEnd)
                 {
-                    return ParseResult.NewError<I, I>(new ParseErrorInfo("Input id End "), input);
+                    return ParseResult.NewError<I, I>(new ParseErrorInfo("Input id End ", input.RangePosition), input);
                 }
 
                 var token = input.Current;
@@ -242,17 +242,17 @@ namespace MarineLang.ParserCore
                 {
                     return ParseResult.NewOk(token, input.Advance());
                 }
-                return ParseResult.NewError<I, I>(new ParseErrorInfo("Verify actual "+token), input);
+                return ParseResult.NewError<I, I>(new ParseErrorInfo("Verify actual " + token, input.RangePosition), input);
             };
         }
 
-        public static Parser<I> Expected<T>(Func<I,T> selector, T expect)
+        public static Parser<I> Expected<T>(Func<I, T> selector, T expect)
         {
             return input =>
             {
                 if (input.IsEnd)
                 {
-                    return ParseResult.NewError<I, I>(new ParseErrorInfo("Input id End "), input);
+                    return ParseResult.NewError<I, I>(new ParseErrorInfo("Input id End ", input.RangePosition), input);
                 }
 
                 var actual = selector(input.Current);
@@ -264,9 +264,8 @@ namespace MarineLang.ParserCore
                 return ParseResult.NewError<I, I>(
                     new ParseErrorInfo
                         ($"actual: {actual} expected: {expect}",
-                        ErrorCode.Unknown, 
                         input.RangePosition
-                    ), 
+                    ),
                     input);
             };
         }
@@ -344,7 +343,7 @@ namespace MarineLang.ParserCore
             input =>
                 input.IsEnd ?
                     UnitReturn(input) :
-                    ParseResult.NewError<Unit, I>(new ParseErrorInfo("End"), input);
+                    ParseResult.NewError<Unit, I>(new ParseErrorInfo("End", input.RangePosition), input);
 
         public static Parser<Unit> Except<T>(Parser<T> except)
         {
@@ -352,8 +351,8 @@ namespace MarineLang.ParserCore
             {
                 var result = except(input);
                 if (result.Result.IsOk)
-                    return result.Error<Unit>(new ParseErrorInfo("Except"));
-                return ParseResult.NewOk(Unit.Value,result.Remain);
+                    return result.Error<Unit>(new ParseErrorInfo("Except", input.RangePosition));
+                return ParseResult.NewOk(Unit.Value, result.Remain);
             };
         }
 
@@ -370,7 +369,7 @@ namespace MarineLang.ParserCore
         public static readonly Parser<I> Any =
             input =>
                 input.IsEnd ?
-                    ParseResult.NewError<I, I>(new ParseErrorInfo("Any"), input) :
+                    ParseResult.NewError<I, I>(new ParseErrorInfo("Any", input.RangePosition), input) :
                     ParseResult.NewOk(input.Current, input.Advance());
 
         public static Parse<char>.Parser<char> Char(char c)

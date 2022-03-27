@@ -933,6 +933,26 @@ end", 1)]
             Assert.Equal(18, vm.Run<int>("bbb").Eval());
         }
 
+        [Fact]
+        public void NamespaceAccessTest5()
+        {
+            var lexer = new LexicalAnalyzer();
+
+            var parser = new SyntaxAnalyzer();
+
+            var vm = new HighLevelVirtualMachine();
+
+            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 555 end"));
+            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
+
+            parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret aaa() end"));
+            vm.LoadProgram(new MarineProgramUnit(new[] { "foobar" }, parseResult.programAst));
+
+            vm.Compile();
+
+            Assert.Equal(555, vm.Run<int>(new[] { "foobar" }, "bbb").Eval());
+        }
+
         [Theory]
         [InlineData("fun main() ret null end", null)]
         [InlineData("fun main() ret null == null end", true)]
