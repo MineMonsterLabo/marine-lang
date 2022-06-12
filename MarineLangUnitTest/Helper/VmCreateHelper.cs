@@ -68,6 +68,7 @@ namespace MarineLangUnitTest.Helper
         public class Hoge
         {
             public bool flag;
+            public bool Flag;
             public string[] Names { get; } = new string[] {"rrr", "qqq"};
 
             public string this[string index]

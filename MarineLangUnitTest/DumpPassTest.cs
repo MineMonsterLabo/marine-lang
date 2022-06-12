@@ -32,7 +32,7 @@ namespace MarineLangUnitTest
         {
             var hogeTypeRef = dumpModel.GlobalVariables["hoge"];
             var hoge = hogeTypeRef.GetTypeDumpModel(dumpModel);
-            Assert.Equal(11, hoge.Members.Count);
+            Assert.Equal(12, hoge.Members.Count);
             Assert.Equal(nameof(VmCreateHelper.Hoge), hogeTypeRef.Name);
             Assert.Equal(typeof(VmCreateHelper.Hoge).FullName, hogeTypeRef.FullName);
             Assert.Equal(typeof(VmCreateHelper.Hoge).AssemblyQualifiedName, hogeTypeRef.QualifiedName);
