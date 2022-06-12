@@ -32,9 +32,14 @@
             return char.IsLetter(c) && char.IsUpper(c);
         }
 
-        static public bool IsIdChar(char c)
+        static public bool IsIdHeadChar(char c)
         {
-            return char.IsDigit(c) || IsLowerLetter(c) || c == '_';
+            return char.IsLetter(c);
+        }
+
+        static public bool IsIdTailChar(char c)
+        {
+            return char.IsDigit(c) || char.IsLetter(c) || c == '_';
         }
     }
 }

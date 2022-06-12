@@ -22,7 +22,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             if (type == null)
                 this.ThrowRuntimeError(fieldName, ErrorCode.Unknown);
 
-            var fieldInfo = type.GetField(NameUtil.GetLowerCamelName(fieldName),
+            var fieldInfo = type.GetField(NameUtil.ConvertCameName(fieldName),
                 BindingFlags.Public | BindingFlags.Static);
 
             if (fieldInfo != null)
@@ -56,6 +56,8 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly string fieldName;
 
+        public const BindingFlags BINDING_FLAGS = BindingFlags.Public | BindingFlags.Instance;
+
         public InstanceCSharpFieldLoadIL(string fieldName)
         {
             this.fieldName = fieldName;
@@ -65,8 +67,7 @@ namespace MarineLang.VirtualMachines.MarineILs
         {
             var instance = vm.Pop();
             var instanceType = instance.GetType();
-            var fieldInfo = instanceType.GetField(NameUtil.GetLowerCamelName(fieldName),
-                BindingFlags.Public | BindingFlags.Instance);
+            var fieldInfo = instanceType.GetField(NameUtil.ConvertCameName(fieldName), BINDING_FLAGS);
 
             if (fieldInfo != null)
             {
@@ -112,7 +113,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             if (type == null)
                 this.ThrowRuntimeError(fieldName, ErrorCode.Unknown);
 
-            var fieldInfo = type.GetField(NameUtil.GetLowerCamelName(fieldName),
+            var fieldInfo = type.GetField(NameUtil.ConvertCameName(fieldName),
                 BindingFlags.Public | BindingFlags.Static);
 
             if (fieldInfo != null)
@@ -156,7 +157,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             var value = vm.Pop();
             var instance = vm.Pop();
             var instanceType = instance.GetType();
-            var fieldInfo = instanceType.GetField(NameUtil.GetLowerCamelName(fieldName),
+            var fieldInfo = instanceType.GetField(NameUtil.ConvertCameName(fieldName),
                 BindingFlags.Public | BindingFlags.Instance);
 
             if (fieldInfo != null)
