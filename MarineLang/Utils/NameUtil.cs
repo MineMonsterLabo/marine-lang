@@ -15,7 +15,7 @@ namespace MarineLang.Utils
                 );
         }
 
-        public static string GetLowerCamelName(in string name)
+        public static string ConvertCameName(in string name)
         {
             var splites = name.Split('_');
             if (splites.Length == 1)

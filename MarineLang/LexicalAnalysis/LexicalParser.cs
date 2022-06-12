@@ -1,5 +1,6 @@
 ﻿using MarineLang.Models;
 using MarineLang.ParserCore;
+using MarineLang.Utils;
 using MineUtil;
 using System.Collections.Generic;
 
@@ -70,7 +71,6 @@ namespace MarineLang.LexicalAnalysis
                 GetCharToken(TokenType.Comma),
                 GetCharToken(TokenType.NotOp),
                 GetIdToken(),
-                GetClassNameToken(),
                 GetMacroNameToken(),
                 GetUnknownToken()
             );
@@ -174,18 +174,9 @@ namespace MarineLang.LexicalAnalysis
         {
             return
                 from position in Parse.Positioned
-                from firstChar in Parse.Verify(LexerHelper.IsLowerLetter)
-                from tailStr in Parse.Many(Parse.Verify(LexerHelper.IsIdChar)).Text()
+                from firstChar in Parse.Verify(CharUtil.IsIdHeadChar)
+                from tailStr in Parse.Many(Parse.Verify(CharUtil.IsIdTailChar)).Text()
                 select new Token(TokenType.Id, firstChar.ToString() + tailStr, position.Start);
-        }
-
-        static public Parse.Parser<Token> GetClassNameToken()
-        {
-            return
-                from position in Parse.Positioned
-                from firstChar in Parse.Verify(LexerHelper.IsUpperLetter)
-                from tailStr in Parse.Many(Parse.Verify(c => char.IsLetter(c) || char.IsDigit(c))).Text()
-                select new Token(TokenType.ClassName, firstChar.ToString() + tailStr, position.Start);
         }
 
         static public Parse.Parser<Token> GetMacroNameToken()
@@ -227,7 +218,7 @@ namespace MarineLang.LexicalAnalysis
         {
             return
                 from value in Parse.Current.Where(c => c == '\\')
-                from escapeChar in Parse.Current.Map(c => LexerHelper.ToEspaceChar(value.ToString() + c)).Where(x => x.HasValue)
+                from escapeChar in Parse.Current.Map(c => CharUtil.ToEspaceChar(value.ToString() + c)).Where(x => x.HasValue)
                 select escapeChar.Value;
         }
 

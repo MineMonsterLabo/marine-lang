@@ -240,6 +240,7 @@ end
 
         [Theory]
         [InlineData("fun main() ret create_hoge().flag end", false)]
+        [InlineData("fun main() ret create_hoge().Flag end", false)]
         [InlineData("fun main() ret create_hoge().flag.to_string() end", "False")]
         [InlineData("fun main() ret create_hoge().flag||true end", true)]
         [InlineData("fun main() ret create_hoge().name end", "this is the pen")]
@@ -250,6 +251,8 @@ end
 
         [Theory]
         [InlineData("fun main() let hoge = create_hoge() hoge.flag=4!=5 ret hoge.flag end", true)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.Flag end", true)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.flag end", false)]
         [InlineData("fun main() let hoge = create_hoge() hoge.name = 5.to_string() ret hoge.name end", "5")]
         public void InstanceFieldAssignment<T>(string str, T expected)
         {
