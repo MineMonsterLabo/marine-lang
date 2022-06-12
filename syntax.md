@@ -9,7 +9,7 @@
 ```ebnf
 program        = {func_definition | macro} ;
 func_definition
-               = 'fun' , id , variable_list , func_body , 'end' ;
+               = 'fun' , lower_id , variable_list , func_body , 'end' ;
 func_body      = {statement} ;
 statement      =  
                   break_statement |
@@ -31,9 +31,9 @@ foreach_statement
 ret_statement  = 'ret' , expr ;
 assignment     = 'let' , re_assignment_variable ;
 field_assignment  
-               = indexer_op_expr ,  dot_terms , '.' , variable , '=' , expr ;
+               = indexer_op_expr ,  dot_terms , '.' , field_variable , '=' , expr ;
 static_field_assignment
-               =  class_name , '.' , variable , '=' , expr ;
+               =  class_name , '.' , field_variable , '=' , expr ;
 re_assignment_variable  =  variable , '=' , expr ;
 re_assignment_indexer  
                = term , indexers , '=' , expr ;
@@ -50,10 +50,10 @@ dot_op_expr    = indexer_op_expr , dot_terms ;
 indexer_op_expr
                = static_term | ( term , [indexers] ) ;
 dot_terms      = { '.' , field_term , [indexers] } ;
-static_term    = class_name , '.' , func_call | variable ;
+static_term    = class_name , '.' , func_call | field_variable ;
 top_level_func_call  
-               =  { id , two_colon } , func_call;
-field_term     = 'await' | func_call | variable ;
+               =  { lower_id , two_colon } , func_call;
+field_term     = 'await' | func_call | field_variable ;
 term           =
                  '(' , expr , ')' |
                  top_level_func_call | 
@@ -68,7 +68,7 @@ term           =
                  variable |
                  dict_cons_literal;
 action_literal = '{' , action_variable_list , func_body , '}' ;
-func_call      = id , param_list ;
+func_call      = lower_id , param_list ;
 indexers       = ( '[' , expr , ']' )+ ;
 param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
 variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;
@@ -78,7 +78,10 @@ macro          = macro_name , ? トークン文字列群 ? ;
 dict_cons_literal 
                = dollar , '{' , [ dict_cons_key_value , { ',' dict_cons_key_value } ] , '}' ;
 dict_cons_key_value
-               = id , colon , expr ;
+               = lower_id , colon , expr ;
+variable       = lower_id;
+class_name     = upper_id;
+
 トークン
 
 float_literal  = int_literal , '.' , int_literal ;
@@ -86,9 +89,10 @@ int_literal    = digit ;
 bool_literal   = 'true' | 'false' ;
 char_literal   = ? 省略 ? ;
 string_literal = ? 省略 ? ;
-class_name     = upper_letter , {digit | lower_letter | upper_letter} ; 
-variable       = id ;
-id             = lower_letter , {id_char} ;
+upper_id       = upper_letter , {digit | lower_letter | upper_letter} ; 
+lower_id       = lower_letter , {id_char} ;
+field_variable = id ;
+id             = (lower_letter | upper_letter) , {id_char} ;
 id_char        = digit | lower_letter | '_' ;
 lower_letter   = ? 省略 ?;
 upper_letter   = ? 省略 ?;
