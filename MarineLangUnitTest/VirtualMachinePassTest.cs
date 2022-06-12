@@ -241,6 +241,7 @@ end
         [Theory]
         [InlineData("fun main() ret create_hoge().flag end", false)]
         [InlineData("fun main() ret create_hoge().Flag end", false)]
+        [InlineData("fun main() ret create_hoge().FlagTest end", false)]
         [InlineData("fun main() ret create_hoge().flag.to_string() end", "False")]
         [InlineData("fun main() ret create_hoge().flag||true end", true)]
         [InlineData("fun main() ret create_hoge().name end", "this is the pen")]

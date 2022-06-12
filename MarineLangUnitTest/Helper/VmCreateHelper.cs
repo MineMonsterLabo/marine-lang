@@ -69,6 +69,7 @@ namespace MarineLangUnitTest.Helper
         {
             public bool flag;
             public bool Flag;
+            public bool FlagTest;
             public string[] Names { get; } = new string[] {"rrr", "qqq"};
 
             public string this[string index]
