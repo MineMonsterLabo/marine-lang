@@ -1,9 +1,9 @@
-﻿using MarineLang.LexicalAnalysis;
-using MarineLang.MacroPlugins;
+﻿using MarineLang.MacroPlugins;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
 using MarineLang.ParserCore;
+using MarineLang.Utils;
 using MineUtil;
 using System.Collections.Generic;
 using System.Linq;
@@ -850,7 +850,7 @@ namespace MarineLang.SyntaxAnalysis
                 (
                     token => 
                         token.tokenType == TokenType.Id && 
-                        LexerHelper.IsLowerLetter(token.text[0])
+                        CharUtil.IsLowerLetter(token.text[0])
                 );
         }
 
@@ -861,7 +861,7 @@ namespace MarineLang.SyntaxAnalysis
                 (
                     token =>
                         token.tokenType == TokenType.Id &&
-                        LexerHelper.IsUpperLetter(token.text[0])
+                        CharUtil.IsUpperLetter(token.text[0])
                 );
         }
     }

@@ -1,6 +1,6 @@
-﻿namespace MarineLang.LexicalAnalysis
+﻿namespace MarineLang.Utils
 {
-    public static class LexerHelper
+    public static class CharUtil
     {
         static public char? ToEspaceChar(string str)
         {

@@ -4,14 +4,12 @@ using System.IO;
 using MarineLang.LexicalAnalysis;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
-using System.Linq;
 
 namespace Example
 {
     class Program
     {
         static HighLevelVirtualMachine vm;
-
         static void Main(string[] args)
         {
             vm = new HighLevelVirtualMachine();

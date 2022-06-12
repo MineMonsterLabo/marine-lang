@@ -1,5 +1,6 @@
 ﻿using MarineLang.Models;
 using MarineLang.ParserCore;
+using MarineLang.Utils;
 using MineUtil;
 using System.Collections.Generic;
 
@@ -173,8 +174,8 @@ namespace MarineLang.LexicalAnalysis
         {
             return
                 from position in Parse.Positioned
-                from firstChar in Parse.Verify(LexerHelper.IsIdHeadChar)
-                from tailStr in Parse.Many(Parse.Verify(LexerHelper.IsIdTailChar)).Text()
+                from firstChar in Parse.Verify(CharUtil.IsIdHeadChar)
+                from tailStr in Parse.Many(Parse.Verify(CharUtil.IsIdTailChar)).Text()
                 select new Token(TokenType.Id, firstChar.ToString() + tailStr, position.Start);
         }
 
@@ -217,7 +218,7 @@ namespace MarineLang.LexicalAnalysis
         {
             return
                 from value in Parse.Current.Where(c => c == '\\')
-                from escapeChar in Parse.Current.Map(c => LexerHelper.ToEspaceChar(value.ToString() + c)).Where(x => x.HasValue)
+                from escapeChar in Parse.Current.Map(c => CharUtil.ToEspaceChar(value.ToString() + c)).Where(x => x.HasValue)
                 select escapeChar.Value;
         }
 
