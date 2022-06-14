@@ -19,6 +19,12 @@
         <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
 
+    <Target Name="SetProjectVersion" AfterTargets="_GetProjectReferenceVersions">
+        <ItemGroup>
+	    <_ProjectReferencesWithVersions Update="..\MarineLang\MarineLang.csproj" ProjectVersion="$(GitBaseVersionMajor).$(GitSemVerMinor).$(GitSemVerPatch)-alpha" />
+        </ItemGroup>
+    </Target>
+
     <ItemGroup>
         <ProjectReference Include="..\MarineLang\MarineLang.csproj"/>
     </ItemGroup>
