@@ -26,11 +26,11 @@
     </Target>
 
     <ItemGroup>
-        <ProjectReference Include="..\MarineLang\MarineLang.csproj"/>
+        <ProjectReference Include="..\MarineLang\MarineLang.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="GitInfo" Version="2.2.0"/>
+        <PackageReference Include="GitInfo" Version="2.2.0" />
     </ItemGroup>
 
     <Target Name="ChangeVersion" BeforeTargets="Build" DependsOnTargets="GitInfo">
