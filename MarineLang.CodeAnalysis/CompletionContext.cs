@@ -12,37 +12,29 @@ namespace MarineLang.CodeAnalysis
 
         public bool IsSuccess => _result.IsOk;
 
+        public CodeAnalyzer CodeAnalyzer { get; }
+
         public CompletionContext(SyntaxParseResult result)
         {
             _result = result;
+
+            CodeAnalyzer = new CodeAnalyzer(result);
         }
 
-        public void GetTypes(Position position)
+        public CompletionContext(SyntaxParseResult result, CodeAnalyzer codeAnalyzer)
         {
+            _result = result;
+
+            CodeAnalyzer = codeAnalyzer;
+            CodeAnalyzer.SetResult(result);
         }
 
-        public void GetGlobalFunctions(Position position)
+        public IEnumerable<CompletionItem> GetCompletions(Position position,
+            CompletionFilterFlags flags = CompletionFilterFlags.All)
         {
-        }
+            CodeAnalyzer.ExecuteAnalyze(position);
 
-        public void GetFunctions(Position position)
-        {
-        }
-
-        public void GetGlobalVariables(Position position)
-        {
-        }
-
-        public void GetVariables(Position position)
-        {
-        }
-
-        public void GetKeywords(Position position)
-        {
-        }
-
-        public void GetSnippets(Position position)
-        {
+            yield return null;
         }
 
         public IEnumerable<ParseErrorInfo> GetErrorInfos()

@@ -27,7 +27,7 @@ namespace MarineLang.CodeAnalysis
             RootFolder = folder;
         }
 
-        public void UpdateTextDocument(string fileName, string document)
+        public void SetTextDocument(string fileName, string document)
         {
             _textDocuments[fileName] = document;
         }
@@ -57,6 +57,21 @@ namespace MarineLang.CodeAnalysis
             var result = analyzer.Parse(tokens);
 
             return new CompletionContext(result);
+        }
+
+        public CompletionContext GetCompletionContext(string fileName, CompletionContext oldContext)
+        {
+            if (!_textDocuments.ContainsKey(fileName))
+            {
+                return null;
+            }
+
+            var text = _textDocuments[fileName];
+            var tokens = new LexicalAnalyzer().GetTokens(text);
+            var analyzer = OnCreateSyntaxAnalyzer?.Invoke() ?? new SyntaxAnalyzer();
+            var result = analyzer.Parse(tokens);
+
+            return new CompletionContext(result, oldContext.CodeAnalyzer);
         }
     }
 }
