@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.SyntaxAnalysis;
@@ -17,7 +18,9 @@ namespace MarineLang.CodeAnalysis
         private StatementAst[] _currentStatements;
 
         private StatementAst _currentStatement;
-        private VariableAst[] _currentStatementVariables;
+        private ExprAst[] _currentStatementExprs;
+
+        private ExprAst _currentExpr;
 
         public CodeAnalyzer(SyntaxParseResult result)
         {
@@ -43,18 +46,55 @@ namespace MarineLang.CodeAnalysis
                     _currentFuncParameters = funcDefinition.args;
                     _currentStatements = _currentFuncDefinition.statementAsts;
 
-                    var variables = new List<VariableAst>();
-                    foreach (var statement in _currentStatements)
+                    Queue<StatementAst> statementQueue = new Queue<StatementAst>();
+                    foreach (StatementAst statement in _currentStatements)
                     {
+                        statementQueue.Enqueue(statement);
+                    }
+
+                    while (statementQueue.Count > 0)
+                    {
+                        StatementAst statement = statementQueue.Dequeue();
                         if (statement.Range.Contain(position))
                         {
-                            _currentStatement = statement;
-                            _currentStatementVariables = variables.ToArray();
+                            statementQueue.Clear();
 
-                            break;
+                            var children = statement.LookUp<StatementAst>().Except(new[] { statement }).ToArray();
+                            foreach (var child in children)
+                            {
+                                statementQueue.Enqueue(child);
+                            }
+
+                            _currentStatement = statement;
+                        }
+                    }
+
+                    if (_currentStatement != null)
+                    {
+                        _currentStatementExprs = _currentStatement.LookUp<ExprAst>().ToArray();
+
+                        Queue<ExprAst> exprQueue = new Queue<ExprAst>();
+                        foreach (var expr in _currentStatementExprs)
+                        {
+                            exprQueue.Enqueue(expr);
                         }
 
-                        variables.AddRange(statement.LookUp<VariableAst>());
+                        while (exprQueue.Count > 0)
+                        {
+                            var exprAst = exprQueue.Dequeue();
+                            if (exprAst.Range.Contain(position))
+                            {
+                                exprQueue.Clear();
+
+                                var children = exprAst.LookUp<ExprAst>().Except(new[] { exprAst }).ToArray();
+                                foreach (var child in children)
+                                {
+                                    exprQueue.Enqueue(child);
+                                }
+
+                                _currentExpr = exprAst;
+                            }
+                        }
                     }
 
                     break;
