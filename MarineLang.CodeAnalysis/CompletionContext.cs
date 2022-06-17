@@ -34,7 +34,15 @@ namespace MarineLang.CodeAnalysis
         {
             CodeAnalyzer.ExecuteAnalyze(position);
 
-            yield return null;
+            var list = new List<CompletionItem>();
+            if (CodeAnalyzer.CurrentStatement != null)
+            {
+                var parameters = CodeAnalyzer.CurrentFuncParameters.Select(e =>
+                    new CompletionItem(e.VarName, string.Empty, string.Empty, 0, CompletionFilterFlags.FuncVariable));
+                list.AddRange(parameters);
+            }
+
+            return list.Where(e => flags.HasFlag(e.Flags));
         }
 
         public IEnumerable<ParseErrorInfo> GetErrorInfos()
