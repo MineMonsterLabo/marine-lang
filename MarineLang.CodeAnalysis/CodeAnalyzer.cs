@@ -10,6 +10,8 @@ namespace MarineLang.CodeAnalysis
     {
         private SyntaxParseResult _result;
 
+        private bool _analyzed;
+
         private FuncDefinitionAst[] _funcDefinitions;
 
         private FuncDefinitionAst _currentFuncDefinition;
@@ -21,6 +23,20 @@ namespace MarineLang.CodeAnalysis
         private ExprAst[] _currentStatementExprs;
 
         private ExprAst _currentExpr;
+
+        public bool Analyzed => _analyzed;
+
+        public FuncDefinitionAst[] FuncDefinitionAsts => _funcDefinitions;
+
+        public FuncDefinitionAst CurrentFuncDefinition => _currentFuncDefinition;
+        public VariableAst[] CurrentFuncParameters => _currentFuncParameters;
+
+        public StatementAst[] CurrentStatements => _currentStatements;
+
+        public StatementAst CurrentStatement => _currentStatement;
+        public ExprAst[] CurrentStatementExprs => _currentStatementExprs;
+
+        public ExprAst CurrentExpr => _currentExpr;
 
         public CodeAnalyzer(SyntaxParseResult result)
         {
@@ -100,6 +116,8 @@ namespace MarineLang.CodeAnalysis
                     break;
                 }
             }
+
+            _analyzed = true;
         }
     }
 }
