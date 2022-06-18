@@ -26,7 +26,7 @@ namespace MarineLang.CodeAnalysis
 
         public bool Analyzed => _analyzed;
 
-        public FuncDefinitionAst[] FuncDefinitionAsts => _funcDefinitions;
+        public FuncDefinitionAst[] FuncDefinitions => _funcDefinitions;
 
         public FuncDefinitionAst CurrentFuncDefinition => _currentFuncDefinition;
         public VariableAst[] CurrentFuncParameters => _currentFuncParameters;

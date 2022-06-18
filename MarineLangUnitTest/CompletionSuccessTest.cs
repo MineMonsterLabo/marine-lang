@@ -14,7 +14,7 @@ namespace MarineLangUnitTest
             var nl = Environment.NewLine;
             var source = $"fun main(i){nl}if i > 0 {{ let a = 5 }}{nl}end";
 
-            MarineLangWorkspace workspace = new MarineLangWorkspace();
+            MarineLangWorkspace workspace = new MarineLangWorkspace(string.Empty);
             workspace.SetTextDocument("test.mrn", source);
             var context = workspace.GetCompletionContext("test.mrn");
             var list = context.GetCompletions(new Position(2, 9)).ToArray();
