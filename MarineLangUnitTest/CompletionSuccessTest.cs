@@ -8,27 +8,28 @@ namespace MarineLangUnitTest
 {
     public class CompletionSuccessTest
     {
-        [Fact]
-        public void Test()
+        private const int KeywordCount = 6;
+
+        [Theory]
+        [InlineData("fun main(i★) if i > 0 { let a = 5 } end", 0)]
+        [InlineData("fun main(i) if i > 0★ { let a = 5 } end", KeywordCount + 2)]
+        [InlineData("fun main(i, j) if i > 0★ { let a = 5 } end fun main2(i) ret 0 end", KeywordCount + 4)]
+        public void Test(string source, int listCount)
         {
             var nl = Environment.NewLine;
-            var source = $"fun main(i){nl}if i > 0★ {{ let a = 5 }}{nl}end";
 
-            var position = GetMarkerPosition(source);
+            var position = GetMarkerPosition(source, out source);
             Assert.NotNull(position);
 
-            source = source.Replace("★", string.Empty);
-
-            const int keywordCount = 6;
             MarineLangWorkspace workspace = new MarineLangWorkspace(string.Empty);
             workspace.SetTextDocument("test.mrn", source);
             var context = workspace.GetCompletionContext("test.mrn");
             var list = context.GetCompletions(position.Value).ToArray();
             Assert.NotNull(list);
-            Assert.Equal(keywordCount + 2, list.Length);
+            Assert.Equal(listCount, list.Length);
         }
 
-        private Position? GetMarkerPosition(string source, string marker = "★")
+        private Position? GetMarkerPosition(string source, out string replaceSource, string marker = "★")
         {
             Position? position = null;
             var lines = source.Split(Environment.NewLine);
@@ -39,8 +40,11 @@ namespace MarineLangUnitTest
                 if (index != -1)
                 {
                     position = new Position(i + 1, index + 1);
+                    break;
                 }
             }
+
+            replaceSource = source.Replace(marker, string.Empty);
 
             return position;
         }
