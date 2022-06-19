@@ -14,6 +14,8 @@ namespace MarineLangUnitTest
         [InlineData("fun main(i★) if i > 0 { let a = 5 } end", 0)]
         [InlineData("fun main(i) if i > 0★ { let a = 5 } end", KeywordCount + 2)]
         [InlineData("fun main(i, j) if i > 0★ { let a = 5 } end fun main2(i) ret 0 end", KeywordCount + 4)]
+        [InlineData("fun main(i, j) if i > 0 { let a = 5★ } end fun main2(i) ret 0 end", KeywordCount + 4)]
+        // [InlineData("fun main(i, j) if i > 0 { let a = ★ } end fun main2(i) ret 0 end", KeywordCount + 4)]
         public void Test(string source, int listCount)
         {
             var nl = Environment.NewLine;
