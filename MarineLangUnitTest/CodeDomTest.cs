@@ -1,4 +1,4 @@
-﻿using MarineLang.CodeDoms;
+﻿using MarineLang.CodeDom;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Models;
 using MarineLang.Models.Asts;

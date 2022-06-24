@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Authors>elipmoc</Authors>
+        <Company>MineMonsterLabo</Company>
+        <Description>Unityで簡易でパワフルなスクリプト言語
+            (Simple and powerful scripting language in Unity)
+        </Description>
+        <Copyright>elipmoc</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/MineMonsterLabo/marine-lang</PackageProjectUrl>
+        <Title>MarineLang.CodeDom</Title>
+        <RepositoryUrl>https://github.com/MineMonsterLabo/marine-lang</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>script scripting</PackageTags>
+
+        <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+        <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+        <TargetFramework>netstandard2.0</TargetFramework>
+    </PropertyGroup>
+
+    <Target Name="SetProjectVersion" AfterTargets="_GetProjectReferenceVersions">
+        <ItemGroup>
+	    <_ProjectReferencesWithVersions Update="..\MarineLang\MarineLang.csproj" ProjectVersion="$(GitBaseVersionMajor).$(GitSemVerMinor).$(GitSemVerPatch)-alpha" />
+        </ItemGroup>
+    </Target>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MarineLang\MarineLang.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="GitInfo" Version="2.2.0"/>
+    </ItemGroup>
+
+    <Target Name="ChangeVersion" BeforeTargets="Build" DependsOnTargets="GitInfo">
+        <PropertyGroup>
+            <Version>$(GitBaseVersionMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
+            <PackageVersion>$(GitBaseVersionMajor).$(GitSemVerMinor).$(GitSemVerPatch)-alpha</PackageVersion>
+        </PropertyGroup>
+    </Target>
+
+</Project>

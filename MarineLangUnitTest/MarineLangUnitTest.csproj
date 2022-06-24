@@ -14,6 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MarineLang.CodeAnalysis\MarineLang.CodeAnalysis.csproj" />
+    <ProjectReference Include="..\MarineLang.CodeDom\MarineLang.CodeDom.csproj" />
     <ProjectReference Include="..\MarineLang\MarineLang.csproj" />
     <ProjectReference Include="..\MineUtil\MineUtil\MineUtil.csproj" />
   </ItemGroup>
