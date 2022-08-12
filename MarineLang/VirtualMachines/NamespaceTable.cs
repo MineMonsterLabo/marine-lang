@@ -29,22 +29,12 @@ namespace MarineLang.VirtualMachines
             return funcILIndexDict.ContainsKey(funcName);
         }
 
-        public IEnumerable<NamespaceTable> GetChildrenNamespaces()
-        {
-            return childrenNamespaceTableDict.Values;
-        }
-
-        public IEnumerable<string> GetFuncNames()
-        {
-            return funcILIndexDict.Keys;
-        }
-
         public NamespaceTable GetChildNamespace(IEnumerable<string> namespaceStrings)
         {
             return GetChildNamespace(namespaceStrings.GetEnumerator());
         }
 
-        public NamespaceTable GetChildNamespace(IEnumerator<string> namespaceStrings)
+        private NamespaceTable GetChildNamespace(IEnumerator<string> namespaceStrings)
         {
             if (namespaceStrings.MoveNext())
             {
@@ -54,7 +44,7 @@ namespace MarineLang.VirtualMachines
             return this;
         }
 
-        public NamespaceTable GetOrCreateChildNamespace(IEnumerator<string> namespaceStrings)
+        private NamespaceTable GetOrCreateChildNamespace(IEnumerator<string> namespaceStrings)
         {
             if (namespaceStrings.MoveNext())
             {
@@ -83,10 +73,16 @@ namespace MarineLang.VirtualMachines
             }
         }
 
-        public FuncILIndex AddFuncILIndex(IEnumerable<string> namespaceStrings, string funcName)
+        public FuncILIndex GetFuncILIndex(IEnumerable<string> namespaceStrings, string funcName)
         {
             var child = GetOrCreateChildNamespace(namespaceStrings.GetEnumerator());
-            return child.SetFuncILIndex(funcName, -1);
+            return child.GetFuncILIndex(funcName);
+        }
+
+        public bool TryGetFuncILIndex(IEnumerable<string> namespaceStrings, string funcName, out FuncILIndex funcILIndex)
+        {
+            var child = GetOrCreateChildNamespace(namespaceStrings.GetEnumerator());
+            return child.TryGetFuncILIndex(funcName, out funcILIndex);
         }
 
         public FuncILIndex SetFuncILIndex(string funcName, int index)
@@ -110,19 +106,9 @@ namespace MarineLang.VirtualMachines
             return funcILIndexDict[funcName];
         }
 
-        public FuncILIndex GetFuncILIndex(IEnumerable<string> namespaceStrings, string funcName)
+        public bool TryGetFuncILIndex(string funcName, out FuncILIndex funcILIndex)
         {
-            return GetFuncILIndex(namespaceStrings.GetEnumerator(), funcName);
-        }
-
-        public FuncILIndex GetFuncILIndex(IEnumerator<string> namespaceStrings, string funcName)
-        {
-            if (namespaceStrings.MoveNext())
-            {
-                return childrenNamespaceTableDict[namespaceStrings.Current].GetFuncILIndex(namespaceStrings, funcName);
-            }
-
-            return funcILIndexDict[funcName];
+            return funcILIndexDict.TryGetValue(funcName, out funcILIndex);
         }
     }
 }

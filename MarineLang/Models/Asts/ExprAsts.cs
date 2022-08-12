@@ -624,7 +624,11 @@ namespace MarineLang.Models.Asts
         public Token rightParen;
 
         public string FuncName => funcNameToken.text;
-        public IEnumerable<string> NamespaceSettings => namespaceTokens.Select(token => token.text);
+        public IEnumerable<string> NamespaceSettings
+            => namespaceTokens
+            .Where((token, index) => index != 0 || token.text != "global")
+            .Select(token => token.text);
+
         public override RangePosition Range
             => rightParen == null ? new RangePosition() : new RangePosition(StartPosition, rightParen.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
