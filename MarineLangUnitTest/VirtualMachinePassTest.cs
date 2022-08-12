@@ -906,21 +906,30 @@ end", 1)]
             Assert.Equal(123, vm.Run<int>(new[] { "foobar" }, "main").Eval());
         }
 
+        public static int Ret10()
+        {
+            return 10;
+        }
+
         [Fact]
         public void GlobalNamespaceExplicitAccessTest3()
         {
+          
             var vm = CreateVM();
-            Func<int> action = () => 0;
-            vm.GlobalFuncRegister(new[] { "foobar" }, action.Method,"ret_123");
-            vm.ParseAndLoad("fun main1() ret global::ret_123() + foobar::ret_123() end", "foobar");
+
+            vm.GlobalFuncRegister(
+                new[] { "hogefuga" },
+                typeof(VirtualMachinePassTest).GetMethod(nameof(Ret10)),
+                "Ret123"
+            );
+            vm.ParseAndLoad("fun main1() ret global::ret_123() + foobar::ret_123() + hogefuga::ret_123() end", "foobar");
             vm.ParseAndLoad("fun main2() ret global::ret_123() + ret_123() end", "foobar");
             vm.ParseAndLoad("fun ret_123() ret 0 end", "foobar");
             vm.Compile();
 
-            Assert.Equal(123, vm.Run<int>(new[] { "foobar" }, "main1").Eval());
+            Assert.Equal(123+10, vm.Run<int>(new[] { "foobar" }, "main1").Eval());
             Assert.Equal(123, vm.Run<int>(new[] { "foobar" }, "main2").Eval());
         }
-
 
         [Theory]
         [InlineData("fun main() ret null end", null)]
