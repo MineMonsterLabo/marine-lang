@@ -77,7 +77,7 @@ namespace MarineLang.VirtualMachines
             }
         }
 
-        IReadOnlyDictionary<string, MethodInfo> csharpFuncDict;
+        IReadonlyCsharpFuncTable csharpFuncTable;
         IReadOnlyDictionary<string, Type> staticTypeDict;
         readonly List<IMarineIL> marineILs = new List<IMarineIL>();
         readonly List<ActionFuncData> actionFuncDataList = new List<ActionFuncData>();
@@ -89,12 +89,12 @@ namespace MarineLang.VirtualMachines
         }
 
         public ILGeneratedData Generate(
-            IReadOnlyDictionary<string, MethodInfo> csharpFuncDict,
+            IReadonlyCsharpFuncTable csharpFuncTable,
             IReadOnlyDictionary<string, Type> staticTypeDict,
             string[] globalVariableNames
             )
         {
-            this.csharpFuncDict = csharpFuncDict;
+            this.csharpFuncTable = csharpFuncTable;
             this.staticTypeDict = staticTypeDict;
             var namespaceTable = new NamespaceTable();
 
@@ -312,38 +312,57 @@ namespace MarineLang.VirtualMachines
             foreach (var exprAst in funcCallAst.args)
                 ExprILGenerate(exprAst, generateArgs);
 
+            var namespaceSettings = funcCallAst.NamespaceSettings;
+            var funcName = funcCallAst.FuncName;
+            var currentNamespaceTable = generateArgs.CurrentNamespaceTable;
+            var globalNamespaceTable = generateArgs.GlobalNamespaceTable;
+
             if (funcCallAst.namespaceTokens.Any())
             {
-                var funcILIndex = generateArgs.GlobalNamespaceTable.AddFuncILIndex(funcCallAst.NamespaceSettings, funcCallAst.FuncName);
+                if (globalNamespaceTable.TryGetFuncILIndex(namespaceSettings, funcName, out var funcILIndex))
+                {
+                    marineILs.Add(
+                        new MarineFuncCallIL(
+                            funcName,
+                            funcILIndex,
+                            funcCallAst.args.Length
+                        )
+                    );
+                    return;
+                }
+
                 marineILs.Add(
-                    new MarineFuncCallIL(
-                        funcCallAst.FuncName,
-                        funcILIndex,
-                        funcCallAst.args.Length
-                    )
-                );
+                   new CSharpFuncCallIL(
+                       csharpFuncTable.GetCsharpFunc(namespaceSettings,NameUtil.GetUpperCamelName(funcName)),
+                       funcCallAst.args.Length
+                   )
+               );
                 return;
             }
 
-            if (generateArgs.CurrentNamespaceTable.ContainFunc(funcCallAst.FuncName))
+            if (currentNamespaceTable.ContainFunc(funcName))
                 marineILs.Add(
                     new MarineFuncCallIL(
-                        funcCallAst.FuncName,
-                        generateArgs.CurrentNamespaceTable.GetFuncILIndex(funcCallAst.FuncName),
+                        funcName,
+                        currentNamespaceTable.GetFuncILIndex(funcName),
                         funcCallAst.args.Length
                     )
                 );
-            else if (generateArgs.GlobalNamespaceTable.ContainFunc(funcCallAst.FuncName))
+            else if (globalNamespaceTable.ContainFunc(funcName))
                 marineILs.Add(
                     new MarineFuncCallIL(
-                        funcCallAst.FuncName,
-                        generateArgs.GlobalNamespaceTable.GetFuncILIndex(funcCallAst.FuncName),
+                        funcName,
+                        globalNamespaceTable.GetFuncILIndex(funcName),
                         funcCallAst.args.Length
                     )
                 );
             else
-                marineILs.Add(new CSharpFuncCallIL(csharpFuncDict[NameUtil.GetUpperCamelName(funcCallAst.FuncName)],
-                    funcCallAst.args.Length));
+                marineILs.Add(
+                    new CSharpFuncCallIL(
+                        csharpFuncTable.GetCsharpFunc(NameUtil.GetUpperCamelName(funcName)),
+                        funcCallAst.args.Length
+                    )
+                );
         }
 
         void BinaryOpILGenerate(BinaryOpAst binaryOpAst, GenerateArgs generateArgs)

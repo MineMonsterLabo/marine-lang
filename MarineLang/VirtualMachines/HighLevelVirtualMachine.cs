@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using MarineLang.BuildInObjects;
-using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
 using MarineLang.VirtualMachines.Dumps;
 using MarineLang.VirtualMachines.MarineILs;
@@ -15,13 +14,13 @@ namespace MarineLang.VirtualMachines
     {
         uint marineProgramUnitId = uint.MinValue;
 
-        readonly Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
+        readonly CsharpFuncTable methodInfoDict = new CsharpFuncTable();
         readonly Dictionary<string, Type> staticTypeDict = new Dictionary<string, Type>();
         readonly SortedDictionary<string, object> globalVariableDict = new SortedDictionary<string, object>();
         readonly Dictionary<uint, MarineProgramUnit> marineProgramUnitList = new Dictionary<uint, MarineProgramUnit>();
 
         public ILGeneratedData ILGeneratedData { get; private set; }
-        public IReadOnlyDictionary<string, MethodInfo> GlobalFuncDict => methodInfoDict;
+        public IReadonlyCsharpFuncTable GlobalFuncDict => methodInfoDict;
 
         public IReadOnlyDictionary<string, Type> StaticTypeDict => staticTypeDict;
 
@@ -46,9 +45,14 @@ namespace MarineLang.VirtualMachines
             return ILGeneratedData?.namespaceTable?.ContainFunc(funcName) ?? false;
         }
 
-        public void GlobalFuncRegister(MethodInfo methodInfo)
+        public void GlobalFuncRegister(MethodInfo methodInfo, string methodName = null)
         {
-            methodInfoDict.Add(methodInfo.Name, methodInfo);
+            methodInfoDict.AddCsharpFunc(methodName??methodInfo.Name, methodInfo);
+        }
+
+        public void GlobalFuncRegister(IEnumerable<string> namespaceStrings, MethodInfo methodInfo, string methodName = null)
+        {
+            methodInfoDict.AddCsharpFunc(namespaceStrings, methodName ?? methodInfo.Name, methodInfo);
         }
 
         public void StaticTypeRegister(Type type)

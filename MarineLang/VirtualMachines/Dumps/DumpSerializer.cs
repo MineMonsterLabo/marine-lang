@@ -10,7 +10,7 @@ namespace MarineLang.VirtualMachines.Dumps
 {
     public class DumpSerializer
     {
-        public string Serialize(IReadOnlyDictionary<string, MethodInfo> methodInfoDict,
+        public string Serialize(IReadonlyCsharpFuncTable csharpFuncTable,
             IReadOnlyDictionary<string, Type> staticTypeDict, IReadOnlyDictionary<string, object> globalVariableDict)
         {
             MarineDumpModel dumpModel = new MarineDumpModel();
@@ -19,9 +19,9 @@ namespace MarineLang.VirtualMachines.Dumps
                 dumpModel.StaticTypes.Add(type.Key, AnalyzeReference(dumpModel, type.Value));
             }
 
-            foreach (KeyValuePair<string, MethodInfo> method in methodInfoDict)
+            foreach ((string FuncName, MethodInfo MethodInfo) in csharpFuncTable.GetFuncs())
             {
-                dumpModel.GlobalMethods.Add(method.Key, Analyze(dumpModel, method.Value));
+                dumpModel.GlobalMethods.Add(FuncName, Analyze(dumpModel, MethodInfo));
             }
 
             foreach (KeyValuePair<string, object> variable in globalVariableDict)

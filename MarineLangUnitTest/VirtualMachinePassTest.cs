@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Models.Errors;
 using MarineLang.SyntaxAnalysis;
@@ -764,16 +763,9 @@ end", 1)]
         [Fact]
         public void MultipleLoadProgramTest()
         {
-            var lexer = new LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
             var vm = new HighLevelVirtualMachine();
-            var parseResult = parser.Parse(lexer.GetTokens("fun hoge() ret 5 end"));
-
-            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
-            parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 3 end"));
-            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
+            vm.ParseAndLoad("fun hoge() ret 5 end");
+            vm.ParseAndLoad("fun fuga() ret 3 end");
             vm.Compile();
 
             Assert.Equal(5, vm.Run<int>("hoge").Eval());
@@ -782,14 +774,10 @@ end", 1)]
             vm.ClearAllPrograms();
 
             var removeNamespace = new[] { "test", "hoge" };
-            parseResult = parser.Parse(lexer.GetTokens("fun hoge() ret 9 end"));
-            var removeProgramId = vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
-            parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 30 end"));
-            var removeProgramId2 = vm.LoadProgram(new MarineProgramUnit(removeNamespace, parseResult.programAst));
-            parseResult = parser.Parse(lexer.GetTokens("fun piyo() ret 1 end"));
-            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
-            parseResult = parser.Parse(lexer.GetTokens("fun test() ret 100 end"));
-            var removeProgramId3 = vm.LoadProgram(new MarineProgramUnit(removeNamespace, parseResult.programAst));
+            var removeProgramId = vm.ParseAndLoad("fun hoge() ret 9 end");
+            var removeProgramId2 = vm.ParseAndLoad("fun fuga() ret 30 end", removeNamespace);
+            vm.ParseAndLoad("fun piyo() ret 1 end");
+            var removeProgramId3 = vm.ParseAndLoad("fun test() ret 100 end",removeNamespace);
             vm.Compile();
 
             var programUnit = vm.GetProgramUnit(removeProgramId2);
@@ -822,24 +810,11 @@ end", 1)]
         [Fact]
         public void MultipleLoadProgramNamespaceTest()
         {
-            var lexer = new LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
             var vm = new HighLevelVirtualMachine();
-
-            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 25 end"));
-            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret 2525 end"));
-            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge" }, parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge", "fuga" }, parseResult.programAst));
-
+            vm.ParseAndLoad("fun aaa() ret 25 end");
+            vm.ParseAndLoad("fun bbb() ret 2525 end");
+            vm.ParseAndLoad("fun aaa() ret 88 end", "hoge" );
+            vm.ParseAndLoad("fun aaa() ret 100 end", "hoge", "fuga" );
             vm.Compile();
 
             Assert.Equal(25, vm.Run<int>("aaa").Eval());
@@ -851,20 +826,10 @@ end", 1)]
         [Fact]
         public void NamespaceAccessTest1()
         {
-            var lexer = new LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
             var vm = new HighLevelVirtualMachine();
-            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end"));
-            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge" }, parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "aaa", "ppp" }, parseResult.programAst));
-
+            vm.ParseAndLoad("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end");
+            vm.ParseAndLoad("fun aaa() ret 88 end", "hoge" );
+            vm.ParseAndLoad("fun aaa() ret 100 end", "aaa", "ppp" );
             vm.Compile();
 
             Assert.Equal(188, vm.Run<int>("aaa").Eval());
@@ -873,21 +838,10 @@ end", 1)]
         [Fact]
         public void NamespaceAccessTest2()
         {
-            var lexer = new LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
             var vm = new HighLevelVirtualMachine();
-
-            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge" }, parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "aaa", "ppp" }, parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end"));
-            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
-
+            vm.ParseAndLoad("fun aaa() ret 88 end", "hoge" );
+            vm.ParseAndLoad("fun aaa() ret 100 end", "aaa", "ppp" );
+            vm.ParseAndLoad("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end");
             vm.Compile();
 
             Assert.Equal(188, vm.Run<int>("aaa").Eval());
@@ -896,18 +850,9 @@ end", 1)]
         [Fact]
         public void NamespaceAccessTest3()
         {
-            var lexer = new LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
             var vm = new HighLevelVirtualMachine();
-
-            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret {|x| ret x + x } end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge", "fuga" }, parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret hoge::fuga::aaa().invoke([8]).value end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "foobar" }, parseResult.programAst));
-
+            vm.ParseAndLoad("fun aaa() ret {|x| ret x + x } end", "hoge", "fuga");
+            vm.ParseAndLoad("fun bbb() ret hoge::fuga::aaa().invoke([8]).value end", "foobar");
             vm.Compile();
 
             Assert.Equal(16, vm.Run<int>(new[] { "foobar" }, "bbb").Eval());
@@ -916,22 +861,10 @@ end", 1)]
         [Fact]
         public void NamespaceAccessTest4()
         {
-            var lexer = new LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
             var vm = new HighLevelVirtualMachine();
-
-            var parseResult = parser.Parse(lexer.GetTokens("fun ccc() ret 10 end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge", "fuga" }, parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret {|x| ret x + ccc() } end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "hoge", "fuga" }, parseResult.programAst));
-
-
-            parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret hoge::fuga::aaa().invoke([8]).value end"));
-            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
-
+            vm.ParseAndLoad("fun ccc() ret 10 end","hoge", "fuga");
+            vm.ParseAndLoad("fun aaa() ret {|x| ret x + ccc() } end", "hoge", "fuga");
+            vm.ParseAndLoad("fun bbb() ret hoge::fuga::aaa().invoke([8]).value end");
             vm.Compile();
 
             Assert.Equal(18, vm.Run<int>("bbb").Eval());
@@ -940,21 +873,62 @@ end", 1)]
         [Fact]
         public void NamespaceAccessTest5()
         {
-            var lexer = new LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
             var vm = new HighLevelVirtualMachine();
 
-            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 555 end"));
-            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
-
-            parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret aaa() end"));
-            vm.LoadProgram(new MarineProgramUnit(new[] { "foobar" }, parseResult.programAst));
-
+            vm.ParseAndLoad("fun aaa() ret 555 end");
+            vm.ParseAndLoad("fun bbb() ret aaa() end", "foobar");
             vm.Compile();
 
             Assert.Equal(555, vm.Run<int>(new[] { "foobar" }, "bbb").Eval());
+        }
+
+        [Fact]
+        public void GlobalNamespaceExplicitAccessTest1()
+        {
+            var vm = new HighLevelVirtualMachine();
+
+            vm.ParseAndLoad("fun aaa() ret 555 end");
+            vm.ParseAndLoad("fun aaa() ret 444() end", "foobar");
+            vm.ParseAndLoad("fun main() ret global::aaa() end","foobar" );
+            vm.Compile();
+
+            Assert.Equal(555, vm.Run<int>(new[] { "foobar" }, "main").Eval());
+        }
+
+        [Fact]
+        public void GlobalNamespaceExplicitAccessTest2()
+        {
+            var vm = CreateVM();
+            vm.ParseAndLoad("fun main() ret global::ret_123() end", "foobar");
+            vm.ParseAndLoad("fun ret_123() ret 0 end", "foobar");
+            vm.Compile();
+
+            Assert.Equal(123, vm.Run<int>(new[] { "foobar" }, "main").Eval());
+        }
+
+        public static int Ret10()
+        {
+            return 10;
+        }
+
+        [Fact]
+        public void GlobalNamespaceExplicitAccessTest3()
+        {
+          
+            var vm = CreateVM();
+
+            vm.GlobalFuncRegister(
+                new[] { "hogefuga" },
+                typeof(VirtualMachinePassTest).GetMethod(nameof(Ret10)),
+                "Ret123"
+            );
+            vm.ParseAndLoad("fun main1() ret global::ret_123() + foobar::ret_123() + hogefuga::ret_123() end", "foobar");
+            vm.ParseAndLoad("fun main2() ret global::ret_123() + ret_123() end", "foobar");
+            vm.ParseAndLoad("fun ret_123() ret 0 end", "foobar");
+            vm.Compile();
+
+            Assert.Equal(123+10, vm.Run<int>(new[] { "foobar" }, "main1").Eval());
+            Assert.Equal(123, vm.Run<int>(new[] { "foobar" }, "main2").Eval());
         }
 
         [Theory]
