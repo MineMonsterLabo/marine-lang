@@ -78,7 +78,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             }
             else
             {
-                PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.ConvertCameName(fieldName),
                     BindingFlags.Public | BindingFlags.Instance);
                 if (propertyInfo == null)
                     this.ThrowRuntimeError(fieldName, ErrorCode.RuntimeMemberNotFound);

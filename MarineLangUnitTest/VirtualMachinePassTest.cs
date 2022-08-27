@@ -238,12 +238,14 @@ end
         }
 
         [Theory]
+        [InlineData("fun main() ret create_hoge().flag2 end", false)]
+        [InlineData("fun main() ret create_hoge().Flag2 end", true)]
         [InlineData("fun main() ret create_hoge().flag end", false)]
         [InlineData("fun main() ret create_hoge().Flag end", false)]
         [InlineData("fun main() ret create_hoge().FlagTest end", false)]
         [InlineData("fun main() ret create_hoge().flag.to_string() end", "False")]
         [InlineData("fun main() ret create_hoge().flag||true end", true)]
-        [InlineData("fun main() ret create_hoge().name end", "this is the pen")]
+        [InlineData("fun main() ret create_hoge().Name end", "this is the pen")]
         public void InstanceField<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -253,7 +255,7 @@ end
         [InlineData("fun main() let hoge = create_hoge() hoge.flag=4!=5 ret hoge.flag end", true)]
         [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.Flag end", true)]
         [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.flag end", false)]
-        [InlineData("fun main() let hoge = create_hoge() hoge.name = 5.to_string() ret hoge.name end", "5")]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Name = 5.to_string() ret hoge.Name end", "5")]
         public void InstanceFieldAssignment<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -314,8 +316,8 @@ end", 18)]
         }
 
         [Theory]
-        [InlineData("fun main()  hoge.name = \"gg\"  ret hoge.name end", "gg")]
-        [InlineData("fun main()  hoge.get_this().name = \"gg\"  ret hoge.name end", "gg")]
+        [InlineData("fun main()  hoge.Name = \"gg\"  ret hoge.Name end", "gg")]
+        [InlineData("fun main()  hoge.get_this().Name = \"gg\"  ret hoge.Name end", "gg")]
         [InlineData("fun main() ret hoge.plus_one(5) end", 6)]
         public void GlobalVariable<T>(string str, T expected)
         {
@@ -326,12 +328,12 @@ end", 18)]
         [InlineData("fun main() ret names[0] end", "aaa")]
         [InlineData("fun main() ret names[2-1] end", "bbb")]
         [InlineData("fun main() ret namess[1][0] end", "xxx")]
-        [InlineData("fun main() ret hoge.names[1] end", "qqq")]
+        [InlineData("fun main() ret hoge.Names[1] end", "qqq")]
         [InlineData("fun main() ret hoge[\"nnn\"] end", "nnn")]
-        [InlineData("fun main() ret hoge.dict[\"hoge\"] end", "fuga")]
+        [InlineData("fun main() ret hoge.Dict[\"hoge\"] end", "fuga")]
         [InlineData("fun main() names[1] = \"SAO\" ret names[1] end", "SAO")]
-        [InlineData("fun main() hoge.names[1] = \"AAA\" ret hoge.names[1] end", "AAA")]
-        [InlineData("fun main() hoge.get_this().get_this().names[1] = \"AAA\" ret hoge.get_this().names[1] end", "AAA")]
+        [InlineData("fun main() hoge.Names[1] = \"AAA\" ret hoge.Names[1] end", "AAA")]
+        [InlineData("fun main() hoge.get_this().get_this().Names[1] = \"AAA\" ret hoge.get_this().Names[1] end", "AAA")]
         public void Indexer<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -399,9 +401,9 @@ fun main()
     let bb = 5
     let action = {|x| 
         bb=bb+1 
-        ret bb + x - aa+{ |y| ret x*y }.invoke([2]).value
+        ret bb + x - aa+{ |y| ret x*y }.invoke([2]).Value
     }
-    ret action.invoke([8]).value+aa
+    ret action.invoke([8]).Value+aa
 end
 ")]
         public void ActionObjectCall2(string str)
@@ -414,19 +416,19 @@ end
 fun main()
     ret {|f| 
         ret 
-            { |x| ret f.invoke( [{ |y| ret x.invoke([x]).value.invoke([y]).value }] ).value }
-            .invoke( [{|x| ret f.invoke( [{ |y| ret x.invoke([x]).value.invoke([y]).value }] ).value }] ).value   
+            { |x| ret f.invoke( [{ |y| ret x.invoke([x]).Value.invoke([y]).Value }] ).Value }
+            .invoke( [{|x| ret f.invoke( [{ |y| ret x.invoke([x]).Value.invoke([y]).Value }] ).Value }] ).Value   
     }.invoke([
         { |f| 
             ret { |n| 
-                ret if n==0 {1} else {n * f.invoke([n - 1]).value } 
+                ret if n==0 {1} else {n * f.invoke([n - 1]).Value } 
             }
         } 
-    ]).value.invoke([5]).value
+    ]).Value.invoke([5]).Value
 end
 ")]
         [InlineData(@"
-fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).value}]).value}.invoke([{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).value}]).value}]).value}.invoke([{|f|ret{|n|ret if n==0{1}else{n*f.invoke([n-1]).value}}}]).value.invoke([5]).value end
+fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).Value.invoke([y]).Value}]).Value}.invoke([{|x|ret f.invoke([{|y|ret x.invoke([x]).Value.invoke([y]).Value}]).Value}]).Value}.invoke([{|f|ret{|n|ret if n==0{1}else{n*f.invoke([n-1]).Value}}}]).Value.invoke([5]).Value end
 ")]
         public void ActionObjectCall3(string str)
         {
@@ -434,8 +436,8 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
         }
 
         [Theory]
-        [InlineData("fun main() ret {| |ret 1+2 }.invoke([]).value end")]
-        [InlineData("fun main() ret {||ret 1+2 }.invoke([]).value end")]
+        [InlineData("fun main() ret {| |ret 1+2 }.invoke([]).Value end")]
+        [InlineData("fun main() ret {||ret 1+2 }.invoke([]).Value end")]
         public void ActionObjectCall4(string str)
         {
             RunReturnCheck(str, 3);
@@ -525,10 +527,10 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
         [Theory]
         [InlineData("fun main() let fuga = create_fuga() ret fuga.member1 end ", 12)]
         [InlineData("fun main() let fuga = create_fuga() fuga.member1 = 20 ret fuga.member1 end ", 20)]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member2 end ", "hello")]
-        [InlineData("fun main() let fuga = create_fuga() fuga.member2 = \"hello2\" ret fuga.member2 end ", "hello2")]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member3[0] end ", "hello")]
-        [InlineData("fun main() let fuga = create_fuga() fuga.member3[0] = \"hello2\" ret fuga.member3[0] end ",
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.Member2 end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.Member2 = \"hello2\" ret fuga.Member2 end ", "hello2")]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.Member3[0] end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.Member3[0] = \"hello2\" ret fuga.Member3[0] end ",
             "hello2")]
         [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
         public void AccessibilityTest<T>(string str, T expected)
@@ -754,7 +756,7 @@ end", 1)]
         [InlineData("fun main() ret ${a:33,b:true}[\"a\"] end", 33)]
         [InlineData("fun main() let dict = ${a:33,b:11} ret dict[\"a\"]+ dict[\"b\"] end", 44)]
         [InlineData(
-            "fun main() let dict = ${ f:{ |a,b| ret ${c:a+b} } } ret dict[\"f\"].invoke([10,5]).value[\"c\"] end", 15)]
+            "fun main() let dict = ${ f:{ |a,b| ret ${c:a+b} } } ret dict[\"f\"].invoke([10,5]).Value[\"c\"] end", 15)]
         public void DictionaryCreateTest3<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -852,7 +854,7 @@ end", 1)]
         {
             var vm = new HighLevelVirtualMachine();
             vm.ParseAndLoad("fun aaa() ret {|x| ret x + x } end", "hoge", "fuga");
-            vm.ParseAndLoad("fun bbb() ret hoge::fuga::aaa().invoke([8]).value end", "foobar");
+            vm.ParseAndLoad("fun bbb() ret hoge::fuga::aaa().invoke([8]).Value end", "foobar");
             vm.Compile();
 
             Assert.Equal(16, vm.Run<int>(new[] { "foobar" }, "bbb").Eval());
@@ -864,7 +866,7 @@ end", 1)]
             var vm = new HighLevelVirtualMachine();
             vm.ParseAndLoad("fun ccc() ret 10 end","hoge", "fuga");
             vm.ParseAndLoad("fun aaa() ret {|x| ret x + ccc() } end", "hoge", "fuga");
-            vm.ParseAndLoad("fun bbb() ret hoge::fuga::aaa().invoke([8]).value end");
+            vm.ParseAndLoad("fun bbb() ret hoge::fuga::aaa().invoke([8]).Value end");
             vm.Compile();
 
             Assert.Equal(18, vm.Run<int>("bbb").Eval());

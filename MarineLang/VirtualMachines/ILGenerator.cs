@@ -717,7 +717,7 @@ namespace MarineLang.VirtualMachines
             var jumpFalseILInsertIndex = marineILs.Count;
             marineILs.Add(null);
             marineILs.Add(new LoadIL(iterVarIdx));
-            marineILs.Add(new InstanceCSharpFieldLoadIL("current"));
+            marineILs.Add(new InstanceCSharpFieldLoadIL("Current"));
             marineILs.Add(new StoreIL(currentVarIdx));
             foreach (var statementAst in forEachAst.statements)
                 StatementILGenerate(statementAst, generateArgs);
