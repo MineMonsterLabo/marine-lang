@@ -1,9 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
-using MarineLang.LexicalAnalysis;
 using MarineLang.Models.Errors;
-using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
 using MineUtil;
 using Xunit;
@@ -252,6 +249,8 @@ end
         }
 
         [Theory]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Count=hoge.Count+1 ret hoge.Count end", 101)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.count=hoge.count+1 ret hoge.count end", 11)]
         [InlineData("fun main() let hoge = create_hoge() hoge.flag=4!=5 ret hoge.flag end", true)]
         [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.Flag end", true)]
         [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.flag end", false)]
@@ -666,9 +665,16 @@ end", 1)]
         [Theory]
         [InlineData("fun main() ret StaticType.ret_func_name() end", "func_name")]
         [InlineData("fun main() ret StaticType.sum(1, 4) end", 5)]
-        [InlineData("fun main() ret StaticType.name end", "aaa")]
+        [InlineData("fun main() ret StaticType.Name end", "aaa")]
         [InlineData("fun main() ret StaticType.field end", "Hello field!!")]
+        [InlineData("fun main() ret StaticType.Field end", "hello")]
+        [InlineData("fun main() StaticType.Field=StaticType.Field+\"hello\" ret StaticType.Field end", "hellohello")]
+        [InlineData("fun main() StaticType.Field2 = StaticType.Field2 +1 ret StaticType.Field2 end", 151)]
+        [InlineData("fun main() ret StaticType.Field2 end", 150)]
+        [InlineData("fun main() StaticType.Field2=30  ret StaticType.Field2 end", 30)]
+        [InlineData("fun main() StaticType.field=StaticType.field+\"2\"  ret StaticType.field end", "Hello field!!2")]
         [InlineData("fun main() StaticType.field2 = 1000 ret StaticType.field2 end", 1000)]
+        [InlineData("fun main() StaticType.field2 = StaticType.field2+1 ret StaticType.field2 end", 51)]
         public void StaticTypeTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);

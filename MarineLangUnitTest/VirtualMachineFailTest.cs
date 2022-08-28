@@ -48,7 +48,7 @@ namespace MarineLangUnitTest
         [InlineData("fun main() let piyo = create_piyo() ret piyo.member1 end ", 12, 1, 37)]
         [InlineData("fun main() let piyo = create_piyo() piyo.member1 = 20 ret piyo.member1 end ", 20, 1, 37)]
         [InlineData("fun main() let piyo = create_piyo() ret piyo.Member2 end ", "hello", 1, 37)]
-        [InlineData("fun main() let piyo = create_piyo() piyo.member2 = \"hello2\" ret piyo.member2 end ", "hello2", 1,
+        [InlineData("fun main() let piyo = create_piyo() piyo.Member2 = \"hello2\" ret piyo.Member2 end ", "hello2", 1,
             37)]
         [InlineData("fun main() let piyo = create_piyo() ret piyo.Member3[0] end ", "hello", 1, 37)]
         [InlineData("fun main() let piyo = create_piyo() piyo.Member3[0] = \"hello2\" ret piyo.Member3[0] end ",
