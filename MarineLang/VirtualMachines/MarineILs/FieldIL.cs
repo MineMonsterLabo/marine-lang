@@ -34,7 +34,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             }
             else
             {
-                PropertyInfo propertyInfo = type.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                PropertyInfo propertyInfo = type.GetProperty(NameUtil.ConvertCameName(fieldName),
                     BindingFlags.Public | BindingFlags.Static);
                 if (propertyInfo == null)
                     this.ThrowRuntimeError(fieldName, ErrorCode.RuntimeMemberNotFound);
@@ -125,7 +125,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             }
             else
             {
-                PropertyInfo propertyInfo = type.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                PropertyInfo propertyInfo = type.GetProperty(NameUtil.ConvertCameName(fieldName),
                     BindingFlags.Public | BindingFlags.Static);
                 if (propertyInfo == null)
                     this.ThrowRuntimeError(fieldName, ErrorCode.RuntimeMemberNotFound);
@@ -169,7 +169,7 @@ namespace MarineLang.VirtualMachines.MarineILs
             }
             else
             {
-                PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.GetUpperCamelName(fieldName),
+                PropertyInfo propertyInfo = instanceType.GetProperty(NameUtil.ConvertCameName(fieldName),
                     BindingFlags.Public | BindingFlags.Instance);
                 if (propertyInfo == null)
                     this.ThrowRuntimeError(fieldName, ErrorCode.RuntimeMemberNotFound);

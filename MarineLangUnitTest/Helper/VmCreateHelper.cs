@@ -64,6 +64,7 @@ namespace MarineLangUnitTest.Helper
                 new string[] {"xxx", "yyy"},
             });
 
+            StaticType.Reset();
             vm.StaticTypeRegister(typeof(StaticType));
             vm.StaticTypeRegister(typeof(Constructor));
             vm.StaticTypeRegister<OpSample1>();
@@ -84,6 +85,8 @@ namespace MarineLangUnitTest.Helper
 
         public class Hoge
         {
+            public int count = 10;
+            public int Count = 100;
             public bool flag;
             public bool Flag;
             public bool flag2 => false;
@@ -217,6 +220,17 @@ namespace MarineLangUnitTest.Helper
 
             public static string field = "Hello field!!";
             public static int field2 = 50;
+            public static int Field2 = 150;
+
+            public static string Field { get; set; }= "hello";
+
+            public static void Reset()
+            {
+                field = "Hello field!!";
+                field2 = 50;
+                Field2 = 150;
+                Field = "hello";
+            }
 
             public static string RetFuncName()
             {
