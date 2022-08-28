@@ -10,7 +10,6 @@ namespace MarineLang.VirtualMachines.MarineILs
     public struct BinaryOpIL : IMarineIL
     {
         public readonly TokenType opKind;
-        public ILDebugInfo ILDebugInfo => null;
 
         public BinaryOpIL(TokenType opKind)
         {
@@ -104,9 +103,9 @@ namespace MarineLang.VirtualMachines.MarineILs
 
                     break;
                 case TokenType.EqualOp:
-                    return leftValue.Equals(rightValue);
+                    return leftValue?.Equals(rightValue) ?? null == rightValue;
                 case TokenType.NotEqualOp:
-                    return !leftValue.Equals(rightValue);
+                    return (!leftValue?.Equals(rightValue)) ?? null != rightValue; ;
                 case TokenType.OrOp:
                     return (bool)leftValue || (bool)rightValue;
                 case TokenType.AndOp:
@@ -164,7 +163,7 @@ namespace MarineLang.VirtualMachines.MarineILs
 
             if (methodInfo == null)
             {
-                this.ThrowRuntimeError($"演算子{opKind}:", ErrorCode.RuntimeOperatorNotFound);
+                this.ThrowRuntimeError($"演算子{opKind}", ErrorCode.RuntimeOperatorNotFound);
             }
 
             return methodInfo.Invoke(null, new[] { leftValue, rightValue });
@@ -174,7 +173,6 @@ namespace MarineLang.VirtualMachines.MarineILs
     public struct UnaryOpIL : IMarineIL
     {
         public readonly TokenType opKind;
-        public ILDebugInfo ILDebugInfo => null;
 
         public UnaryOpIL(TokenType opKind)
         {

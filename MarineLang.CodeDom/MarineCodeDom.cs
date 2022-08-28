@@ -1,9 +1,9 @@
-﻿using MarineLang.Models;
-using MarineLang.Models.Asts;
-using System;
+﻿using System;
 using System.Linq;
+using MarineLang.Models;
+using MarineLang.Models.Asts;
 
-namespace MarineLang.CodeDoms
+namespace MarineLang.CodeDom
 {
     public class MarineCodeDom
     {

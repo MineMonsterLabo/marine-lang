@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
+using MarineLang.LexicalAnalysis;
+using MarineLang.Models.Errors;
 using MarineLang.SyntaxAnalysis;
-using MarineLangUnitTest.Helper;
+using MarineLang.VirtualMachines;
 using MineUtil;
 using Xunit;
 using static MarineLangUnitTest.Helper.VmCreateHelper;
@@ -11,7 +15,7 @@ namespace MarineLangUnitTest
     {
         internal void RunReturnCheck<RET>(string str, RET expected)
         {
-            var vm = VmCreateHelper.Create(str);
+            var vm = Create(str);
 
             Assert.NotNull(vm);
 
@@ -138,7 +142,7 @@ fun f() let a=3 ret a end
         [InlineData("fun main(a,b) ret plus(a,b) end ")]
         public void CallMarineFuncWithArgs2(string str)
         {
-            var vm = VmCreateHelper.Create(str);
+            var vm = Create(str);
 
             Assert.NotNull(vm);
 
@@ -234,10 +238,14 @@ end
         }
 
         [Theory]
+        [InlineData("fun main() ret create_hoge().flag2 end", false)]
+        [InlineData("fun main() ret create_hoge().Flag2 end", true)]
         [InlineData("fun main() ret create_hoge().flag end", false)]
+        [InlineData("fun main() ret create_hoge().Flag end", false)]
+        [InlineData("fun main() ret create_hoge().FlagTest end", false)]
         [InlineData("fun main() ret create_hoge().flag.to_string() end", "False")]
         [InlineData("fun main() ret create_hoge().flag||true end", true)]
-        [InlineData("fun main() ret create_hoge().name end", "this is the pen")]
+        [InlineData("fun main() ret create_hoge().Name end", "this is the pen")]
         public void InstanceField<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -245,7 +253,9 @@ end
 
         [Theory]
         [InlineData("fun main() let hoge = create_hoge() hoge.flag=4!=5 ret hoge.flag end", true)]
-        [InlineData("fun main() let hoge = create_hoge() hoge.name = 5.to_string() ret hoge.name end", "5")]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.Flag end", true)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.flag end", false)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Name = 5.to_string() ret hoge.Name end", "5")]
         public void InstanceFieldAssignment<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -306,8 +316,8 @@ end", 18)]
         }
 
         [Theory]
-        [InlineData("fun main()  hoge.name = \"gg\"  ret hoge.name end", "gg")]
-        [InlineData("fun main()  hoge.get_this().name = \"gg\"  ret hoge.name end", "gg")]
+        [InlineData("fun main()  hoge.Name = \"gg\"  ret hoge.Name end", "gg")]
+        [InlineData("fun main()  hoge.get_this().Name = \"gg\"  ret hoge.Name end", "gg")]
         [InlineData("fun main() ret hoge.plus_one(5) end", 6)]
         public void GlobalVariable<T>(string str, T expected)
         {
@@ -318,12 +328,12 @@ end", 18)]
         [InlineData("fun main() ret names[0] end", "aaa")]
         [InlineData("fun main() ret names[2-1] end", "bbb")]
         [InlineData("fun main() ret namess[1][0] end", "xxx")]
-        [InlineData("fun main() ret hoge.names[1] end", "qqq")]
+        [InlineData("fun main() ret hoge.Names[1] end", "qqq")]
         [InlineData("fun main() ret hoge[\"nnn\"] end", "nnn")]
-        [InlineData("fun main() ret hoge.dict[\"hoge\"] end", "fuga")]
+        [InlineData("fun main() ret hoge.Dict[\"hoge\"] end", "fuga")]
         [InlineData("fun main() names[1] = \"SAO\" ret names[1] end", "SAO")]
-        [InlineData("fun main() hoge.names[1] = \"AAA\" ret hoge.names[1] end", "AAA")]
-        [InlineData("fun main() hoge.get_this().get_this().names[1] = \"AAA\" ret hoge.get_this().names[1] end", "AAA")]
+        [InlineData("fun main() hoge.Names[1] = \"AAA\" ret hoge.Names[1] end", "AAA")]
+        [InlineData("fun main() hoge.get_this().get_this().Names[1] = \"AAA\" ret hoge.get_this().Names[1] end", "AAA")]
         public void Indexer<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -391,9 +401,9 @@ fun main()
     let bb = 5
     let action = {|x| 
         bb=bb+1 
-        ret bb + x - aa+{ |y| ret x*y }.invoke([2]).value
+        ret bb + x - aa+{ |y| ret x*y }.invoke([2]).Value
     }
-    ret action.invoke([8]).value+aa
+    ret action.invoke([8]).Value+aa
 end
 ")]
         public void ActionObjectCall2(string str)
@@ -406,19 +416,19 @@ end
 fun main()
     ret {|f| 
         ret 
-            { |x| ret f.invoke( [{ |y| ret x.invoke([x]).value.invoke([y]).value }] ).value }
-            .invoke( [{|x| ret f.invoke( [{ |y| ret x.invoke([x]).value.invoke([y]).value }] ).value }] ).value   
+            { |x| ret f.invoke( [{ |y| ret x.invoke([x]).Value.invoke([y]).Value }] ).Value }
+            .invoke( [{|x| ret f.invoke( [{ |y| ret x.invoke([x]).Value.invoke([y]).Value }] ).Value }] ).Value   
     }.invoke([
         { |f| 
             ret { |n| 
-                ret if n==0 {1} else {n * f.invoke([n - 1]).value } 
+                ret if n==0 {1} else {n * f.invoke([n - 1]).Value } 
             }
         } 
-    ]).value.invoke([5]).value
+    ]).Value.invoke([5]).Value
 end
 ")]
         [InlineData(@"
-fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).value}]).value}.invoke([{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).value}]).value}]).value}.invoke([{|f|ret{|n|ret if n==0{1}else{n*f.invoke([n-1]).value}}}]).value.invoke([5]).value end
+fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).Value.invoke([y]).Value}]).Value}.invoke([{|x|ret f.invoke([{|y|ret x.invoke([x]).Value.invoke([y]).Value}]).Value}]).Value}.invoke([{|f|ret{|n|ret if n==0{1}else{n*f.invoke([n-1]).Value}}}]).Value.invoke([5]).Value end
 ")]
         public void ActionObjectCall3(string str)
         {
@@ -426,19 +436,19 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
         }
 
         [Theory]
-        [InlineData("fun main() ret {| |ret 1+2 }.invoke([]).value end")]
-        [InlineData("fun main() ret {||ret 1+2 }.invoke([]).value end")]
+        [InlineData("fun main() ret {| |ret 1+2 }.invoke([]).Value end")]
+        [InlineData("fun main() ret {||ret 1+2 }.invoke([]).Value end")]
         public void ActionObjectCall4(string str)
         {
             RunReturnCheck(str, 3);
         }
 
         [Theory]
-        [InlineData("fun main() yield ret 4 end ", 4)]
-        [InlineData("fun main() yield ret hoge() + 1 end fun hoge() yield ret 5 end ", 6)]
+        [InlineData("fun main() yield 0 ret 4 end ", 4)]
+        [InlineData("fun main() yield 0 ret hoge() + 1 end fun hoge() yield 0 ret 5 end ", 6)]
         public void YieldTest<T>(string str, T expected)
         {
-            var vm = VmCreateHelper.Create(str);
+            var vm = Create(str);
 
             Assert.NotNull(vm);
 
@@ -447,6 +457,30 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
             var value = ret.Eval();
 
             Assert.Equal(expected, value);
+        }
+
+        [Fact]
+        public void YieldTest2()
+        {
+            var vm = Create
+                (
+                    @"
+                        fun main()
+                            yield null
+                            yield 4+5
+                            yield 'c'
+                            ret 123
+                        end
+                    "
+                );
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run("main");
+
+            Assert.True(ret.IsCoroutine);
+
+            Assert.Equal(new object[] { null, 9, 'c', 123}, ret.Coroutine);
         }
 
         [Theory]
@@ -456,24 +490,47 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).value.invoke([y]).va
         [InlineData("fun main() ret hoge() end fun hoge() ret wait5().await end ", 5)]
         public void AwaitTest<T>(string str, T expected)
         {
-            var vm = VmCreateHelper.Create(str);
+            var vm = Create(str);
 
             Assert.NotNull(vm);
 
-            var ret = vm.Run<T>("main");
+            var ret = vm.Run("main");
 
             var value = ret.Eval();
 
             Assert.Equal(expected, value);
         }
 
+        [Fact]
+        public void AwaitTest2()
+        {
+            var vm = Create
+                (
+                    @"
+                        fun main() 
+                            wait5().await 
+                            wait5().await 
+                            ret 6
+                        end
+                    "
+                );
+
+            Assert.NotNull(vm);
+
+            var ret = vm.Run("main");
+
+            Assert.True(ret.IsCoroutine);
+
+            Assert.Equal(new object[] { 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6}, ret.Coroutine);
+        }
+
         [Theory]
         [InlineData("fun main() let fuga = create_fuga() ret fuga.member1 end ", 12)]
         [InlineData("fun main() let fuga = create_fuga() fuga.member1 = 20 ret fuga.member1 end ", 20)]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member2 end ", "hello")]
-        [InlineData("fun main() let fuga = create_fuga() fuga.member2 = \"hello2\" ret fuga.member2 end ", "hello2")]
-        [InlineData("fun main() let fuga = create_fuga() ret fuga.member3[0] end ", "hello")]
-        [InlineData("fun main() let fuga = create_fuga() fuga.member3[0] = \"hello2\" ret fuga.member3[0] end ",
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.Member2 end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.Member2 = \"hello2\" ret fuga.Member2 end ", "hello2")]
+        [InlineData("fun main() let fuga = create_fuga() ret fuga.Member3[0] end ", "hello")]
+        [InlineData("fun main() let fuga = create_fuga() fuga.Member3[0] = \"hello2\" ret fuga.Member3[0] end ",
             "hello2")]
         [InlineData("fun main() let fuga = create_fuga() ret fuga.plus(2, 5) end ", 7)]
         public void AccessibilityTest<T>(string str, T expected)
@@ -675,52 +732,91 @@ end", 1)]
         }
 
         [Fact]
+        public void DictionaryCreateTest1()
+        {
+            var vm = Create("fun main() ret ${} end");
+            Assert.NotNull(vm);
+            var ret = vm.Run<Dictionary<string, object>>("main").Value;
+            Assert.Empty(ret);
+        }
+
+        [Fact]
+        public void DictionaryCreateTest2()
+        {
+            var vm = Create("fun main() ret ${a:33,b:true} end");
+            Assert.NotNull(vm);
+            var ret = vm.Run<Dictionary<string, object>>("main").Value;
+            Assert.True(ret.ContainsKey("a"));
+            Assert.Equal(33, ret["a"]);
+            Assert.True(ret.ContainsKey("b"));
+            Assert.Equal(true, ret["b"]);
+        }
+
+        [Theory]
+        [InlineData("fun main() ret ${a:33,b:true}[\"a\"] end", 33)]
+        [InlineData("fun main() let dict = ${a:33,b:11} ret dict[\"a\"]+ dict[\"b\"] end", 44)]
+        [InlineData(
+            "fun main() let dict = ${ f:{ |a,b| ret ${c:a+b} } } ret dict[\"f\"].invoke([10,5]).Value[\"c\"] end", 15)]
+        public void DictionaryCreateTest3<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
+        }
+
+        [Fact]
         public void MultipleLoadProgramTest()
         {
-            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
-            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
-            var parseResult = parser.Parse(lexer.GetTokens("fun hoge() ret 5 end"));
-
-            vm.LoadProgram(parseResult.programAst);
-            parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 3 end"));
-            vm.LoadProgram(parseResult.programAst);
+            var vm = new HighLevelVirtualMachine();
+            vm.ParseAndLoad("fun hoge() ret 5 end");
+            vm.ParseAndLoad("fun fuga() ret 3 end");
             vm.Compile();
 
             Assert.Equal(5, vm.Run<int>("hoge").Eval());
             Assert.Equal(3, vm.Run<int>("fuga").Eval());
 
             vm.ClearAllPrograms();
-            parseResult = parser.Parse(lexer.GetTokens("fun fuga() ret 30 end"));
-            vm.LoadProgram(parseResult.programAst);
+
+            var removeNamespace = new[] { "test", "hoge" };
+            var removeProgramId = vm.ParseAndLoad("fun hoge() ret 9 end");
+            var removeProgramId2 = vm.ParseAndLoad("fun fuga() ret 30 end", removeNamespace);
+            vm.ParseAndLoad("fun piyo() ret 1 end");
+            var removeProgramId3 = vm.ParseAndLoad("fun test() ret 100 end",removeNamespace);
             vm.Compile();
 
-            Assert.Equal(30, vm.Run<int>("fuga").Eval());
+            var programUnit = vm.GetProgramUnit(removeProgramId2);
+            Assert.Equal(9, vm.Run<int>("hoge").Eval());
+            Assert.Equal(30, vm.Run<int>(removeNamespace, "fuga").Eval());
+            Assert.Equal(1, vm.Run<int>("piyo").Eval());
+            Assert.Equal(100, vm.Run<int>(removeNamespace, "test").Eval());
+            Assert.NotNull(programUnit);
+            Assert.Equal(programUnit.NamespaceStrings, removeNamespace);
+
+
+            vm.ClearProgram(removeProgramId);
+            vm.Compile();
+
+            Assert.Throws<MarineRuntimeException>(() => Assert.Equal(9, vm.Run<int>("hoge").Eval()));
+            Assert.Equal(30, vm.Run<int>(removeNamespace, "fuga").Eval());
+            Assert.Equal(1, vm.Run<int>("piyo").Eval());
+            Assert.Equal(100, vm.Run<int>(removeNamespace, "test").Eval());
+
+            vm.ClearProgram(removeProgramId2);
+            vm.ClearProgram(removeProgramId3);
+            vm.Compile();
+
+            Assert.Throws<MarineRuntimeException>(() => Assert.Equal(9, vm.Run<int>("hoge").Eval()));
+            Assert.Throws<MarineRuntimeException>(() => Assert.Equal(30, vm.Run<int>(removeNamespace, "fuga").Eval()));
+            Assert.Equal(1, vm.Run<int>("piyo").Eval());
+            Assert.Throws<MarineRuntimeException>(() => Assert.Equal(100, vm.Run<int>(removeNamespace, "test").Eval()));
         }
 
         [Fact]
         public void MultipleLoadProgramNamespaceTest()
         {
-            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
-            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
-
-            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 25 end"));
-            vm.LoadProgram(parseResult.programAst);
-
-            parseResult = parser.Parse(lexer.GetTokens("fun bbb() ret 2525 end"));
-            vm.LoadProgram(parseResult.programAst);
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
-            vm.LoadProgram(new[] { "hoge" }, parseResult.programAst);
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new[] { "hoge", "fuga" }, parseResult.programAst);
-
+            var vm = new HighLevelVirtualMachine();
+            vm.ParseAndLoad("fun aaa() ret 25 end");
+            vm.ParseAndLoad("fun bbb() ret 2525 end");
+            vm.ParseAndLoad("fun aaa() ret 88 end", "hoge" );
+            vm.ParseAndLoad("fun aaa() ret 100 end", "hoge", "fuga" );
             vm.Compile();
 
             Assert.Equal(25, vm.Run<int>("aaa").Eval());
@@ -732,20 +828,10 @@ end", 1)]
         [Fact]
         public void NamespaceAccessTest1()
         {
-            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
-            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
-            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end"));
-            vm.LoadProgram(parseResult.programAst);
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
-            vm.LoadProgram(new[] { "hoge" }, parseResult.programAst);
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new[] { "aaa","ppp" }, parseResult.programAst);
-
+            var vm = new HighLevelVirtualMachine();
+            vm.ParseAndLoad("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end");
+            vm.ParseAndLoad("fun aaa() ret 88 end", "hoge" );
+            vm.ParseAndLoad("fun aaa() ret 100 end", "aaa", "ppp" );
             vm.Compile();
 
             Assert.Equal(188, vm.Run<int>("aaa").Eval());
@@ -754,24 +840,110 @@ end", 1)]
         [Fact]
         public void NamespaceAccessTest2()
         {
-            var lexer = new MarineLang.LexicalAnalysis.LexicalAnalyzer();
-
-            var parser = new SyntaxAnalyzer();
-
-            var vm = new MarineLang.VirtualMachines.HighLevelVirtualMachine();
-
-            var parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 88 end"));
-            vm.LoadProgram(new[] { "hoge" }, parseResult.programAst);
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret 100 end"));
-            vm.LoadProgram(new[] { "aaa", "ppp" }, parseResult.programAst);
-
-            parseResult = parser.Parse(lexer.GetTokens("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end"));
-            vm.LoadProgram(parseResult.programAst);
-
+            var vm = new HighLevelVirtualMachine();
+            vm.ParseAndLoad("fun aaa() ret 88 end", "hoge" );
+            vm.ParseAndLoad("fun aaa() ret 100 end", "aaa", "ppp" );
+            vm.ParseAndLoad("fun aaa() ret hoge::aaa()+aaa::ppp::aaa() end");
             vm.Compile();
 
             Assert.Equal(188, vm.Run<int>("aaa").Eval());
+        }
+
+        [Fact]
+        public void NamespaceAccessTest3()
+        {
+            var vm = new HighLevelVirtualMachine();
+            vm.ParseAndLoad("fun aaa() ret {|x| ret x + x } end", "hoge", "fuga");
+            vm.ParseAndLoad("fun bbb() ret hoge::fuga::aaa().invoke([8]).Value end", "foobar");
+            vm.Compile();
+
+            Assert.Equal(16, vm.Run<int>(new[] { "foobar" }, "bbb").Eval());
+        }
+
+        [Fact]
+        public void NamespaceAccessTest4()
+        {
+            var vm = new HighLevelVirtualMachine();
+            vm.ParseAndLoad("fun ccc() ret 10 end","hoge", "fuga");
+            vm.ParseAndLoad("fun aaa() ret {|x| ret x + ccc() } end", "hoge", "fuga");
+            vm.ParseAndLoad("fun bbb() ret hoge::fuga::aaa().invoke([8]).Value end");
+            vm.Compile();
+
+            Assert.Equal(18, vm.Run<int>("bbb").Eval());
+        }
+
+        [Fact]
+        public void NamespaceAccessTest5()
+        {
+            var vm = new HighLevelVirtualMachine();
+
+            vm.ParseAndLoad("fun aaa() ret 555 end");
+            vm.ParseAndLoad("fun bbb() ret aaa() end", "foobar");
+            vm.Compile();
+
+            Assert.Equal(555, vm.Run<int>(new[] { "foobar" }, "bbb").Eval());
+        }
+
+        [Fact]
+        public void GlobalNamespaceExplicitAccessTest1()
+        {
+            var vm = new HighLevelVirtualMachine();
+
+            vm.ParseAndLoad("fun aaa() ret 555 end");
+            vm.ParseAndLoad("fun aaa() ret 444() end", "foobar");
+            vm.ParseAndLoad("fun main() ret global::aaa() end","foobar" );
+            vm.Compile();
+
+            Assert.Equal(555, vm.Run<int>(new[] { "foobar" }, "main").Eval());
+        }
+
+        [Fact]
+        public void GlobalNamespaceExplicitAccessTest2()
+        {
+            var vm = CreateVM();
+            vm.ParseAndLoad("fun main() ret global::ret_123() end", "foobar");
+            vm.ParseAndLoad("fun ret_123() ret 0 end", "foobar");
+            vm.Compile();
+
+            Assert.Equal(123, vm.Run<int>(new[] { "foobar" }, "main").Eval());
+        }
+
+        public static int Ret10()
+        {
+            return 10;
+        }
+
+        [Fact]
+        public void GlobalNamespaceExplicitAccessTest3()
+        {
+          
+            var vm = CreateVM();
+
+            vm.GlobalFuncRegister(
+                new[] { "hogefuga" },
+                typeof(VirtualMachinePassTest).GetMethod(nameof(Ret10)),
+                "Ret123"
+            );
+            vm.ParseAndLoad("fun main1() ret global::ret_123() + foobar::ret_123() + hogefuga::ret_123() end", "foobar");
+            vm.ParseAndLoad("fun main2() ret global::ret_123() + ret_123() end", "foobar");
+            vm.ParseAndLoad("fun ret_123() ret 0 end", "foobar");
+            vm.Compile();
+
+            Assert.Equal(123+10, vm.Run<int>(new[] { "foobar" }, "main1").Eval());
+            Assert.Equal(123, vm.Run<int>(new[] { "foobar" }, "main2").Eval());
+        }
+
+        [Theory]
+        [InlineData("fun main() ret null end", null)]
+        [InlineData("fun main() ret null == null end", true)]
+        [InlineData("fun main() ret null != null end", false)]
+        [InlineData("fun main() ret null == 444 end", false)]
+        [InlineData("fun main() ret null != 444 end", true)]
+        [InlineData("fun main() ret 333 == null end", false)]
+        [InlineData("fun main() ret 333 != null end", true)]
+        public void NullTest<T>(string str, T expected)
+        {
+            RunReturnCheck(str, expected);
         }
     }
 }

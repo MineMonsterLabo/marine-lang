@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using MarineLang.BuildInObjects;
-using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
 using MarineLang.VirtualMachines.Dumps;
 using MarineLang.VirtualMachines.MarineILs;
@@ -13,13 +12,15 @@ namespace MarineLang.VirtualMachines
 {
     public class HighLevelVirtualMachine
     {
-        readonly Dictionary<string, MethodInfo> methodInfoDict = new Dictionary<string, MethodInfo>();
+        uint marineProgramUnitId = uint.MinValue;
+
+        readonly CsharpFuncTable methodInfoDict = new CsharpFuncTable();
         readonly Dictionary<string, Type> staticTypeDict = new Dictionary<string, Type>();
         readonly SortedDictionary<string, object> globalVariableDict = new SortedDictionary<string, object>();
-        readonly List<MarineProgramUnit> marineProgramUnitList = new List<MarineProgramUnit>();
+        readonly Dictionary<uint, MarineProgramUnit> marineProgramUnitList = new Dictionary<uint, MarineProgramUnit>();
 
         public ILGeneratedData ILGeneratedData { get; private set; }
-        public IReadOnlyDictionary<string, MethodInfo> GlobalFuncDict => methodInfoDict;
+        public IReadonlyCsharpFuncTable GlobalFuncDict => methodInfoDict;
 
         public IReadOnlyDictionary<string, Type> StaticTypeDict => staticTypeDict;
 
@@ -44,9 +45,14 @@ namespace MarineLang.VirtualMachines
             return ILGeneratedData?.namespaceTable?.ContainFunc(funcName) ?? false;
         }
 
-        public void GlobalFuncRegister(MethodInfo methodInfo)
+        public void GlobalFuncRegister(MethodInfo methodInfo, string methodName = null)
         {
-            methodInfoDict.Add(methodInfo.Name, methodInfo);
+            methodInfoDict.AddCsharpFunc(methodName??methodInfo.Name, methodInfo);
+        }
+
+        public void GlobalFuncRegister(IEnumerable<string> namespaceStrings, MethodInfo methodInfo, string methodName = null)
+        {
+            methodInfoDict.AddCsharpFunc(namespaceStrings, methodName ?? methodInfo.Name, methodInfo);
         }
 
         public void StaticTypeRegister(Type type)
@@ -74,27 +80,34 @@ namespace MarineLang.VirtualMachines
             globalVariableDict.Add(name, val);
         }
 
-        public void LoadProgram(string[] namespaceStrings, ProgramAst programAst)
+        public uint LoadProgram(MarineProgramUnit marineProgramUnit)
         {
-            marineProgramUnitList.Add(new MarineProgramUnit(namespaceStrings, programAst));
-        }
-
-        public void LoadProgram(ProgramAst programAst)
-        {
-            marineProgramUnitList.Add(new MarineProgramUnit(new string[] { }, programAst));
+            marineProgramUnitList.Add(marineProgramUnitId, marineProgramUnit);
+            return marineProgramUnitId++;
         }
 
         public void Compile()
         {
             ILGeneratedData
-                = new ILGenerator(marineProgramUnitList).Generate(methodInfoDict, staticTypeDict,
+                = new ILGenerator(marineProgramUnitList.Values).Generate(methodInfoDict, staticTypeDict,
                     globalVariableDict.Keys.ToArray());
+        }
+
+        public void ClearProgram(uint programId)
+        {
+            ILGeneratedData = null;
+            marineProgramUnitList.Remove(programId);
         }
 
         public void ClearAllPrograms()
         {
             ILGeneratedData = null;
             marineProgramUnitList.Clear();
+        }
+
+        public MarineProgramUnit GetProgramUnit(uint programId)
+        {
+            return marineProgramUnitList[programId];
         }
 
         public MarineValue<RET> Run<RET>(string marineFuncName, params object[] args)
@@ -156,14 +169,19 @@ namespace MarineLang.VirtualMachines
                     return new MarineValue(YieldRun(lowLevelVirtualMachine));
                 return new MarineValue(lowLevelVirtualMachine.Pop());
             }
-            catch (MarineRuntimeException)
+            catch (MarineILRuntimeException e)
             {
-                throw;
+                throw new MarineRuntimeException(
+                   new RuntimeErrorInfo(e.ILRuntimeErrorInfo, lowLevelVirtualMachine.GetDebugContexts())
+                );
             }
             catch (Exception e)
             {
                 var currentIL = ILGeneratedData.marineILs[lowLevelVirtualMachine.nextILIndex];
-                throw new MarineRuntimeException(new RuntimeErrorInfo(e.Message, errorPosition: currentIL.ILDebugInfo.position), e);
+                var iLRuntimeErrorInfo = new ILRuntimeErrorInfo(currentIL, e.Message);
+                throw new MarineRuntimeException(
+                  new RuntimeErrorInfo(iLRuntimeErrorInfo, lowLevelVirtualMachine.GetDebugContexts()), e
+               );
             }
         }
 
@@ -185,12 +203,14 @@ namespace MarineLang.VirtualMachines
 
         private IEnumerable<object> YieldRun(LowLevelVirtualMachine lowLevelVirtualMachine)
         {
+            yield return lowLevelVirtualMachine.yieldCurrentRegister;
+
             while (true)
             {
                 lowLevelVirtualMachine.Resume();
                 if (lowLevelVirtualMachine.yieldFlag == false)
                     break;
-                yield return null;
+                yield return lowLevelVirtualMachine.yieldCurrentRegister;
             }
 
             yield return lowLevelVirtualMachine.Pop();

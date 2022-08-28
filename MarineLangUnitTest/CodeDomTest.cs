@@ -1,4 +1,4 @@
-﻿using MarineLang.CodeDoms;
+﻿using MarineLang.CodeDom;
 using MarineLang.LexicalAnalysis;
 using MarineLang.Models;
 using MarineLang.Models.Asts;
@@ -126,7 +126,7 @@ namespace MarineLangUnitTest
                             new StatementAst[]{ ExprStatementAst.Create(ValueAst.Create(1))},
                             new StatementAst[]{ ExprStatementAst.Create(ValueAst.Create(2))}
                         )),
-                        YieldAst.Create(),
+                        YieldAst.Create(ValueAst.Create(null)),
                         ReturnAst.Create(VariableAst.Create("hhh")),
                         InstanceFieldAssignmentAst.Create(
                             InstanceFieldAst.Create(

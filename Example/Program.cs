@@ -4,14 +4,12 @@ using System.IO;
 using MarineLang.LexicalAnalysis;
 using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
-using System.Linq;
 
 namespace Example
 {
     class Program
     {
         static HighLevelVirtualMachine vm;
-
         static void Main(string[] args)
         {
             vm = new HighLevelVirtualMachine();
@@ -26,20 +24,31 @@ namespace Example
                 {
                     var filePath = str.Replace("\\f", "");
                     filePath = filePath.Replace(" ", "");
-                    SetProgram(File.ReadAllText(filePath));
+                    SetProgram(filePath, File.ReadAllText(filePath));
                 }
                 else if (str.StartsWith("\\c"))
                 {
                     var marineFuncName = str.Replace("\\c", "");
                     marineFuncName = marineFuncName.Replace(" ", "");
-                    vm.Run<object>(marineFuncName);
+
+                    vm.Compile();
+
+                    try
+                    {
+                        var value = vm.Run<object>(marineFuncName);
+                        Console.WriteLine("結果：" + value.Eval());
+                    }
+                    catch (MarineLang.Models.Errors.MarineRuntimeException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                 }
                 else
-                    SetProgram(str);
+                    SetProgram("direct input", str);
             }
         }
 
-        static void SetProgram(string code)
+        static void SetProgram(string name,string code)
         {
             var lexer = new LexicalAnalyzer();
 
@@ -63,8 +72,7 @@ namespace Example
                 return;
             }
 
-            vm.LoadProgram(syntaxParseResult.programAst);
-            vm.Compile();
+            vm.LoadProgram(new MarineProgramUnit(name, syntaxParseResult.programAst));
         }
 
         static void Print(string str)

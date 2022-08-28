@@ -4,7 +4,6 @@
     {
         Func,
         Id,
-        ClassName,
         MacroName,
         Await,
         Yield,
@@ -42,6 +41,7 @@
         Char,
         String,
         Float,
+        Null,
         End,
         Return,
         While,
@@ -49,6 +49,8 @@
         ForEach,
         In,
         TwoColon,
+        Colon,
+        Dollar,
         UnKnown,
     }
 
@@ -136,6 +138,12 @@
                     return "in";
                 case TokenType.TwoColon:
                     return "::";
+                case TokenType.Colon:
+                    return ":";
+                case TokenType.Dollar:
+                    return "$";
+                case TokenType.Null:
+                    return "null";
             }
             return null;
         }

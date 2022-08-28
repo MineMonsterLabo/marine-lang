@@ -78,6 +78,11 @@ namespace MarineLang.Models.Asts
             return this as UnaryOpAst;
         }
 
+        public DictionaryConstructAst GetDictionaryConstructAst()
+        {
+            return this as DictionaryConstructAst;
+        }
+
         public ErrorExprAst GetErrorExprAst()
         {
             return this as ErrorExprAst;
@@ -114,7 +119,8 @@ namespace MarineLang.Models.Asts
 
     public class ValueAst : ExprAst
     {
-        public override RangePosition Range => new RangePosition(token.position, token.PositionEnd);
+        public override RangePosition Range =>
+            token == null ? new RangePosition() : new RangePosition(token.position, token.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
 
         public object value;
@@ -618,7 +624,11 @@ namespace MarineLang.Models.Asts
         public Token rightParen;
 
         public string FuncName => funcNameToken.text;
-        public IEnumerable<string> NamespaceSettings => namespaceTokens.Select(token => token.text);
+        public IEnumerable<string> NamespaceSettings
+            => namespaceTokens
+            .Where((token, index) => index != 0 || token.text != "global")
+            .Select(token => token.text);
+
         public override RangePosition Range
             => rightParen == null ? new RangePosition() : new RangePosition(StartPosition, rightParen.PositionEnd);
         public override ExprPriority ExprPriority => ExprPriority.Primary;
@@ -666,6 +676,37 @@ namespace MarineLang.Models.Asts
             return
                 Enumerable.Empty<IAst>().Append(this)
                 .Concat(args.SelectMany(x => x.GetChildrenWithThis()));
+        }
+    }
+
+    public class DictionaryConstructAst : ExprAst
+    {
+        public Dictionary<string,ExprAst> dict;
+        public Token start;
+        public Token end;
+        public override RangePosition Range => new RangePosition(start.position, end.PositionEnd);
+        public override ExprPriority ExprPriority => ExprPriority.Primary;
+
+        public static DictionaryConstructAst Create(Token start, Token end, Dictionary<string, ExprAst> dict)
+        {
+            return new DictionaryConstructAst
+            {
+                dict = dict,
+                start = start,
+                end = end
+            };
+        }
+
+        public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)
+        {
+            return base.Accept(astVisitor).Append(astVisitor.Visit(this));
+        }
+
+        public override IEnumerable<IAst> GetChildrenWithThis()
+        {
+            return
+                Enumerable.Empty<IAst>().Append(this)
+                .Concat(dict.Values.SelectMany(x => x.GetChildrenWithThis()));
         }
     }
 }

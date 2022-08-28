@@ -29,9 +29,18 @@ namespace MarineLangUnitTest.Helper
             var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
                 throw new Exception(string.Concat(parseResult.parseErrorInfos.Select(x => x.FullErrorMessage)));
+            var vm = CreateVM();
+
+            vm.LoadProgram(new MarineProgramUnit(parseResult.programAst));
+            vm.Compile();
+
+            return vm;
+        }
+
+        public static HighLevelVirtualMachine CreateVM()
+        {
             var vm = new HighLevelVirtualMachine();
 
-            vm.LoadProgram(parseResult.programAst);
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Ret123)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Hello)));
             vm.GlobalFuncRegister(typeof(VmCreateHelper).GetMethod(nameof(Plus)));
@@ -48,7 +57,7 @@ namespace MarineLangUnitTest.Helper
             vm.GlobalVariableRegister("hoge", new Hoge());
             vm.GlobalVariableRegister("fuga", new Fuga());
             vm.GlobalVariableRegister("piyo", new Piyo());
-            vm.GlobalVariableRegister("names", new string[] {"aaa", "bbb"});
+            vm.GlobalVariableRegister("names", new string[] { "aaa", "bbb" });
             vm.GlobalVariableRegister("namess", new string[][]
             {
                 new string[] {"ccc", "ddd"},
@@ -60,14 +69,26 @@ namespace MarineLangUnitTest.Helper
             vm.StaticTypeRegister<OpSample1>();
             vm.StaticTypeRegister<TestColor>();
 
-            vm.Compile();
-
             return vm;
+        }
+
+        public static uint ParseAndLoad(this HighLevelVirtualMachine vm, string str, params string[] namespaceStrings)
+        {
+            var lexer = new LexicalAnalyzer();
+            var parser = new SyntaxAnalyzer();
+
+            var tokens = lexer.GetTokens(str).ToArray();
+            var parseResult = parser.Parse(tokens);
+            return vm.LoadProgram(new MarineProgramUnit(namespaceStrings, parseResult.programAst));
         }
 
         public class Hoge
         {
             public bool flag;
+            public bool Flag;
+            public bool flag2 => false;
+            public bool Flag2 => true;
+            public bool FlagTest;
             public string[] Names { get; } = new string[] {"rrr", "qqq"};
 
             public string this[string index]

@@ -10,6 +10,7 @@ namespace MarineLang.Models.Errors
         SyntaxNonFuncName,
         SyntaxNonFuncParen,
         SyntaxNonRetExpr,
+        SyntaxNonYieldExpr,
         SyntaxNonLetVarName,
         SyntaxNonLetEqual,
         SyntaxNonEqualExpr,
@@ -38,6 +39,8 @@ namespace MarineLang.Models.Errors
                     return "関数定義には()が必要です";
                 case ErrorCode.SyntaxNonRetExpr:
                     return "retの後には式が必要です";
+                case ErrorCode.SyntaxNonYieldExpr:
+                    return "yieldの後には式が必要です";
                 case ErrorCode.SyntaxNonLetVarName:
                     return "letの後には変数名が必要です";
                 case ErrorCode.SyntaxNonLetEqual:
@@ -53,7 +56,7 @@ namespace MarineLang.Models.Errors
                 case ErrorCode.RuntimeOperatorNotFound:
                     return "演算子が見つかりません";
                 case ErrorCode.Unknown:
-                    return "";
+                    return "不明なエラー";
             }
 
             throw new NotImplementedException();

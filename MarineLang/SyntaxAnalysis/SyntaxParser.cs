@@ -3,6 +3,7 @@ using MarineLang.Models;
 using MarineLang.Models.Asts;
 using MarineLang.Models.Errors;
 using MarineLang.ParserCore;
+using MarineLang.Utils;
 using MineUtil;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,8 +32,11 @@ namespace MarineLang.SyntaxAnalysis
         public Parse.Parser<ValueAst> ParseBool { get; }
         public Parse.Parser<ValueAst> ParseChar { get; }
         public Parse.Parser<ValueAst> ParseString { get; }
+        public Parse.Parser<ValueAst> ParseNull { get; }
         public Parse.Parser<VariableAst> ParseVariable { get; }
-        public Parse.Parser<YieldAst> ParseYield { get; }
+        public Parse.Parser<VariableAst> ParseFieldVariable { get; }
+        public Parse.Parser<Token> ParseLowerIdToken { get; }
+        public Parse.Parser<Token> ParseUpperIdToken { get; }
         public Parse.Parser<BreakAst> ParseBreak { get; }
         public Parse.Parser<ProgramAst> ParseProgram { get; }
         public Parse.Parser<FuncDefinitionAst> ParseFuncDefinition { get; }
@@ -47,8 +51,11 @@ namespace MarineLang.SyntaxAnalysis
             ParseBool = InternalParseBool();
             ParseChar = InternalParseChar();
             ParseString = InternalParseString();
+            ParseNull = InternalParseNull();
+            ParseLowerIdToken = InternalParseLowerIdToken();
+            ParseUpperIdToken = InternalParseUpperIdToken();
             ParseVariable = InternalParseVariable();
-            ParseYield = InternalParseYield();
+            ParseFieldVariable = InternalParseFieldVariable();
             ParseBreak = InternalParseBreak();
             ParseStatement = InternalParseStatement();
             ParseFuncDefinition = InternalParseFuncDefinition();
@@ -79,7 +86,7 @@ namespace MarineLang.SyntaxAnalysis
                     ParseToken(TokenType.Func)
                     .NamedError(ErrorCode.SyntaxNonFuncWord, $"\"{input.Current.text}\"")
                     .Right(
-                        ParseToken(TokenType.Id)
+                        ParseLowerIdToken
                          .NamedError(ErrorCode.SyntaxNonFuncName, new RangePosition(headToken.position, headToken.PositionEnd))
                     )
                     .Left(
@@ -106,7 +113,7 @@ namespace MarineLang.SyntaxAnalysis
                                     ParseToken(TokenType.Func).NoConsume()
                                 )
                             )
-                            .Right(Parse.Any) 
+                            .Right(Parse.Any)
                         )
                     )
                     .Left(
@@ -164,7 +171,7 @@ namespace MarineLang.SyntaxAnalysis
             return
                 Parse.OrConsumedError(
                     ParseBreak.Try(),
-                    ParseYield.Try(),
+                    ParseYield().Try(),
                     ParseWhile(),
                     ParseFor(),
                     ParseForEach(),
@@ -178,14 +185,22 @@ namespace MarineLang.SyntaxAnalysis
                 );
         }
 
-        Parse.Parser<YieldAst> InternalParseYield()
+        Parse.Parser<YieldAst> ParseYield()
         {
-            return ParseToken(TokenType.Yield).Map(_ => new YieldAst());
+            return
+                from yieldToken in
+                    ParseToken(TokenType.Yield)
+                    .Left(
+                        Parse.Except(Parse.End)
+                        .NamedError(ErrorCode.SyntaxNonYieldExpr)
+                    )
+                from expr in ParseExpr().NamedError(ErrorCode.SyntaxNonYieldExpr)
+                select YieldAst.Create(yieldToken, expr);
         }
 
         Parse.Parser<BreakAst> InternalParseBreak()
         {
-            return ParseToken(TokenType.Break).Map(_ => new BreakAst());
+            return ParseToken(TokenType.Break).Map(BreakAst.Create);
         }
 
         public Parse.Parser<WhileAst> ParseWhile()
@@ -258,7 +273,7 @@ namespace MarineLang.SyntaxAnalysis
                 from conditionExpr in ParseExpr()
                 from thenBlock in ParseBlock()
                 from elseToken in ParseToken(TokenType.Else).Default(null)
-                from elseBlock in elseToken==null?Parse.Return<Block>(null): ParseBlock()
+                from elseBlock in elseToken == null ? Parse.Return<Block>(null) : ParseBlock()
                 select
                     IfExprAst.Create(
                         ifToken,
@@ -276,7 +291,7 @@ namespace MarineLang.SyntaxAnalysis
 
         public Parse.Parser<Block> ParseBlock()
         {
-            return 
+            return
                 from _ in ParseToken(TokenType.LeftCurlyBracket)
                 from statementAsts in Parse.Until(ParseStatement, ParseBlockEnd().NoConsume())
                 from endRightCurlyBracketToken in ParseToken(TokenType.RightCurlyBracket)
@@ -360,18 +375,18 @@ namespace MarineLang.SyntaxAnalysis
 
         public Parse.Parser<ExprAst> ParseDotTermExpr(ExprAst instance)
         {
-           return from expr in
-                Parse.Or<ExprAst>(
-                    from awaitToken in ParseToken(TokenType.Await)
-                    select AwaitAst.Create(awaitToken, instance)
-                    ,
-                    from funcCall in ParseFuncCall().Try()
-                    select InstanceFuncCallAst.Create(instance, funcCall)
-                    ,
-                    from variable in ParseVariable
-                    select InstanceFieldAst.Create(instance, variable)
-                )
-            select expr;
+            return from expr in
+                 Parse.Or<ExprAst>(
+                     from awaitToken in ParseToken(TokenType.Await)
+                     select AwaitAst.Create(awaitToken, instance)
+                     ,
+                     from funcCall in ParseFuncCall().Try()
+                     select InstanceFuncCallAst.Create(instance, funcCall)
+                     ,
+                     from variable in ParseFieldVariable
+                     select InstanceFieldAst.Create(instance, variable)
+                 )
+                   select expr;
         }
 
         public Parse.Parser<ExprAst> ParseDotTerms(ExprAst instance)
@@ -420,7 +435,7 @@ namespace MarineLang.SyntaxAnalysis
         public Parse.Parser<ExprAst> ParseStaticTerm()
         {
             var classNameParser =
-                from className in ParseToken(TokenType.ClassName)
+                from className in ParseUpperIdToken
                 from dotOpToken in ParseToken(TokenType.DotOp)
                 select className;
 
@@ -431,7 +446,7 @@ namespace MarineLang.SyntaxAnalysis
 
             var fieldParser =
               from className in classNameParser
-              from variable in ParseVariable
+              from variable in ParseFieldVariable
               select StaticFieldAst.Create(className, variable);
 
             return Parse.Or<ExprAst>(funcCallParser.Try(), fieldParser);
@@ -448,9 +463,11 @@ namespace MarineLang.SyntaxAnalysis
                     ParseBool.Try(),
                     ParseChar.Try(),
                     ParseString.Try(),
+                    ParseNull,
                     ParseArrayLiteral().Try(),
                     ParseActionLiteral().Try(),
-                    ParseVariable.Try()
+                    ParseVariable.Try(),
+                    ParseDictConsLiteral().Try()
                 );
         }
 
@@ -475,17 +492,17 @@ namespace MarineLang.SyntaxAnalysis
         public Parse.Parser<FuncCallAst> ParseTopLevelFuncCall()
         {
             return
-                from namespaceTokens in Parse.Many(ParseToken(TokenType.Id).Left(ParseToken(TokenType.TwoColon)).Try())
+                from namespaceTokens in Parse.Many(ParseLowerIdToken.Left(ParseToken(TokenType.TwoColon)).Try())
                 from remain in Parse.Remain
-                from funcNameToken in ParseToken(TokenType.Id)
-                from tuple in namespaceTokens.Any()?ParseParamList().Try(): ParseParamList().Try(remain)
+                from funcNameToken in ParseLowerIdToken
+                from tuple in namespaceTokens.Any() ? ParseParamList().Try() : ParseParamList().Try(remain)
                 select FuncCallAst.Create(namespaceTokens.ToArray(), funcNameToken, tuple.Item2, tuple.Item3);
         }
 
         public Parse.Parser<FuncCallAst> ParseFuncCall()
         {
             return
-                from funcNameToken in ParseToken(TokenType.Id)
+                from funcNameToken in ParseLowerIdToken
                 from tuple in ParseParamList().Try()
                 select FuncCallAst.Create(funcNameToken, tuple.Item2, tuple.Item3);
         }
@@ -607,7 +624,7 @@ namespace MarineLang.SyntaxAnalysis
             return
                 ParseIndexerOpExpr()
                 .Bind(ParseDotTerms)
-                .Where(expr=>!(expr is VariableAst))
+                .Where(expr => !(expr is VariableAst))
                 .NamedError(ErrorCode.Unknown)
                 .Left(ParseToken(TokenType.AssignmentOp))
                 .NamedError(ErrorCode.Unknown, "=を期待してます")
@@ -615,7 +632,7 @@ namespace MarineLang.SyntaxAnalysis
                     Parse.Except(Parse.End)
                     .NamedError(ErrorCode.SyntaxNonEqualExpr)
                 ).Try()
-                .Bind(exprAst =>
+                .Bind((exprAst, input) =>
                  {
                      if (exprAst is InstanceFieldAst fieldAst)
                          return
@@ -629,16 +646,16 @@ namespace MarineLang.SyntaxAnalysis
                              ParseExpr()
                              .Map(expr => ReAssignmentIndexerAst.Create(getIndexerAst, expr));
 
-                     return Parse.ErrorReturn<StatementAst>(new ParseErrorInfo("ParseInstanceFieldAssignment"+ exprAst));
+                     return Parse.ErrorReturn<StatementAst>(new ParseErrorInfo("ParseInstanceFieldAssignment" + exprAst, input.RangePosition));
                  });
         }
 
         public Parse.Parser<StaticFieldAssignmentAst> ParseStaticFieldAssignment()
         {
             return
-                from className in ParseToken(TokenType.ClassName)
+                from className in ParseUpperIdToken
                 from dotOp in ParseToken(TokenType.DotOp)
-                from variable in ParseVariable
+                from variable in ParseFieldVariable
                 from equalOp in ParseToken(TokenType.AssignmentOp)
                 from expr in ParseExpr()
                 select StaticFieldAssignmentAst.Create(StaticFieldAst.Create(className, variable), expr);
@@ -647,20 +664,20 @@ namespace MarineLang.SyntaxAnalysis
         Parse.Parser<ValueAst> InternalParseInt()
         {
             return ParseToken(TokenType.Int)
-                .BindResult(token =>
+                .BindResult((token, input) =>
                  (int.TryParse(token.text, out int value)) ?
                      Result.Ok<ValueAst, ParseErrorInfo>(ValueAst.Create(value, token)) :
-                     Result.Error<ValueAst, ParseErrorInfo>(new ParseErrorInfo("InternalParseInt"))
+                     Result.Error<ValueAst, ParseErrorInfo>(new ParseErrorInfo("InternalParseInt", input.RangePosition))
              );
         }
 
         Parse.Parser<ValueAst> InternalParseFloat()
         {
             return ParseToken(TokenType.Float)
-               .BindResult(token =>
+               .BindResult((token, input) =>
                     (float.TryParse(token.text, out float value)) ?
                         Result.Ok<ValueAst, ParseErrorInfo>(ValueAst.Create(value, token)) :
-                        Result.Error<ValueAst, ParseErrorInfo>(new ParseErrorInfo("InternalParseFloat"))
+                        Result.Error<ValueAst, ParseErrorInfo>(new ParseErrorInfo("InternalParseFloat", input.RangePosition))
                 );
         }
 
@@ -687,7 +704,20 @@ namespace MarineLang.SyntaxAnalysis
             });
         }
 
+        Parse.Parser<ValueAst> InternalParseNull()
+        {
+            return ParseToken(TokenType.Null)
+              .Map(token => ValueAst.Create(null, token));
+        }
+
         Parse.Parser<VariableAst> InternalParseVariable()
+        {
+            return
+                ParseLowerIdToken
+                .Map(token => VariableAst.Create(token));
+        }
+
+        Parse.Parser<VariableAst> InternalParseFieldVariable()
         {
             return
                 ParseToken(TokenType.Id)
@@ -758,6 +788,39 @@ namespace MarineLang.SyntaxAnalysis
                 ).Map(tuple => ArrayLiteralAst.Create(tuple.Item1, tuple.Item2, tuple.Item3));
         }
 
+        public Parse.Parser<DictionaryConstructAst> ParseDictConsLiteral()
+        {
+            var parseDictConsKeyValues =
+                 Parse.Separated(ParseDictConsKeyValue(), ParseToken(TokenType.Comma))
+                 .SwallowIfError(
+                     Parse.Many(
+                         Parse.Except(
+                             ParseToken(TokenType.RightCurlyBracket).NoConsume()
+                         ).Right(Parse.Any)
+                     )
+                 ).StackError(new (string id, ExprAst exprAst)[] { });
+
+            return
+                from start in ParseToken(TokenType.Dollar)
+                from _ in ParseToken(TokenType.LeftCurlyBracket)
+                from dictConsKeyValues in parseDictConsKeyValues
+                from end in ParseToken(TokenType.RightCurlyBracket)
+                select
+                    DictionaryConstructAst.Create(
+                        start,
+                        end,
+                        dictConsKeyValues.ToDictionary(item => item.id, item => item.exprAst)
+                    );
+        }
+
+        public Parse.Parser<(string id, ExprAst exprAst)> ParseDictConsKeyValue()
+        {
+            return
+                from idToken in ParseLowerIdToken
+                from exprAst in ParseToken(TokenType.Colon).Right(ParseExpr())
+                select (id: idToken.text, exprAst: exprAst);
+        }
+
         public Parse.Parser<ActionAst> ParseActionLiteral()
         {
             return
@@ -778,6 +841,28 @@ namespace MarineLang.SyntaxAnalysis
         public Parse.Parser<Token> ParseToken(TokenType tokenType)
         {
             return Parse.Expected(token => token.tokenType, tokenType);
+        }
+
+        public Parse.Parser<Token> InternalParseLowerIdToken()
+        {
+            return 
+                Parse.Verify
+                (
+                    token => 
+                        token.tokenType == TokenType.Id && 
+                        CharUtil.IsLowerLetter(token.text[0])
+                );
+        }
+
+        public Parse.Parser<Token> InternalParseUpperIdToken()
+        {
+            return
+                Parse.Verify
+                (
+                    token =>
+                        token.tokenType == TokenType.Id &&
+                        CharUtil.IsUpperLetter(token.text[0])
+                );
         }
     }
 }

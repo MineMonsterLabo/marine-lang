@@ -23,7 +23,7 @@ namespace MarineLang.ParserCore
             (this Parse<I>.Parser<T> parser, ErrorCode errorCode, RangePosition rangePosition, string prefixErrorMessage = "")
         {
             return parser.NamedError(_ =>
-               new ParseErrorInfo(prefixErrorMessage, errorCode, rangePosition)
+               new ParseErrorInfo(prefixErrorMessage, rangePosition, errorCode)
            );
         }
 
@@ -31,7 +31,7 @@ namespace MarineLang.ParserCore
             (this Parse<I>.Parser<T> parser, ErrorCode errorCode, string prefixErrorMessage = "")
         {
             return parser.NamedError(rangePosition =>
-                new ParseErrorInfo(prefixErrorMessage, errorCode, rangePosition)
+                new ParseErrorInfo(prefixErrorMessage, rangePosition, errorCode)
             );
         }
 
@@ -59,15 +59,20 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parse<I>.Parser<TT> Bind<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, Parse<I>.Parser<TT>> func)
+        public static Parse<I>.Parser<TT> Bind<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, IInput<I>, Parse<I>.Parser<TT>> func)
         {
             return input =>
             {
                 var result = parser(input);
                 if (result.Result.IsError)
                     return result.CastError<TT>();
-                return result.ChainRight(func(result.Result.RawValue)(result.Remain));
+                return result.ChainRight(func(result.Result.RawValue, result.Remain)(result.Remain));
             };
+        }
+
+        public static Parse<I>.Parser<TT> Bind<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, Parse<I>.Parser<TT>> func)
+        {
+            return Bind(parser, (value, _) => func(value));
         }
 
         public static Parse<I>.Parser<V> SelectMany<T, U, V, I>(
@@ -75,18 +80,23 @@ namespace MarineLang.ParserCore
                  Func<T, Parse<I>.Parser<U>> selector,
                  Func<T, U, V> projector)
         {
-            return parser.Bind(t => selector(t).Select(u => projector(t, u)));
+            return parser.Bind((t, _) => selector(t).Select(u => projector(t, u)));
         }
 
-        public static Parse<I>.Parser<TT> BindResult<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, IResult<TT, ParseErrorInfo>> func)
+        public static Parse<I>.Parser<TT> BindResult<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, IInput<I>, IResult<TT, ParseErrorInfo>> func)
         {
             return input =>
             {
                 var result = parser(input);
                 if (result.Result.IsError)
                     return result.CastError<TT>();
-                return result.SetResult(func(result.Result.RawValue));
+                return result.SetResult(func(result.Result.RawValue, result.Remain));
             };
+        }
+
+        public static Parse<I>.Parser<TT> BindResult<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, IResult<TT, ParseErrorInfo>> func)
+        {
+            return BindResult(parser, (value, _) => func(value));
         }
 
         public static Parse<I>.Parser<TT> Map<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, TT> func)
@@ -179,9 +189,9 @@ namespace MarineLang.ParserCore
         public static Parse<I>.Parser<T> Where<T, I>(this Parse<I>.Parser<T> parser, Func<T, bool> predicate)
         {
             return parser.BindResult(
-                t => predicate(t) ?
+                (t, input) => predicate(t) ?
                     Result.Ok<T, ParseErrorInfo>(t) :
-                    Result.Error<T, ParseErrorInfo>(new ParseErrorInfo("Where"))
+                    Result.Error<T, ParseErrorInfo>(new ParseErrorInfo("Where", input.RangePosition))
             );
         }
 
@@ -199,7 +209,7 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parse<I>.Parser<T> SwallowIfError<T,TT, I>(this Parse<I>.Parser<T> parser, Parse<I>.Parser<TT> swallowParser)
+        public static Parse<I>.Parser<T> SwallowIfError<T, TT, I>(this Parse<I>.Parser<T> parser, Parse<I>.Parser<TT> swallowParser)
         {
             return input =>
             {

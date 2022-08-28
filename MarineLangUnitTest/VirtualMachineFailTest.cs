@@ -20,45 +20,45 @@ namespace MarineLangUnitTest
         }
 
         [Theory]
-        [InlineData("fun main() let hoge = create_hoge() hoge.test() end", 1, 42)]
-        [InlineData("fun main() let hoge = create_hoge() hoge.test end", 1, 42)]
-        [InlineData("fun main() let hoge = create_hoge() hoge.test = 20 end", 1, 42)]
-        [InlineData("fun main() let hoge = create_hoge() hoge.test[0] end", 1, 42)]
-        [InlineData("fun main() let hoge = create_hoge() hoge.test[0] = 10 end", 1, 42)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.test() end", 1, 37)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.test end", 1, 37)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.test = 20 end", 1, 37)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.test[0] end", 1, 37)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.test[0] = 10 end", 1, 37)]
         public void MemberNotFoundThrowTest(string str, int line = 0, int column = 0)
         {
             var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, Unit.Value));
-            Assert.Equal(ErrorCode.RuntimeMemberNotFound, exception.RuntimeErrorInfo.ErrorCode);
-            Assert.Equal(new Position(line, column), exception.RuntimeErrorInfo.errorPosition);
+            Assert.Equal(ErrorCode.RuntimeMemberNotFound, exception.RuntimeErrorInfo.ILRuntimeErrorInfo.ErrorCode);
+            Assert.Equal(new Position(line, column), exception.RuntimeErrorInfo.DebugContexts[0].RangePosition.Start);
         }
 
         [Theory]
-        [InlineData("fun main() let hoge = create_hoge() hoge.name[0] end", 1, 46)]
-        [InlineData("fun main() let hoge = create_hoge() hoge.name[0] = 20 end", 1, 46)]
-        [InlineData("fun main() let hoge = create_hoge() hoge.names['0'] end", 1, 47)]
-        [InlineData("fun main() let hoge = create_hoge() hoge.names['0'] = 10 end", 1, 47)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Name[0] end", 1, 37)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Name[0] = 20 end", 1, 37)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Names['0'] end", 1, 37)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Names['0'] = 10 end", 1, 37)]
         public void IndexerNotFoundThrowTest(string str, int line = 0, int column = 0)
         {
             var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, Unit.Value));
-            Assert.Equal(ErrorCode.RuntimeIndexerNotFound, exception.RuntimeErrorInfo.ErrorCode);
-            Assert.Equal(new Position(line, column), exception.RuntimeErrorInfo.errorPosition);
+            Assert.Equal(ErrorCode.RuntimeIndexerNotFound, exception.RuntimeErrorInfo.ILRuntimeErrorInfo.ErrorCode);
+            Assert.Equal(new Position(line, column), exception.RuntimeErrorInfo.DebugContexts[0].RangePosition.Start);
         }
 
         [Theory]
-        [InlineData("fun main() let piyo = create_piyo() ret piyo.member1 end ", 12, 1, 46)]
-        [InlineData("fun main() let piyo = create_piyo() piyo.member1 = 20 ret piyo.member1 end ", 20, 1, 42)]
-        [InlineData("fun main() let piyo = create_piyo() ret piyo.member2 end ", "hello", 1, 46)]
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.member1 end ", 12, 1, 37)]
+        [InlineData("fun main() let piyo = create_piyo() piyo.member1 = 20 ret piyo.member1 end ", 20, 1, 37)]
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.Member2 end ", "hello", 1, 37)]
         [InlineData("fun main() let piyo = create_piyo() piyo.member2 = \"hello2\" ret piyo.member2 end ", "hello2", 1,
-            42)]
-        [InlineData("fun main() let piyo = create_piyo() ret piyo.member3[0] end ", "hello", 1, 46)]
-        [InlineData("fun main() let piyo = create_piyo() piyo.member3[0] = \"hello2\" ret piyo.member3[0] end ",
-            "hello2", 1, 42)]
-        [InlineData("fun main() let piyo = create_piyo() ret piyo.plus(2, 5) end ", 7, 1, 46)]
+            37)]
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.Member3[0] end ", "hello", 1, 37)]
+        [InlineData("fun main() let piyo = create_piyo() piyo.Member3[0] = \"hello2\" ret piyo.Member3[0] end ",
+            "hello2", 1, 37)]
+        [InlineData("fun main() let piyo = create_piyo() ret piyo.plus(2, 5) end ", 7, 1, 37)]
         public void AccessibilityThrowTest<T>(string str, T expected, int line = 0, int column = 0)
         {
             var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, expected));
-            Assert.Equal(ErrorCode.RuntimeMemberAccessPrivate, exception.RuntimeErrorInfo.ErrorCode);
-            Assert.Equal(new Position(line, column), exception.RuntimeErrorInfo.errorPosition);
+            Assert.Equal(ErrorCode.RuntimeMemberAccessPrivate, exception.RuntimeErrorInfo.ILRuntimeErrorInfo.ErrorCode);
+            Assert.Equal(new Position(line, column), exception.RuntimeErrorInfo.DebugContexts[0].RangePosition.Start);
         }
 
         [Theory]
@@ -66,8 +66,7 @@ namespace MarineLangUnitTest
         public void OpThrowTest<T>(string str, T expected)
         {
             var exception = Assert.Throws<MarineRuntimeException>(() => RunReturnCheck(str, expected));
-            Assert.Equal(ErrorCode.RuntimeOperatorNotFound, exception.RuntimeErrorInfo.ErrorCode);
-            Assert.Null(exception.RuntimeErrorInfo.errorPosition);
+            Assert.Equal(ErrorCode.RuntimeOperatorNotFound, exception.RuntimeErrorInfo.ILRuntimeErrorInfo.ErrorCode);
         }
     }
 }
