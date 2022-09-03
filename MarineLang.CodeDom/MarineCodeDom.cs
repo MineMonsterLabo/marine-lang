@@ -7,28 +7,38 @@ namespace MarineLang.CodeDom
 {
     public class MarineCodeDom
     {
-        public static string CreateProgram(ProgramAst programAst)
+        public string Eof{get;}
+        public MarineCodeDom(string eof)
         {
-            return string.Join("\n", programAst.funcDefinitionAsts.Select(CreateFuncDefinition));
+            Eof = eof;
         }
 
-        public static string CreateFuncDefinition(FuncDefinitionAst funcDefinitionAst)
+        public MarineCodeDom()
+        {
+            Eof = Environment.NewLine;
+        }
+
+        public string CreateProgram(ProgramAst programAst)
+        {
+            return string.Join(Eof, programAst.funcDefinitionAsts.Select(CreateFuncDefinition));
+        }
+
+        public string CreateFuncDefinition(FuncDefinitionAst funcDefinitionAst)
         {
             var funcName = funcDefinitionAst.funcName;
-            var newLine = Environment.NewLine;
             var args = string.Join(", ", funcDefinitionAst.args.Select(arg => arg.VarName));
             var statements =
                 string.Join(
-                    newLine,
+                    Eof,
                     funcDefinitionAst.statementAsts.Select(statement => CreateStatement(statement, 1))
                 );
-            var statementLastNewLine = statements.Length > 0 ? newLine : "";
+            var statementLastNewLine = statements.Length > 0 ? Eof : "";
 
             return
-                $"fun {funcName}({args}){newLine}{statements}{statementLastNewLine}end";
+                $"fun {funcName}({args}){Eof}{statements}{statementLastNewLine}end";
         }
 
-        public static string CreateStatement(StatementAst statementAst, int indent)
+        public string CreateStatement(StatementAst statementAst, int indent)
         {
             var tabs = GetTabs(indent);
             var text = "";
@@ -54,73 +64,71 @@ namespace MarineLang.CodeDom
             return tabs + text;
         }
 
-        public static string CreateAssignmentVariable(AssignmentVariableAst assignmentVariableAst, int indent)
+        public string CreateAssignmentVariable(AssignmentVariableAst assignmentVariableAst, int indent)
         {
             var varName = assignmentVariableAst.variableAst.VarName;
             var expr = CreateExpr(assignmentVariableAst.expr, indent + 1);
             return $"let {varName} = {expr}";
         }
 
-        public static string CreateYield(YieldAst yieldAst)
+        public string CreateYield(YieldAst yieldAst)
         {
             return $"yield";
         }
 
-        public static string CreateReturn(ReturnAst returnAst, int indent)
+        public string CreateReturn(ReturnAst returnAst, int indent)
         {
             var expr = CreateExpr(returnAst.expr, indent + 1);
             return $"ret {expr}";
         }
 
-        public static string CreateFieldAssignment(InstanceFieldAssignmentAst fieldAssignmentAst,int indent)
+        public string CreateFieldAssignment(InstanceFieldAssignmentAst fieldAssignmentAst,int indent)
         {
             var instanceExpr = CreateExpr(fieldAssignmentAst.instanceFieldAst,indent);
             var expr = CreateExpr(fieldAssignmentAst.expr, indent + 1);
             return $"{instanceExpr} = {expr}";
         }
 
-        public static string CreateReAssignmentVariable(ReAssignmentVariableAst reAssignmentVariableAst, int indent)
+        public string CreateReAssignmentVariable(ReAssignmentVariableAst reAssignmentVariableAst, int indent)
         {
             var varName = reAssignmentVariableAst.variableAst.VarName;
             var expr = CreateExpr(reAssignmentVariableAst.expr, indent + 1);
             return $"{varName} = {expr}";
         }
 
-        public static string CreateWhile(WhileAst whileAst,int indent)
+        public string CreateWhile(WhileAst whileAst,int indent)
         {
             var conditionExpr = CreateExpr(whileAst.conditionExpr, indent + 1);
-            var newLine = Environment.NewLine;
             var statements = string.Join(
-                newLine,
+                Eof,
                 whileAst.statements.Select(statement => CreateStatement(statement, indent + 1))
             );
             var tabs = GetTabs(indent);
-            return $"while({conditionExpr}){newLine}{tabs}{{{newLine}{statements}{newLine}{tabs}}}";
+            return $"while({conditionExpr}){Eof}{tabs}{{{Eof}{statements}{Eof}{tabs}}}";
         }
 
-        public static string CreateFor(ForAst forAst, int indent)
+        public string CreateFor(ForAst forAst, int indent)
         {
             var initVariable= CreateVariable(forAst.initVariable);
             var initExpr = CreateExpr(forAst.initExpr, indent + 1);
             var maxValueExpr = CreateExpr(forAst.maxValueExpr, indent + 1);
             var addValueExpr = CreateExpr(forAst.addValueExpr, indent + 1);
-            var newLine = Environment.NewLine;
             var statements = string.Join(
-                newLine,
+                Eof,
                 forAst.statements.Select(statement => CreateStatement(statement, indent + 1))
             );
             var tabs = GetTabs(indent);
-            return $"for {initVariable} = {initExpr}, {maxValueExpr}, {addValueExpr}{newLine}{tabs}{{{newLine}{statements}{newLine}{tabs}}}";
+            return $"for {initVariable} = {initExpr}, {maxValueExpr}, {addValueExpr}{Eof}{tabs}{{{Eof}{statements}{Eof}{tabs}}}";
         }
 
-        public static string CreateReAssignmentIndexer(ReAssignmentIndexerAst reAssignmentIndexerAst, int indent)
+        public string CreateReAssignmentIndexer(ReAssignmentIndexerAst reAssignmentIndexerAst, int indent)
         {
             var indexerExpr = CreateExpr(reAssignmentIndexerAst.getIndexerAst, indent);
             var expr = CreateExpr(reAssignmentIndexerAst.assignmentExpr, indent + 1);
             return $"{indexerExpr} = {expr}";
         }
 
-        public static string CreateExpr(ExprAst exprAst, int indent)
+        public string CreateExpr(ExprAst exprAst, int indent)
         {
             if (exprAst.GetValueAst() != null)
                 return CreateValue(exprAst.GetValueAst());
@@ -149,7 +157,7 @@ namespace MarineLang.CodeDom
             return "";
         }
 
-        public static string CreateValue(ValueAst valueAst)
+        public string CreateValue(ValueAst valueAst)
         {
             if (valueAst.value is string str)
                 return $"\"{str}\"";
@@ -163,12 +171,12 @@ namespace MarineLang.CodeDom
             return valueAst.value.ToString();
         }
 
-        public static string CreateVariable(VariableAst variableAst)
+        public string CreateVariable(VariableAst variableAst)
         {
             return variableAst.VarName;
         }
 
-        public static string CreateBinaryOp(BinaryOpAst binaryOpAst, int indent)
+        public string CreateBinaryOp(BinaryOpAst binaryOpAst, int indent)
         {
             var op = binaryOpAst.opKind.GetText();
             var leftExpr = CreateExpr(binaryOpAst.leftExpr, indent);
@@ -178,7 +186,7 @@ namespace MarineLang.CodeDom
             return $"{leftExpr} {op} {rightExpr}";
         }
 
-        public static string CreateUnaryOp(UnaryOpAst unaryOpAst, int indent)
+        public string CreateUnaryOp(UnaryOpAst unaryOpAst, int indent)
         {
             var op = unaryOpAst.opToken.text;
             var expr = SetParenthesis(
@@ -189,14 +197,14 @@ namespace MarineLang.CodeDom
             return $"{op}{expr}";
         }
 
-        public static string CreateFuncCall(FuncCallAst funcCallAst, int indent)
+        public string CreateFuncCall(FuncCallAst funcCallAst, int indent)
         {
             var funcName = funcCallAst.FuncName;
             var args = string.Join(", ", funcCallAst.args.Select(arg => CreateExpr(arg, indent + 1)));
             return $"{funcName}({args})";
         }
 
-        public static string CreateInstanceFuncCall(InstanceFuncCallAst instanceFuncCallAst, int indent)
+        public string CreateInstanceFuncCall(InstanceFuncCallAst instanceFuncCallAst, int indent)
         {
             var expr = CreateExpr(instanceFuncCallAst.instanceExpr, indent);
             expr = SetParenthesis(expr, instanceFuncCallAst.instanceExpr.ExprPriority, instanceFuncCallAst.ExprPriority);
@@ -204,7 +212,7 @@ namespace MarineLang.CodeDom
             return $"{expr}.{funcCall}";
         }
 
-        public static string CreateInstanceField(InstanceFieldAst instanceFieldAst, int indent)
+        public string CreateInstanceField(InstanceFieldAst instanceFieldAst, int indent)
         {
             var expr = CreateExpr(instanceFieldAst.instanceExpr, indent);
             expr = SetParenthesis(expr, instanceFieldAst.instanceExpr.ExprPriority, instanceFieldAst.ExprPriority);
@@ -212,7 +220,7 @@ namespace MarineLang.CodeDom
             return $"{expr}.{variable}";
         }
 
-        public static string CreateArrayLiteral(ArrayLiteralAst arrayLiteralAst, int indent)
+        public string CreateArrayLiteral(ArrayLiteralAst arrayLiteralAst, int indent)
         {
             var args =
                 string.Join(
@@ -225,7 +233,7 @@ namespace MarineLang.CodeDom
             return $"[{args}; {size}]";
         }
 
-        public static string CreateGetIndexer(GetIndexerAst getIndexerAst, int indent)
+        public string CreateGetIndexer(GetIndexerAst getIndexerAst, int indent)
         {
             var expr = CreateExpr(getIndexerAst.instanceExpr, indent);
             expr = SetParenthesis(expr, getIndexerAst.instanceExpr.ExprPriority, getIndexerAst.ExprPriority);
@@ -233,44 +241,42 @@ namespace MarineLang.CodeDom
             return $"{expr}[{index}]";
         }
 
-        public static string CreateAwait(AwaitAst awaitAst, int indent)
+        public string CreateAwait(AwaitAst awaitAst, int indent)
         {
             var expr = CreateExpr(awaitAst.instanceExpr, indent);
             expr = SetParenthesis(expr, awaitAst.instanceExpr.ExprPriority, awaitAst.ExprPriority);
             return $"{expr}.await";
         }
 
-        public static string CreateIfExpr(IfExprAst ifExprAst, int indent)
+        public string CreateIfExpr(IfExprAst ifExprAst, int indent)
         {
-            var newLine = Environment.NewLine;
             var tabs = GetTabs(indent);
             var conditionExpr = CreateExpr(ifExprAst.conditionExpr, indent + 1);
             var thens = string.Join(
-                newLine,
+                Eof,
                 ifExprAst.thenStatements.Select(statement => CreateStatement(statement, indent + 1))
             );
             var elses = string.Join(
-                newLine,
+                Eof,
                 ifExprAst.elseStatements.Select(statement => CreateStatement(statement, indent + 1))
             );
             if (elses.Length == 0)
-                return $"if({conditionExpr}){newLine}{tabs}{{{newLine}{thens}{newLine}{tabs}}}";
-            return $"if({conditionExpr}){newLine}{tabs}{{{newLine}{thens}{newLine}{tabs}}}{newLine}{tabs}else{newLine}{tabs}{{{newLine}{elses}{newLine}{tabs}}}";
+                return $"if({conditionExpr}){Eof}{tabs}{{{Eof}{thens}{Eof}{tabs}}}";
+            return $"if({conditionExpr}){Eof}{tabs}{{{Eof}{thens}{Eof}{tabs}}}{Eof}{tabs}else{Eof}{tabs}{{{Eof}{elses}{Eof}{tabs}}}";
         }
 
-        public static string CreateAction(ActionAst actionAst, int indent)
+        public string CreateAction(ActionAst actionAst, int indent)
         {
             var args = string.Join(", ", actionAst.args.Select(arg => CreateExpr(arg, indent + 1)));
-            var newLine = Environment.NewLine;
             var statements = string.Join(
-              newLine,
+              Eof,
               actionAst.statementAsts.Select(statement => CreateStatement(statement, indent + 1))
             );
             var tabs = GetTabs(indent);
 
             if (args.Length > 0)
-                return $"{{|{args}|{newLine}{statements}{newLine}{tabs}}}";
-            return $"{{{newLine}{statements}{newLine}{tabs}}}";
+                return $"{{|{args}|{Eof}{statements}{Eof}{tabs}}}";
+            return $"{{{Eof}{statements}{Eof}{tabs}}}";
         }
 
         static string GetTabs(int indent)
