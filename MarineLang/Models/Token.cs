@@ -5,7 +5,8 @@
         public readonly TokenType tokenType;
         public readonly string text;
         public readonly Position position;
-        public Position PositionEnd => new Position(position.line, position.column + text.Length);
+        public Position PositionEnd
+            => new Position(position.index + text.Length - 1, position.line, position.column + text.Length);
         public RangePosition rangePosition => new RangePosition(position, PositionEnd);
 
         public Token(TokenType tokenType, string text, Position position = default)

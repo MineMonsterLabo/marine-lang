@@ -23,8 +23,8 @@ namespace MarineLangUnitTest
         )
         {
             var rangePosition
-                = new RangePosition(new Position(startLine, startColumn), new Position(endLine, endColumn));
-            var position = new Position(line, column);
+                = new RangePosition(new Position(0, startLine, startColumn), new Position(0, endLine, endColumn));
+            var position = new Position(0, line, column);
             Assert.Equal(isContain, rangePosition.Contain(position));
         }
 
@@ -47,9 +47,9 @@ namespace MarineLangUnitTest
        )
         {
             var rangePosition
-                = new RangePosition(new Position(startLine, startColumn), new Position(endLine, endColumn));
+                = new RangePosition(new Position(0, startLine, startColumn), new Position(0, endLine, endColumn));
             var rangePosition2
-                = new RangePosition(new Position(start2Line, start2Column), new Position(end2Line, end2Column));
+                = new RangePosition(new Position(0, start2Line, start2Column), new Position(0, end2Line, end2Column));
             Assert.Equal(isContain, rangePosition.Intersection(rangePosition2));
         }
     }

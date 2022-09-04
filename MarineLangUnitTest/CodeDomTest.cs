@@ -243,7 +243,7 @@ namespace MarineLangUnitTest
         total = total + i
     }
 end";
-            var actual = MarineCodeDom.CreateProgram(programAst);
+            var actual = new MarineCodeDom("\r\n").CreateProgram(programAst);
             Assert.Equal(expected, actual);
         }
     }
