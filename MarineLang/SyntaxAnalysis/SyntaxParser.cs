@@ -653,10 +653,11 @@ namespace MarineLang.SyntaxAnalysis
         public Parse.Parser<StaticFieldAssignmentAst> ParseStaticFieldAssignment()
         {
             return
+                from remain in Parse.Remain
                 from className in ParseUpperIdToken
                 from dotOp in ParseToken(TokenType.DotOp)
                 from variable in ParseFieldVariable
-                from equalOp in ParseToken(TokenType.AssignmentOp)
+                from equalOp in ParseToken(TokenType.AssignmentOp).Try(remain)
                 from expr in ParseExpr()
                 select StaticFieldAssignmentAst.Create(StaticFieldAst.Create(className, variable), expr);
         }
