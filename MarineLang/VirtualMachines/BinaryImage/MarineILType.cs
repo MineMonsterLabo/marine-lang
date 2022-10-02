@@ -1,0 +1,36 @@
+﻿namespace MarineLang.VirtualMachines.BinaryImage
+{
+    public enum MarineILType
+    {
+        NoOpIL = 0,
+        StaticCSharpFieldLoadIL = 10,
+        StaticCSharpFieldStoreIL,
+        InstanceCSharpFieldLoadIL,
+        InstanceCSharpFieldStoreIL,
+        CSharpFuncCallIL = 20,
+        StaticCSharpFuncCallIL,
+        InstanceCSharpFuncCallIL,
+        MarineFuncCallIL,
+        MoveNextIL = 30,
+        GetIterCurrentIL,
+        InstanceCSharpIndexerLoadIL = 40,
+        InstanceCSharpIndexerStoreIL,
+        BinaryOpIL = 50,
+        UnaryOpIL,
+        RetIL = 60,
+        JumpFalseIL,
+        JumpIL,
+        BreakIL,
+        StoreValueIL,
+        PushValueIL,
+        StoreIL,
+        LoadIL,
+        PopIL,
+        CreateArrayIL = 70,
+        StackAllocIL,
+        YieldIL = 80,
+        PushYieldCurrentRegisterIL,
+        PushDebugContextIL = 128,
+        PopDebugContextIL,
+    }
+}
