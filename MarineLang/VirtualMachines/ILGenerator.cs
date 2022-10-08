@@ -367,9 +367,28 @@ namespace MarineLang.VirtualMachines
 
         void BinaryOpILGenerate(BinaryOpAst binaryOpAst, GenerateArgs generateArgs)
         {
-            ExprILGenerate(binaryOpAst.leftExpr, generateArgs);
-            ExprILGenerate(binaryOpAst.rightExpr, generateArgs);
-            marineILs.Add(new BinaryOpIL(binaryOpAst.opKind));
+            if (binaryOpAst.opKind == TokenType.OrOp)
+            {
+                ExprILGenerate(binaryOpAst.leftExpr, generateArgs);
+                var jumpInsertIndex = marineILs.Count;
+                marineILs.Add(null);
+                ExprILGenerate(binaryOpAst.rightExpr, generateArgs);
+                marineILs[jumpInsertIndex] = new JumpTrueNoPopIL(marineILs.Count);
+            }
+            else if (binaryOpAst.opKind == TokenType.AndOp)
+            {
+                ExprILGenerate(binaryOpAst.leftExpr, generateArgs);
+                var jumpInsertIndex = marineILs.Count;
+                marineILs.Add(null);
+                ExprILGenerate(binaryOpAst.rightExpr, generateArgs);
+                marineILs[jumpInsertIndex] = new JumpFalseNoPopIL(marineILs.Count);
+            }
+            else
+            {
+                ExprILGenerate(binaryOpAst.leftExpr, generateArgs);
+                ExprILGenerate(binaryOpAst.rightExpr, generateArgs);
+                marineILs.Add(new BinaryOpIL(binaryOpAst.opKind));
+            }
         }
 
         void VariableILGenerate(VariableAst variableAst, GenerateArgs generateArgs)
