@@ -22,6 +22,7 @@ namespace MarineLang.VirtualMachines
 
         public void PushDebugContext(DebugContext debugContext) => debugContextStack.Push(debugContext);
         public void PopDebugContext() => debugContextStack.Pop();
+        public object CurrentValue => iLStack.CurrentValue;
         public object Pop() => iLStack.Pop();
         public void Push(object v) => iLStack.Push(v);
         public int GetStackCurrent() => iLStack.currentIndex;
@@ -84,6 +85,8 @@ namespace MarineLang.VirtualMachines
         {
             readonly object[] stack = new object[10000];
             public int currentIndex;
+
+            public object CurrentValue => stack[currentIndex];
 
             public void Init()
             {
