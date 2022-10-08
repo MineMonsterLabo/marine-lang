@@ -304,5 +304,21 @@ namespace MarineLangUnitTest.Helper
             Green,
             Blue
         }
+
+        public class SequenceLogger
+        {
+            public string Log { get; private set; } = "";
+            public int Hook(int v, int order)
+            {
+                Log += order;
+                return v;
+            }
+
+            public bool Hook(bool v, int order)
+            {
+                Log += order;
+                return v;
+            }
+        }
     }
 }
