@@ -473,15 +473,34 @@ namespace MarineLang.VirtualMachines
                 ExprILGenerate(arg, generateArgs);
 
             var type = staticTypeDict[staticFuncCallAst.ClassName];
-            var methodBases =
-                csharpFuncName == "New" ?
-                    type.GetConstructors().Cast<MethodBase>() :
-                    type.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(e => e.Name == csharpFuncName);
 
-            marineILs.Add(
-                new StaticCSharpFuncCallIL(type, methodBases.ToArray(), csharpFuncName,
-                    funcCallAst.args.Length)
-            );
+            if(csharpFuncName == "New")
+            {
+                marineILs.Add(
+                    new StaticCSharpConstructorCallIL(
+                        type,
+                        type.GetConstructors(), 
+                        csharpFuncName,
+                        funcCallAst.args.Length
+                    )
+                );
+            }
+            else
+            {
+                var methodInfos=
+                    type.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .Where(e => e.Name == csharpFuncName)
+                    .ToArray();
+
+                marineILs.Add(
+                    new StaticCSharpFuncCallIL(
+                        type,
+                        methodInfos,
+                        csharpFuncName,
+                        funcCallAst.args.Length
+                    )
+                );
+            }
         }
 
         void InstanceFieldILGenerate(InstanceFieldAst instanceFieldAst, GenerateArgs generateArgs)
@@ -592,11 +611,10 @@ namespace MarineLang.VirtualMachines
         void DictionaryConstructILGenerate(DictionaryConstructAst dictionaryConstructAst, GenerateArgs generateArgs)
         {
             var type = typeof(Dictionary<string, object>);
-            var methodBases = type.GetConstructors().Cast<MethodBase>();
             var dictVarIdx = generateArgs.variables.CreateUnnamedLocalVariableIdx();
 
             marineILs.Add(
-                new StaticCSharpFuncCallIL(type, methodBases.ToArray(), "New",0)
+                new StaticCSharpConstructorCallIL(type, type.GetConstructors(), "New", 0)
             );
             marineILs.Add(new StoreIL(dictVarIdx));
             foreach (var keyValuePair in dictionaryConstructAst.dict)

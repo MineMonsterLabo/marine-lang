@@ -5,24 +5,25 @@ using System.Reflection;
 
 namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
 {
-    class MethodBaseResolver
+    class MethodResolver
     {
-        struct Data
+        struct Data<T>where T:MethodBase
         {
-            public MethodBase methodBase;
+            public T methodBase;
             public IEnumerable<TypeDistance> paramsTypeDistances;
         }
 
-        static public MethodBase Select(IEnumerable<MethodBase> inputMethodBases, Type[] types)
+        static public T Select<T>(IEnumerable<T> inputMethodBases, Type[] types) 
+        where T : MethodBase
         {
             var typesLength = types.Length;
-            var methodBases = inputMethodBases.Where(MatchMethodBase(typesLength));
+            var methodBases = inputMethodBases.Where(MatchMethodBase<T>(typesLength));
 
             var dataList = methodBases.Select(
                 m =>
                 {
                     var parameters = m.GetParameters();
-                    Data data;
+                    Data<T> data;
                     data.methodBase = m;
                     data.paramsTypeDistances =
                         parameters.Zip(types, (param, type) =>
@@ -31,7 +32,7 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
                     return data;
                 }).Where(tuple => !tuple.paramsTypeDistances.Contains(null));
 
-            var nearestData = new Data {paramsTypeDistances = null};
+            var nearestData = new Data<T> {paramsTypeDistances = null};
 
             foreach (var data in dataList)
             {
@@ -58,15 +59,36 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
 
             if (nearestData.methodBase == null)
                 return null;
-            if (nearestData.methodBase.IsGenericMethod)
+
+           /* if (nearestData.methodBase.IsGenericMethod)
             {
                 throw new NotImplementedException("実装めんどくさい");
-            }
+            }*/
 
             return nearestData.methodBase;
         }
 
-        static Func<MethodBase, bool> MatchMethodBase(int typeLength)
+        public static MethodInfo ResolveGenericMethod(MethodInfo methodInfo, Type[] types)
+        {
+            if (methodInfo.IsGenericMethod)
+            {
+                var genericTypes = methodInfo.GetGenericArguments();
+                var genericParamsInfos = methodInfo.GetParameters()
+                    .Select((param, index) => (ParamType: param.ParameterType, Index: index))
+                    .Where(info => info.ParamType.IsGenericParameter)
+                    .Select(info => (GenericPos: info.ParamType.GenericParameterPosition, ParamIndex: info.Index));
+
+                foreach (var genericParamsInfo in genericParamsInfos)
+                {
+                    genericTypes[genericParamsInfo.GenericPos] = types[genericParamsInfo.ParamIndex];
+                }
+
+                return methodInfo.MakeGenericMethod(genericTypes);
+            }
+            return methodInfo;
+        }
+
+        static Func<T, bool> MatchMethodBase<T>(int typeLength) where T : MethodBase
         {
             return methodBase =>
             {
