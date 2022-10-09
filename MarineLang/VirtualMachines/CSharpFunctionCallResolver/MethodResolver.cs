@@ -60,11 +60,6 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
             if (nearestData.methodBase == null)
                 return null;
 
-           /* if (nearestData.methodBase.IsGenericMethod)
-            {
-                throw new NotImplementedException("実装めんどくさい");
-            }*/
-
             return nearestData.methodBase;
         }
 
