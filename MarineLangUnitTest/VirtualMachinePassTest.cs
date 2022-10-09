@@ -975,5 +975,24 @@ end", 1)]
             Assert.Equal(log, logger.Log);
             Assert.Equal(expect, value);
         }
+
+        /// <summary>
+        /// ジェネリクス関数の推論呼び出しのテスト
+        /// </summary>
+        [Theory]
+        [InlineData("fun main() ret generic.id(555) end", 555)]
+        [InlineData("fun main() ret Generic.id_static(555) end", 555)]
+        [InlineData("fun main() ret generic.test(55.3,23.3) end", "0 Generic Single:Single")]
+        [InlineData("fun main() ret generic.test(55,23.3) end", "1 Generic Int32:Single")]
+        [InlineData("fun main() ret generic.test(55,23) end", "2 Generic Int32:Int32")]
+        public void GenericFuncCallTest1<T>(string str,T expect)
+        {
+            var vm = CreateVM();
+            vm.StaticTypeRegister<Generic>();
+            vm.GlobalVariableRegister("generic", new Generic());
+            vm.ParseAndLoad(str);
+            vm.Compile();
+            Assert.Equal(expect, vm.Run("main").Eval());
+        }
     }
 }
