@@ -33,16 +33,16 @@ namespace MarineLang.VirtualMachines.MarineILs
     public struct StaticCSharpFuncCallIL : IMarineIL
     {
         public readonly Type type;
-        public readonly MethodBase[] methodBases;
+        public readonly MethodInfo[] methodInfos;
         public readonly string funcName;
         public readonly int argCount;
 
-        public StaticCSharpFuncCallIL(Type type, MethodBase[] methodBases, string funcName, int argCount)
+        public StaticCSharpFuncCallIL(Type type, MethodInfo[] methodInfos, string funcName, int argCount)
         {
             this.type = type;
             this.funcName = funcName;
             this.argCount = argCount;
-            this.methodBases = methodBases;
+            this.methodInfos = methodInfos;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -51,25 +51,65 @@ namespace MarineLang.VirtualMachines.MarineILs
 
             var types = args.Select(arg => arg.GetType()).ToArray();
 
-            var methodBase = MethodBaseResolver.Select(methodBases, types);
-            if (methodBase == null)
+            var methodInfo = MethodResolver.Select(methodInfos, types);
+            if (methodInfo == null)
                 this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberNotFound);
+            methodInfo = MethodResolver.ResolveGenericMethod(methodInfo, types);
 
-            var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodBase.GetParameters().Length - args.Length))
+            var args2 = 
+                args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
 
-            if (ClassAccessibilityChecker.CheckMember(methodBase) == false)
+            if (ClassAccessibilityChecker.CheckMember(methodInfo) == false)
                 this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberAccessPrivate);
 
-            if (methodBase is ConstructorInfo constructorInfo)
-                vm.Push(constructorInfo.Invoke(args2));
-            else
-                vm.Push(methodBase.Invoke(null, args2));
+            vm.Push(methodInfo.Invoke(null, args2));
         }
 
         public override string ToString()
         {
             return typeof(StaticCSharpFuncCallIL).Name + " '" + type.FullName + "." + funcName + "' " + argCount;
+        }
+    }
+
+    public struct StaticCSharpConstructorCallIL : IMarineIL
+    {
+        public readonly Type type;
+        public readonly ConstructorInfo[] constructorInfos;
+        public readonly string funcName;
+        public readonly int argCount;
+
+        public StaticCSharpConstructorCallIL(Type type, ConstructorInfo[] constructorInfos, string funcName, int argCount)
+        {
+            this.type = type;
+            this.funcName = funcName;
+            this.argCount = argCount;
+            this.constructorInfos = constructorInfos;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var args = Enumerable.Range(0, argCount).Select(_ => vm.Pop()).Reverse().ToArray();
+
+            var types = args.Select(arg => arg.GetType()).ToArray();
+
+            var constructorInfo = MethodResolver.Select(constructorInfos, types);
+            if (constructorInfo == null)
+                this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberNotFound);
+
+            var args2 =
+                args.Concat(Enumerable.Repeat(Type.Missing, constructorInfo.GetParameters().Length - args.Length))
+                .ToArray();
+
+            if (ClassAccessibilityChecker.CheckMember(constructorInfo) == false)
+                this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberAccessPrivate);
+
+            vm.Push(constructorInfo.Invoke(args2));
+        }
+
+        public override string ToString()
+        {
+            return typeof(StaticCSharpConstructorCallIL).Name + " '" + type.FullName + "." + funcName + "' " + argCount;
         }
     }
 
@@ -95,9 +135,10 @@ namespace MarineLang.VirtualMachines.MarineILs
             var methodInfos =
                 classType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(e => e.Name == funcNameClone)
                     .ToArray();
-            var methodInfo = MethodBaseResolver.Select(methodInfos, types);
+            var methodInfo = MethodResolver.Select(methodInfos, types);
             if (methodInfo == null)
                 this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberNotFound);
+            methodInfo = MethodResolver.ResolveGenericMethod(methodInfo, types);
 
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();

@@ -320,5 +320,21 @@ namespace MarineLangUnitTest.Helper
                 return v;
             }
         }
+
+        public class Generic
+        {
+            public T Id<T>(T v) => v;
+
+            public static T IdStatic<T>(T v) => v;
+
+            public string Test<T, TT>(T _, TT __) 
+                => "2 Generic "+_.GetType().Name + ":" + __.GetType().Name;
+
+            public string Test<T>(T _, float __)
+                => "1 Generic " + _.GetType().Name + ":" + "Single";
+
+            public string Test(float _, float __)
+                => "0 Generic Single:Single";
+        }
     }
 }
