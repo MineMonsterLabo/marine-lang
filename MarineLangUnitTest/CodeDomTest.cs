@@ -73,6 +73,7 @@ namespace MarineLangUnitTest
                             ),
                             FuncCallAst.Create(
                                  "to_string",
+                                 new string[]{ },
                                  new ExprAst[]{ ValueAst.Create(7) , ValueAst.Create(8) }
                             )
                         )),
@@ -170,7 +171,13 @@ namespace MarineLangUnitTest
                                 TokenType.GreaterEqualOp
                             ),
                             new StatementAst[]{
-                               ExprStatementAst.Create( FuncCallAst.Create("print",new ExprAst[]{ ValueAst.Create(123)}))
+                               ExprStatementAst.Create( 
+                                   FuncCallAst.Create(
+                                       "print",
+                                       new string[]{ },
+                                       new ExprAst[]{ ValueAst.Create(123)}
+                                   )
+                               )
                             }
                         ),
                         ForAst.Create(

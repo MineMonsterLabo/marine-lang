@@ -36,13 +36,15 @@ namespace MarineLang.VirtualMachines.MarineILs
         public readonly MethodInfo[] methodInfos;
         public readonly string funcName;
         public readonly int argCount;
+        public readonly Type[] genericTypes;
 
-        public StaticCSharpFuncCallIL(Type type, MethodInfo[] methodInfos, string funcName, int argCount)
+        public StaticCSharpFuncCallIL(Type type, MethodInfo[] methodInfos, string funcName, int argCount, Type[] genericTypes = null)
         {
             this.type = type;
             this.funcName = funcName;
             this.argCount = argCount;
             this.methodInfos = methodInfos;
+            this.genericTypes = genericTypes;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -51,12 +53,12 @@ namespace MarineLang.VirtualMachines.MarineILs
 
             var types = args.Select(arg => arg.GetType()).ToArray();
 
-            var methodInfo = MethodResolver.Select(methodInfos, types);
+            var methodInfo = MethodResolver.Select(methodInfos, types, genericTypes);
             if (methodInfo == null)
                 this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberNotFound);
-            methodInfo = MethodResolver.ResolveGenericMethod(methodInfo, types);
+            methodInfo = MethodResolver.ResolveGenericMethod(methodInfo, types, genericTypes);
 
-            var args2 = 
+            var args2 =
                 args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
 
@@ -117,11 +119,13 @@ namespace MarineLang.VirtualMachines.MarineILs
     {
         public readonly string funcName;
         public readonly int argCount;
+        public readonly Type[] genericTypes;
 
-        public InstanceCSharpFuncCallIL(string funcName, int argCount)
+        public InstanceCSharpFuncCallIL(string funcName, int argCount, Type[] genericTypes = null)
         {
             this.funcName = funcName;
             this.argCount = argCount;
+            this.genericTypes = genericTypes;
         }
 
         public void Run(LowLevelVirtualMachine vm)
@@ -135,10 +139,10 @@ namespace MarineLang.VirtualMachines.MarineILs
             var methodInfos =
                 classType.GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(e => e.Name == funcNameClone)
                     .ToArray();
-            var methodInfo = MethodResolver.Select(methodInfos, types);
+            var methodInfo = MethodResolver.Select(methodInfos, types, genericTypes);
             if (methodInfo == null)
                 this.ThrowRuntimeError(funcName, ErrorCode.RuntimeMemberNotFound);
-            methodInfo = MethodResolver.ResolveGenericMethod(methodInfo, types);
+            methodInfo = MethodResolver.ResolveGenericMethod(methodInfo, types, genericTypes);
 
             var args2 = args.Concat(Enumerable.Repeat(Type.Missing, methodInfo.GetParameters().Length - args.Length))
                 .ToArray();
