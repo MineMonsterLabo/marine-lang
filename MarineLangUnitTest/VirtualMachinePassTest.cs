@@ -994,5 +994,24 @@ end", 1)]
             vm.Compile();
             Assert.Equal(expect, vm.Run("main").Eval());
         }
+
+        /// <summary>
+        /// ジェネリクス関数の呼び出しのテスト
+        /// </summary>
+        [Theory]
+        [InlineData("fun main() ret generic.get_type<System.Int32>() end", "Int32")]
+        [InlineData("fun main() ret generic.get_type<System.Int32>(333) end", "Int32,333")]
+        [InlineData("fun main() ret generic.get_type<System.Int32,System.Boolean>() end", "Int32,Boolean")]
+        [InlineData("fun main() ret generic.get_type<System.Int32,System.Boolean>(false) end", "Int32,Boolean,False")]
+        [InlineData("fun main() ret Generic.get_type2<System.Int32>() end", "Int32")]
+        public void GenericFuncCallTest2<T>(string str, T expect)
+        {
+            var vm = CreateVM();
+            vm.StaticTypeRegister<Generic>();
+            vm.GlobalVariableRegister("generic", new Generic());
+            vm.ParseAndLoad(str);
+            vm.Compile();
+            Assert.Equal(expect, vm.Run("main").Eval());
+        }
     }
 }
