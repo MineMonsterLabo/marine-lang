@@ -324,6 +324,12 @@ namespace MarineLangUnitTest.Helper
         public class Generic
         {
             public T Id<T>(T v) => v;
+            public string GetType<T>() => typeof(T).Name;
+            public string GetType<T>(int aaa) => typeof(T).Name + "," + aaa;
+            public string GetType<T,TT>(TT aaa) => typeof(T).Name + "," + typeof(TT).Name + "," + aaa;
+            public string GetType<T, TT>() => typeof(T).Name + "," + typeof(TT).Name;
+
+            public static string GetType2<T>() => typeof(T).Name;
 
             public static T IdStatic<T>(T v) => v;
 

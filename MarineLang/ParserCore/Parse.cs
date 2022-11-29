@@ -361,6 +361,17 @@ namespace MarineLang.ParserCore
             return input => ParseResult.NewOk(t, input);
         }
 
+        public static Parser<IOption<T>> Optional<T>(Parser<T> parser)
+        {
+            return input =>
+            {
+                var result = parser(input);
+                if (result.Result.IsOk)
+                    return ParseResult.NewOk(Option.Some(result.Result.RawValue), result.Remain);
+                return ParseResult.NewOk(Option.None<T>(), input);
+            };
+        }
+
         public static Parser<T> ErrorReturn<T>(ParseErrorInfo parseErrorInfo)
         {
             return input => ParseResult.NewError<T, I>(parseErrorInfo, input);

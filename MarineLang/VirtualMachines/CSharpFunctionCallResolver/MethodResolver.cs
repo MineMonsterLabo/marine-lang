@@ -13,26 +13,26 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
             public IEnumerable<TypeDistance> paramsTypeDistances;
         }
 
-        static public T Select<T>(IEnumerable<T> inputMethodBases, Type[] types) 
+        static public T Select<T>(IEnumerable<T> inputMethodBases, Type[] argTypes, Type[] genericTypes = null)
         where T : MethodBase
         {
-            var typesLength = types.Length;
-            var methodBases = inputMethodBases.Where(MatchMethodBase<T>(typesLength));
+            genericTypes = genericTypes ?? new Type[] { };
+            var methodBases = inputMethodBases.Where(MatchMethodBase<T>(argTypes.Length, genericTypes.Length));
 
             var dataList = methodBases.Select(
-                m =>
+                methodBase =>
                 {
-                    var parameters = m.GetParameters();
+                    var parameters = methodBase.GetParameters();
                     Data<T> data;
-                    data.methodBase = m;
+                    data.methodBase = methodBase;
                     data.paramsTypeDistances =
-                        parameters.Zip(types, (param, type) =>
+                        parameters.Zip(argTypes, (param, type) =>
                             TypeDistanceGenerator.Generate(type, param.ParameterType));
 
                     return data;
                 }).Where(tuple => !tuple.paramsTypeDistances.Contains(null));
 
-            var nearestData = new Data<T> {paramsTypeDistances = null};
+            var nearestData = new Data<T> { paramsTypeDistances = null };
 
             foreach (var data in dataList)
             {
@@ -63,11 +63,16 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
             return nearestData.methodBase;
         }
 
-        public static MethodInfo ResolveGenericMethod(MethodInfo methodInfo, Type[] types)
+        public static MethodInfo ResolveGenericMethod(MethodInfo methodInfo, Type[] argTypes, Type[] genericTypes = null)
         {
             if (methodInfo.IsGenericMethod)
             {
-                var genericTypes = methodInfo.GetGenericArguments();
+                if (genericTypes != null && genericTypes.Length > 0)
+                {
+                    return methodInfo.MakeGenericMethod(genericTypes);
+                }
+
+                genericTypes = methodInfo.GetGenericArguments();
                 var genericParamsInfos = methodInfo.GetParameters()
                     .Select((param, index) => (ParamType: param.ParameterType, Index: index))
                     .Where(info => info.ParamType.IsGenericParameter)
@@ -75,7 +80,7 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
 
                 foreach (var genericParamsInfo in genericParamsInfos)
                 {
-                    genericTypes[genericParamsInfo.GenericPos] = types[genericParamsInfo.ParamIndex];
+                    genericTypes[genericParamsInfo.GenericPos] = argTypes[genericParamsInfo.ParamIndex];
                 }
 
                 return methodInfo.MakeGenericMethod(genericTypes);
@@ -83,14 +88,19 @@ namespace MarineLang.VirtualMachines.CSharpFunctionCallResolver
             return methodInfo;
         }
 
-        static Func<T, bool> MatchMethodBase<T>(int typeLength) where T : MethodBase
+        static Func<T, bool> MatchMethodBase<T>(int argTypeLength,int genericTypeLength) where T : MethodBase
         {
             return methodBase =>
             {
+                if (genericTypeLength > 0 && methodBase.GetGenericArguments().Length != genericTypeLength)
+                {
+                    return false;
+                }
+
                 var parameterInfoArray = methodBase.GetParameters();
                 var maxLength = parameterInfoArray.Length;
                 var minLength = parameterInfoArray.Count(x => x.IsOptional == false);
-                return minLength <= typeLength && typeLength <= maxLength;
+                return minLength <= argTypeLength && argTypeLength <= maxLength;
             };
         }
     }

@@ -401,6 +401,7 @@ namespace MarineLang.VirtualMachines
                         VariableAst.Create(new Token(default, "_action", default)),
                         FuncCallAst.Create(
                             new Token(default, "get", default),
+                            new string[] { },
                             new[] { ValueAst.Create(captureIdx.Value, default) },
                             new Token(default, "")
                         )
@@ -459,8 +460,9 @@ namespace MarineLang.VirtualMachines
 
             foreach (var arg in funcCallAst.args)
                 ExprILGenerate(arg, generateArgs);
+
             marineILs.Add(
-                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length)
+                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length, GetGenericTypes(funcCallAst.genericTypeNames))
             );
         }
 
@@ -497,7 +499,8 @@ namespace MarineLang.VirtualMachines
                         type,
                         methodInfos,
                         csharpFuncName,
-                        funcCallAst.args.Length
+                        funcCallAst.args.Length,
+                        GetGenericTypes(funcCallAst.genericTypeNames)
                     )
                 );
             }
@@ -571,6 +574,7 @@ namespace MarineLang.VirtualMachines
                     VariableAst.Create(new Token(default, "action_object_generator", default)),
                     FuncCallAst.Create(
                         new Token(default, "generate", default),
+                        new string[] { },
                         new ExprAst[]
                         {
                             ValueAst.Create(actionFuncName, default),
@@ -637,6 +641,7 @@ namespace MarineLang.VirtualMachines
                         VariableAst.Create(new Token(default, "_action", default)),
                         FuncCallAst.Create(
                             new Token(default, "set", default),
+                            new string[] { },
                             new[] { ValueAst.Create(captureIdx.Value, default), reAssignmentAst.expr },
                             new Token(default, "")
                         )
@@ -767,6 +772,11 @@ namespace MarineLang.VirtualMachines
         void ValueILGenerate(ValueAst valueAst)
         {
             marineILs.Add(new PushValueIL(valueAst.value));
+        }
+
+        Type[] GetGenericTypes(string[] genericTypeNames)
+        {
+            return genericTypeNames?.Select(Type.GetType).ToArray();
         }
     }
 }
