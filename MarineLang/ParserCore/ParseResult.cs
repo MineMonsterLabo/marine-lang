@@ -25,7 +25,7 @@ namespace MarineLang.ParserCore
 
         public IResult<T, IEnumerable<ParseErrorInfo>> ToResult()
         {
-            return Result.IsOk && !ErrorStack.Any() ?
+            return Result.IsOk && (ErrorStack == null || !ErrorStack.Any()) ?
                 MineUtil.Result.Ok<T, IEnumerable<ParseErrorInfo>>(Result.RawValue) :
                 MineUtil.Result.Error<T, IEnumerable<ParseErrorInfo>>(ErrorStack);
         }
@@ -63,16 +63,16 @@ namespace MarineLang.ParserCore
             return new ParseResult<T, I>(
                 MineUtil.Result.Ok<T, Unit>(value),
                 remain,
-                Enumerable.Empty<ParseErrorInfo>()
+                null
             );
         }
 
-        public ParseResult<T,I> Error(ParseErrorInfo error)
+        public ParseResult<T, I> Error(ParseErrorInfo error)
         {
             return new ParseResult<T, I>(
                 MineUtil.Result.Error<T, Unit>(Unit.Value),
                 Remain,
-                ErrorStack.Concat(new[] { error })
+                ErrorStack == null ? new[] { error } : ErrorStack.Append(error)
             );
         }
 
@@ -81,7 +81,7 @@ namespace MarineLang.ParserCore
             return new ParseResult<TT, I>(
                 MineUtil.Result.Error<TT, Unit>(Unit.Value),
                 Remain,
-                ErrorStack.Concat(new[] { error })
+                ErrorStack == null ? new[] { error } : ErrorStack.Append(error)
             );
         }
 
@@ -90,7 +90,7 @@ namespace MarineLang.ParserCore
             return new ParseResult<TT, I>(
                 MineUtil.Result.Error<TT, Unit>(Unit.Value),
                 Remain,
-                ErrorStack.Take(ErrorStack.Count()-1).Concat(new[] { error })
+                ErrorStack == null ? new[] { error } : ErrorStack.SkipLast(1).Append(error)
             );
         }
 
@@ -106,10 +106,20 @@ namespace MarineLang.ParserCore
 
         public ParseResult<TT, I> Bind<TT>(Func<T, ParseResult<TT, I>> func)
         {
+
+            IEnumerable<ParseErrorInfo> ConcatErrorStack(IEnumerable<ParseErrorInfo> a, IEnumerable<ParseErrorInfo> b)
+            {
+                if (a == null)
+                    return b;
+                if (b == null)
+                    return a;
+                return a.Concat(b);
+            }
+
             if (IsOk)
             {
                 var r = func(Result.RawValue);
-                return new ParseResult<TT, I>(r.Result, r.Remain, ErrorStack.Concat(r.ErrorStack).ToArray());
+                return new ParseResult<TT, I>(r.Result, r.Remain, ConcatErrorStack(ErrorStack, r.ErrorStack));
             }
             else
             {
@@ -119,7 +129,7 @@ namespace MarineLang.ParserCore
 
         public ParseResult<TT, I> Map<TT>(Func<T, TT> func)
         {
-            return Bind(t => ParseResult<TT, I>.NewOk(func(t), Remain));
+            return IsOk ? Ok(func(Result.RawValue)) : CastError<TT>();
         }
     }
 

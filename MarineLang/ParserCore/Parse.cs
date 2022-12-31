@@ -94,10 +94,12 @@ namespace MarineLang.ParserCore
 
         public static Parser<IEnumerable<T>> OneMany<T>(Parser<T> parser)
         {
+            var manyParser = Many(parser);
+
             return
                 input =>
                 {
-                    var result = Many(parser)(input);
+                    var result = manyParser(input);
                     if (result.IsError == false && !result.Result.RawValue.Any())
                         return result.Error<IEnumerable<T>>(new ParseErrorInfo("OneMany", input.RangePosition));
                     return result;

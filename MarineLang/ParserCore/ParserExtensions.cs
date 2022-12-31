@@ -99,7 +99,7 @@ namespace MarineLang.ParserCore
 
         public static Parse<I>.Parser<TT> Map<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, TT> func)
         {
-            return parser.BindResult((t, _) => Result.Ok<TT, IEnumerable<ParseErrorInfo>>(func(t)));
+            return input => parser(input).Map(func);
         }
 
         public static Parse<I>.Parser<T> ErrorRetry<T, I>(this Parse<I>.Parser<T> parser, Func<ParseResult<T, I>, T> func)
@@ -222,16 +222,7 @@ namespace MarineLang.ParserCore
         public static Parse<I>.Parser<TT> UpCast<I, T, TT>(this Parse<I>.Parser<T> parser)
             where T : TT
         {
-            return input => parser(input).Map(t => (TT)t);
-        }
-
-        public static Parse<I>.Parser<T> Debug<T, I>(this Parse<I>.Parser<T> parser)
-        {
-            return input =>
-            {
-                var result = parser(input);
-                return result;
-            };
+            return parser.Map(t => (TT)t);
         }
 
         public static Parse<I>.Parser<T> DebugPrint<T, I>(this Parse<I>.Parser<T> parser,string tag)
