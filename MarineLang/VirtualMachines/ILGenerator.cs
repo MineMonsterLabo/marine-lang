@@ -216,42 +216,42 @@ namespace MarineLang.VirtualMachines
                 new PushDebugContextIL(
                     new DebugContext(
                         generateArgs.CurrentProgramUnit.Name,
-                        generateArgs.CurrentFuncName, 
+                        generateArgs.CurrentFuncName,
                         statementAst.Range
                     )
                 )
             );
-            if (statementAst.GetReturnAst() != null)
+
+            switch (statementAst)
             {
-                ReturnILGenerate(statementAst.GetReturnAst(), generateArgs);
-                marineILs.Add(new PopDebugContextIL());
-                return true;
+                case ReturnAst returnAst:
+                    ReturnILGenerate(returnAst, generateArgs);
+                    marineILs.Add(new PopDebugContextIL());
+                    return true;
+                case ExprStatementAst exprStatementAst:
+                    ExprILGenerate(exprStatementAst.expr, generateArgs);
+                    marineILs.Add(new PopIL()); break;
+                case ReAssignmentVariableAst reAssignmentVariableAst:
+                    ReAssignmentVariableILGenerate(reAssignmentVariableAst, generateArgs); break;
+                case ReAssignmentIndexerAst reAssignmentIndexerAst:
+                    ReAssignmentIndexerILGenerate(reAssignmentIndexerAst, generateArgs); break;
+                case AssignmentVariableAst assignmentVariableAst:
+                    AssignmentILGenerate(assignmentVariableAst, generateArgs); break;
+                case InstanceFieldAssignmentAst instanceFieldAssignmentAst:
+                    InstanceFieldAssignmentILGenerate(instanceFieldAssignmentAst, generateArgs); break;
+                case StaticFieldAssignmentAst staticFieldAssignmentAst:
+                    StaticFieldAssignmentILGenerate(staticFieldAssignmentAst, generateArgs); break;
+                case WhileAst whileAst:
+                    WhileILGenerate(whileAst, generateArgs); break;
+                case ForAst forAst:
+                    ForILGenerate(forAst, generateArgs); break;
+                case ForEachAst forEachAst:
+                    ForEachILGenerate(forEachAst, generateArgs); break;
+                case YieldAst yieldAst:
+                    YieldILGenerate(yieldAst, generateArgs); break;
+                case BreakAst breakAst:
+                    marineILs.Add(new BreakIL(generateArgs.breakIndex)); break;
             }
-            else if (statementAst.GetExprStatementAst() != null)
-            {
-                ExprILGenerate(statementAst.GetExprStatementAst().expr, generateArgs);
-                marineILs.Add(new PopIL());
-            }
-            else if (statementAst.GetReAssignmentVariableAst() != null)
-                ReAssignmentVariableILGenerate(statementAst.GetReAssignmentVariableAst(), generateArgs);
-            else if (statementAst.GetReAssignmentIndexerAst() != null)
-                ReAssignmentIndexerILGenerate(statementAst.GetReAssignmentIndexerAst(), generateArgs);
-            else if (statementAst.GetAssignmentVariableAst() != null)
-                AssignmentILGenerate(statementAst.GetAssignmentVariableAst(), generateArgs);
-            else if (statementAst.GetInstanceFieldAssignmentAst() != null)
-                InstanceFieldAssignmentILGenerate(statementAst.GetInstanceFieldAssignmentAst(), generateArgs);
-            else if (statementAst.GetStaticFieldAssignmentAst() != null)
-                StaticFieldAssignmentILGenerate(statementAst.GetStaticFieldAssignmentAst(), generateArgs);
-            else if (statementAst.GetWhileAst() != null)
-                WhileILGenerate(statementAst.GetWhileAst(), generateArgs);
-            else if (statementAst.GetForAst() != null)
-                ForILGenerate(statementAst.GetForAst(), generateArgs);
-            else if (statementAst.GetForEachAst() != null)
-                ForEachILGenerate(statementAst.GetForEachAst(), generateArgs);
-            else if (statementAst.GetYieldAst() != null)
-                YieldILGenerate(statementAst.GetYieldAst(), generateArgs);
-            else if (statementAst.GetBreakAst() != null)
-                marineILs.Add(new BreakIL(generateArgs.breakIndex));
 
             marineILs.Add(new PopDebugContextIL());
             return false;
@@ -271,40 +271,41 @@ namespace MarineLang.VirtualMachines
 
         void ExprILGenerate(ExprAst exprAst, GenerateArgs generateArgs)
         {
-            if (exprAst.GetFuncCallAst() != null)
-                FuncCallILGenerate(exprAst.GetFuncCallAst(), generateArgs);
-            else if (exprAst.GetBinaryOpAst() != null)
-                BinaryOpILGenerate(exprAst.GetBinaryOpAst(), generateArgs);
-            else if (exprAst.GetVariableAst() != null)
-                VariableILGenerate(exprAst.GetVariableAst(), generateArgs);
-            else if (exprAst.GetValueAst() != null)
-                ValueILGenerate(exprAst.GetValueAst());
-            else if (exprAst.GetIfExprAst() != null)
-                IfILGenerate(exprAst.GetIfExprAst(), generateArgs);
-            else if (exprAst.GetInstanceFuncCallAst() != null)
-                InstanceFuncCallILGenerate(exprAst.GetInstanceFuncCallAst(), generateArgs);
-            else if (exprAst.GetStaticFuncCallAst() != null)
-                StaticFuncCallILGenerate(exprAst.GetStaticFuncCallAst(), generateArgs);
-            else if (exprAst.GetInstanceFieldAst() != null)
-                InstanceFieldILGenerate(exprAst.GetInstanceFieldAst(), generateArgs);
-            else if (exprAst.GetStaticFieldAst() != null)
-                StaticFieldILGenerate(exprAst.GetStaticFieldAst());
-            else if (exprAst.GetGetIndexerAst() != null)
-                GetGetIndexerILGenerate(exprAst.GetGetIndexerAst(), generateArgs);
-            else if (exprAst.GetArrayLiteralAst() != null)
-                ArrayLiteralILGenerate(exprAst.GetArrayLiteralAst(), generateArgs);
-            else if (exprAst.GetActionAst() != null)
-                ActionILGenerate(exprAst.GetActionAst(), generateArgs);
-            else if (exprAst.GetAwaitAst() != null)
-                AwaitILGenerate(exprAst.GetAwaitAst(), generateArgs);
-            else if (exprAst.GetUnaryOpAst() != null)
-                UnaryOpILGenerate(exprAst.GetUnaryOpAst(), generateArgs);
-            else if (exprAst.GetDictionaryConstructAst() != null)
-                DictionaryConstructILGenerate(exprAst.GetDictionaryConstructAst(), generateArgs);
-            else
+            switch (exprAst)
             {
-                throw new Exception("IL生成に失敗");
-            }
+                case FuncCallAst funcCallAst:
+                    FuncCallILGenerate(funcCallAst, generateArgs); break;
+                case BinaryOpAst binaryOpAst:
+                    BinaryOpILGenerate(binaryOpAst, generateArgs); break;
+                case VariableAst variableAst:
+                    VariableILGenerate(variableAst, generateArgs); break;
+                case ValueAst valueAst:
+                    ValueILGenerate(valueAst); break;
+                case IfExprAst ifExprAst:
+                    IfILGenerate(ifExprAst, generateArgs); break;
+                case InstanceFuncCallAst instanceFuncCallAst:
+                    InstanceFuncCallILGenerate(instanceFuncCallAst, generateArgs); break;
+                case StaticFuncCallAst staticFuncCall:
+                    StaticFuncCallILGenerate(staticFuncCall, generateArgs); break;
+                case InstanceFieldAst instanceFieldAst:
+                    InstanceFieldILGenerate(instanceFieldAst, generateArgs); break;
+                case StaticFieldAst staticFieldAst:
+                    StaticFieldILGenerate(staticFieldAst); break;
+                case GetIndexerAst getIndexerAst:
+                    GetGetIndexerILGenerate(getIndexerAst, generateArgs); break;
+                case ArrayLiteralAst arrayLiteralAst:
+                    ArrayLiteralILGenerate(arrayLiteralAst, generateArgs); break;
+                case ActionAst actionAst:
+                    ActionILGenerate(actionAst, generateArgs); break;
+                case AwaitAst awaitAst:
+                    AwaitILGenerate(awaitAst, generateArgs); break;
+                case UnaryOpAst unaryOpAst:
+                    UnaryOpILGenerate(unaryOpAst, generateArgs); break;
+                case DictionaryConstructAst dictionaryConstructAst:
+                    DictionaryConstructILGenerate(dictionaryConstructAst, generateArgs); break;
+                default:
+                    throw new Exception("IL生成に失敗");
+            };
         }
 
         void FuncCallILGenerate(FuncCallAst funcCallAst, GenerateArgs generateArgs)
