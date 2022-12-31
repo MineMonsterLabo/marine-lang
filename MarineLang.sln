@@ -11,9 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarineLangUnitTest", "Marin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MineUtil", "MineUtil\MineUtil\MineUtil.csproj", "{7F938B1F-6B3E-4F7D-8BF9-D7159515E39D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarineLang.CodeAnalysis", "MarineLang.CodeAnalysis\MarineLang.CodeAnalysis.csproj", "{4698B684-92AE-41A0-83AE-89C4598D9A1E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarineLang.CodeAnalysis", "MarineLang.CodeAnalysis\MarineLang.CodeAnalysis.csproj", "{4698B684-92AE-41A0-83AE-89C4598D9A1E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarineLang.CodeDom", "MarineLang.CodeDom\MarineLang.CodeDom.csproj", "{E51F36F6-D185-45C5-ABB3-52FA0F809FA0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarineLang.CodeDom", "MarineLang.CodeDom\MarineLang.CodeDom.csproj", "{E51F36F6-D185-45C5-ABB3-52FA0F809FA0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
