@@ -74,6 +74,14 @@ namespace MarineLang.Models.Asts
         public abstract IEnumerable<IAst> GetChildrenWithThis();
     }
 
+    public static class StatementAstExtention
+    {
+        public static StatementAst AsStatementAst(this StatementAst statementAst)
+        {
+            return statementAst;
+        }
+    }
+
     public class ExprStatementAst : StatementAst
     {
         public ExprAst expr;

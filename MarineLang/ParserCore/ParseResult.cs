@@ -1,127 +1,163 @@
 ﻿using MarineLang.Models.Errors;
 using MineUtil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace MarineLang.ParserCore
 {
-    public interface IParseResult<out T, I>
+    public class ParseResult<T, I>
     {
-        IResult<T, ParseErrorInfo> Result { get; }
-        IInput<I> Remain { get; }
-        IParseResult<TT, I> Ok<TT>(TT value);
-        IParseResult<TT, I> CastError<TT>();
-        IParseResult<TT, I> Error<TT>(ParseErrorInfo error);
-        IParseResult<TT, I> ReplaceError<TT>(ParseErrorInfo error);
-        IEnumerable<ParseErrorInfo> ErrorStack { get; }
-        IParseResult<T, I> ChainLeft<TT>(IParseResult<TT, I> next);
-        IParseResult<TT, I> ChainRight<TT>(IParseResult<TT, I> next);
-        IParseResult<T, I> SetRemain(IInput<I> remain);
-        IParseResult<TT, I> SetResult<TT>(IResult<TT, ParseErrorInfo> result);
-    }
-
-    public class ParseResult<T, I> : IParseResult<T, I>
-    {
-        public IResult<T, ParseErrorInfo> Result { get; }
+        public IResult<T, Unit> Result { get; }
         public IInput<I> Remain { get; }
         public IEnumerable<ParseErrorInfo> ErrorStack { get; }
 
-        private ParseResult(IResult<T, ParseErrorInfo> result, IInput<I> remain, IEnumerable<ParseErrorInfo> errorStack)
+        public bool IsOk => Result.IsOk;
+
+        public bool IsError => Result.IsError;
+
+        private ParseResult(IResult<T, Unit> result, IInput<I> remain, IEnumerable<ParseErrorInfo> errorStack)
         {
             Result = result;
             Remain = remain;
             ErrorStack = errorStack;
         }
 
-        public IParseResult<T, I> SetRemain(IInput<I> remain)
+        public IResult<T, IEnumerable<ParseErrorInfo>> ToResult()
+        {
+            return Result.IsOk && !ErrorStack.Any() ?
+                MineUtil.Result.Ok<T, IEnumerable<ParseErrorInfo>>(Result.RawValue) :
+                MineUtil.Result.Error<T, IEnumerable<ParseErrorInfo>>(ErrorStack);
+        }
+
+        public ParseResult<T, I> SetRemain(IInput<I> remain)
         {
             return new ParseResult<T, I>(Result, remain, ErrorStack);
         }
 
-        public IParseResult<TT, I> SetResult<TT>(IResult<TT, ParseErrorInfo> result)
+        public ParseResult<TT, I> Ok<TT>(TT value)
         {
-            return new ParseResult<TT, I>(result, Remain, result.IsOk ? ErrorStack : ErrorStack.Concat(new[] { result.RawError }));
+            return new ParseResult<TT, I>(MineUtil.Result.Ok<TT, Unit>(value), Remain, ErrorStack);
         }
 
-        public IParseResult<TT, I> Ok<TT>(TT value)
-        {
-            return new ParseResult<TT, I>(MineUtil.Result.Ok<TT, ParseErrorInfo>(value), Remain, ErrorStack);
-        }
-
-        public IParseResult<TT, I> CastError<TT>()
+        public ParseResult<TT, I> CastError<TT>()
         {
             return new ParseResult<TT, I>(
-                MineUtil.Result.Error<TT, ParseErrorInfo>(Result.RawError),
+                MineUtil.Result.Error<TT, Unit>(Unit.Value),
                 Remain,
                 ErrorStack
             );
         }
 
-        public static IParseResult<T, I> NewError(ParseErrorInfo error, IInput<I> remain)
+        public static ParseResult<T, I> NewError(IEnumerable<ParseErrorInfo> errors, IInput<I> remain)
         {
             return new ParseResult<T, I>(
-                MineUtil.Result.Error<T, ParseErrorInfo>(error),
+                MineUtil.Result.Error<T, Unit>(Unit.Value),
                 remain,
-                new[] { error }
+                errors
             );
         }
 
-        public static IParseResult<T, I> NewOk(T value, IInput<I> remain)
+        public static ParseResult<T, I> NewOk(T value, IInput<I> remain)
         {
             return new ParseResult<T, I>(
-                MineUtil.Result.Ok<T, ParseErrorInfo>(value),
+                MineUtil.Result.Ok<T, Unit>(value),
                 remain,
                 Enumerable.Empty<ParseErrorInfo>()
             );
         }
 
-        public IParseResult<TT, I> Error<TT>(ParseErrorInfo error)
+        public ParseResult<T,I> Error(ParseErrorInfo error)
         {
-            return new ParseResult<TT, I>(
-                MineUtil.Result.Error<TT, ParseErrorInfo>(error),
+            return new ParseResult<T, I>(
+                MineUtil.Result.Error<T, Unit>(Unit.Value),
                 Remain,
                 ErrorStack.Concat(new[] { error })
             );
         }
 
-        public IParseResult<TT, I> ReplaceError<TT>(ParseErrorInfo error)
+        public ParseResult<TT, I> Error<TT>(ParseErrorInfo error)
         {
             return new ParseResult<TT, I>(
-                MineUtil.Result.Error<TT, ParseErrorInfo>(error),
+                MineUtil.Result.Error<TT, Unit>(Unit.Value),
+                Remain,
+                ErrorStack.Concat(new[] { error })
+            );
+        }
+
+        public ParseResult<TT, I> MapErrorStack<TT>(ParseErrorInfo error)
+        {
+            return new ParseResult<TT, I>(
+                MineUtil.Result.Error<TT, Unit>(Unit.Value),
                 Remain,
                 ErrorStack.Take(ErrorStack.Count()-1).Concat(new[] { error })
             );
         }
 
-        public IParseResult<T, I> ChainLeft<TT>(IParseResult<TT, I> next)
+        public ParseResult<T, I> ChainLeft<TT>(ParseResult<TT, I> next)
         {
-            return new ParseResult<T, I>(
-                next.Result.IsOk ? Result : MineUtil.Result.Error<T, ParseErrorInfo>(next.Result.RawError),
-                next.Remain,
-                ErrorStack.Concat(next.ErrorStack)
-            );
+            return Bind(_ => next).Map(_=>Result.RawValue);
         }
 
-        public IParseResult<TT, I> ChainRight<TT>(IParseResult<TT, I> next)
+        public ParseResult<TT, I> ChainRight<TT>(ParseResult<TT, I> next)
         {
-            return new ParseResult<TT, I>(
-                next.Result,
-                next.Remain,
-                ErrorStack.Concat(next.ErrorStack)
-            );
+            return Bind(_ => next);
+        }
+
+        public ParseResult<TT, I> Bind<TT>(Func<T, ParseResult<TT, I>> func)
+        {
+            if (IsOk)
+            {
+                var r = func(Result.RawValue);
+                return new ParseResult<TT, I>(r.Result, r.Remain, ErrorStack.Concat(r.ErrorStack).ToArray());
+            }
+            else
+            {
+                return CastError<TT>();
+            }
+        }
+
+        public ParseResult<TT, I> Map<TT>(Func<T, TT> func)
+        {
+            return Bind(t => ParseResult<TT, I>.NewOk(func(t), Remain));
         }
     }
 
     public static class ParseResult
     {
-        public static IParseResult<T, I> NewOk<T, I>(T value, IInput<I> remain)
+        public static ParseResult<T, I> FromResult<T, I>(IResult<T, IEnumerable<ParseErrorInfo>> result, IInput<I> remain)
+        {
+            return result.IsOk ? NewOk(result.RawValue, remain) : NewError<T, I>(result.RawError, remain);
+        }
+
+        public static ParseResult<T, I> NewOk<T, I>(T value, IInput<I> remain)
         {
             return ParseResult<T, I>.NewOk(value, remain);
         }
 
-        public static IParseResult<T, I> NewError<T, I>(ParseErrorInfo error, IInput<I> remain)
+        public static ParseResult<T, I> NewError<T, I>(ParseErrorInfo error, IInput<I> remain)
         {
-            return ParseResult<T, I>.NewError(error, remain);
+            return ParseResult<T, I>.NewError(new[] { error }, remain);
+        }
+
+        public static ParseResult<T, I> NewError<T, I>(IEnumerable<ParseErrorInfo> errors, IInput<I> remain)
+        {
+            return ParseResult<T, I>.NewError(errors, remain);
+        }
+
+        public static ParseResult<TTT, I> Merge<T,TT, TTT,I>(this ParseResult<T, I> result1, ParseResult<TT, I> result2, Func<T, TT, TTT> func)
+        {
+            return result1.Bind(
+                t => result2.Bind(
+                    tt => ParseResult<TTT, I>.NewOk(func(t, tt), result2.Remain)
+                )
+            );
+        }
+
+        public static ParseResult<IEnumerable<T>, I> Append<T, TList, I>(this ParseResult<TList, I> result1, ParseResult<T, I> result2)
+            where TList : IEnumerable<T>
+        {
+            return result1.Merge(result2, (list, element) => list.Append(element));
         }
     }
 }
