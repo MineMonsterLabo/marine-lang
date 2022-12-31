@@ -16,7 +16,7 @@ namespace MarineLang.PresetMacroPlugins
         {
             var vm = new HighLevelVirtualMachine();
             return
-                marineParser.ParseExpr()(TokenInput.Create(tokens.ToArray()))
+                marineParser.ParseExpr()(TokenInput.Create(tokens))
                 .ToResult().Select(exprAst =>
                 {
                     var programAst = ProgramAst.Create(

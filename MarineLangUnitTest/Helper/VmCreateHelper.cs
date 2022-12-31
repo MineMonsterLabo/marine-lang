@@ -25,7 +25,7 @@ namespace MarineLangUnitTest.Helper
 
             var parser = new SyntaxAnalyzer(pluginContainer);
 
-            var tokens = lexer.GetTokens(str).ToArray();
+            var tokens = lexer.GetTokens(str);
             var parseResult = parser.Parse(tokens);
             if (parseResult.IsError)
                 throw new Exception(string.Concat(parseResult.parseErrorInfos.Select(x => x.FullErrorMessage)));
@@ -78,7 +78,7 @@ namespace MarineLangUnitTest.Helper
             var lexer = new LexicalAnalyzer();
             var parser = new SyntaxAnalyzer();
 
-            var tokens = lexer.GetTokens(str).ToArray();
+            var tokens = lexer.GetTokens(str);
             var parseResult = parser.Parse(tokens);
             return vm.LoadProgram(new MarineProgramUnit(namespaceStrings, parseResult.programAst));
         }
