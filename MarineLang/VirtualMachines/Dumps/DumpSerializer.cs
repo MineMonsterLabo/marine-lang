@@ -112,9 +112,11 @@ namespace MarineLang.VirtualMachines.Dumps
             PropertyDumpModel propertyDumpModel = new PropertyDumpModel(
                 AnalyzeReference(marineDumpModel, propertyInfo.PropertyType), propertyInfo.CanRead,
                 propertyInfo.CanWrite, isStatic);
+            int idx = 0;
             foreach (var parameter in propertyInfo.GetIndexParameters())
             {
-                propertyDumpModel.Parameters.Add(parameter.Name, Analyze(marineDumpModel, parameter));
+                var name = string.IsNullOrWhiteSpace(parameter.Name) ? $"p{idx++}" : parameter.Name;
+                propertyDumpModel.Parameters.Add(name, Analyze(marineDumpModel, parameter));
             }
 
             return propertyDumpModel;
@@ -127,8 +129,8 @@ namespace MarineLang.VirtualMachines.Dumps
             int idx = 0;
             foreach (ParameterInfo parameterInfo in methodInfo.GetParameters())
             {
-                methodDumpModel.Parameters.Add(parameterInfo.Name ?? $"p{idx++}",
-                    Analyze(marineDumpModel, parameterInfo));
+                var name = string.IsNullOrWhiteSpace(parameterInfo.Name) ? $"p{idx++}" : parameterInfo.Name;
+                methodDumpModel.Parameters.Add(name, Analyze(marineDumpModel, parameterInfo));
             }
 
             return methodDumpModel;

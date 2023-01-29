@@ -7,7 +7,7 @@ namespace MarineLang.Inputs
     public class CharInput : Input<char>
     {
         public override RangePosition RangePosition
-            => new RangePosition(new Position(line, column));
+            => new RangePosition(new Position(Index, line, column));
 
         private readonly int line;
         private readonly int column;

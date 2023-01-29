@@ -64,6 +64,7 @@ namespace MarineLangUnitTest.Helper
                 new string[] {"xxx", "yyy"},
             });
 
+            StaticType.Reset();
             vm.StaticTypeRegister(typeof(StaticType));
             vm.StaticTypeRegister(typeof(Constructor));
             vm.StaticTypeRegister<OpSample1>();
@@ -84,6 +85,8 @@ namespace MarineLangUnitTest.Helper
 
         public class Hoge
         {
+            public int count = 10;
+            public int Count = 100;
             public bool flag;
             public bool Flag;
             public bool flag2 => false;
@@ -217,6 +220,17 @@ namespace MarineLangUnitTest.Helper
 
             public static string field = "Hello field!!";
             public static int field2 = 50;
+            public static int Field2 = 150;
+
+            public static string Field { get; set; }= "hello";
+
+            public static void Reset()
+            {
+                field = "Hello field!!";
+                field2 = 50;
+                Field2 = 150;
+                Field = "hello";
+            }
 
             public static string RetFuncName()
             {
@@ -289,6 +303,44 @@ namespace MarineLangUnitTest.Helper
             Red,
             Green,
             Blue
+        }
+
+        public class SequenceLogger
+        {
+            public string Log { get; private set; } = "";
+            public int Hook(int v, int order)
+            {
+                Log += order;
+                return v;
+            }
+
+            public bool Hook(bool v, int order)
+            {
+                Log += order;
+                return v;
+            }
+        }
+
+        public class Generic
+        {
+            public T Id<T>(T v) => v;
+            public string GetType<T>() => typeof(T).Name;
+            public string GetType<T>(int aaa) => typeof(T).Name + "," + aaa;
+            public string GetType<T,TT>(TT aaa) => typeof(T).Name + "," + typeof(TT).Name + "," + aaa;
+            public string GetType<T, TT>() => typeof(T).Name + "," + typeof(TT).Name;
+
+            public static string GetType2<T>() => typeof(T).Name;
+
+            public static T IdStatic<T>(T v) => v;
+
+            public string Test<T, TT>(T _, TT __) 
+                => "2 Generic "+_.GetType().Name + ":" + __.GetType().Name;
+
+            public string Test<T>(T _, float __)
+                => "1 Generic " + _.GetType().Name + ":" + "Single";
+
+            public string Test(float _, float __)
+                => "0 Generic Single:Single";
         }
     }
 }

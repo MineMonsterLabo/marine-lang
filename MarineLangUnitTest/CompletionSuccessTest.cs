@@ -41,7 +41,7 @@ namespace MarineLangUnitTest
                 var index = line.IndexOf(marker, StringComparison.Ordinal);
                 if (index != -1)
                 {
-                    position = new Position(i + 1, index + 1);
+                    position = new Position(0, i + 1, index + 1);
                     break;
                 }
             }

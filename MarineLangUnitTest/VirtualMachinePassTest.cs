@@ -1,9 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
-using MarineLang.LexicalAnalysis;
 using MarineLang.Models.Errors;
-using MarineLang.SyntaxAnalysis;
 using MarineLang.VirtualMachines;
 using MineUtil;
 using Xunit;
@@ -252,6 +249,8 @@ end
         }
 
         [Theory]
+        [InlineData("fun main() let hoge = create_hoge() hoge.Count=hoge.Count+1 ret hoge.Count end", 101)]
+        [InlineData("fun main() let hoge = create_hoge() hoge.count=hoge.count+1 ret hoge.count end", 11)]
         [InlineData("fun main() let hoge = create_hoge() hoge.flag=4!=5 ret hoge.flag end", true)]
         [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.Flag end", true)]
         [InlineData("fun main() let hoge = create_hoge() hoge.Flag=4!=5 ret hoge.flag end", false)]
@@ -666,9 +665,17 @@ end", 1)]
         [Theory]
         [InlineData("fun main() ret StaticType.ret_func_name() end", "func_name")]
         [InlineData("fun main() ret StaticType.sum(1, 4) end", 5)]
-        [InlineData("fun main() ret StaticType.name end", "aaa")]
+        [InlineData("fun main() StaticType.sum(1, 4) ret 5 end", 5)]
+        [InlineData("fun main() ret StaticType.Name end", "aaa")]
         [InlineData("fun main() ret StaticType.field end", "Hello field!!")]
+        [InlineData("fun main() ret StaticType.Field end", "hello")]
+        [InlineData("fun main() StaticType.Field=StaticType.Field+\"hello\" ret StaticType.Field end", "hellohello")]
+        [InlineData("fun main() StaticType.Field2 = StaticType.Field2 +1 ret StaticType.Field2 end", 151)]
+        [InlineData("fun main() ret StaticType.Field2 end", 150)]
+        [InlineData("fun main() StaticType.Field2=30  ret StaticType.Field2 end", 30)]
+        [InlineData("fun main() StaticType.field=StaticType.field+\"2\"  ret StaticType.field end", "Hello field!!2")]
         [InlineData("fun main() StaticType.field2 = 1000 ret StaticType.field2 end", 1000)]
+        [InlineData("fun main() StaticType.field2 = StaticType.field2+1 ret StaticType.field2 end", 51)]
         public void StaticTypeTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
@@ -944,6 +951,67 @@ end", 1)]
         public void NullTest<T>(string str, T expected)
         {
             RunReturnCheck(str, expected);
+        }
+
+        /// <summary>
+        /// 短絡評価のテスト
+        /// </summary>
+        [Theory]
+        [InlineData("fun main(x) ret x.hook(5,0) + x.hook(10,1) end", "01", 15)]
+        [InlineData("fun main(x) ret x.hook(true,0) && x.hook(true,1) && x.hook(true,2) end", "012", true)]
+        [InlineData("fun main(x) ret x.hook(false,0) || x.hook(true,1) && x.hook(true,2) end", "012", true)]
+        [InlineData("fun main(x) ret x.hook(10,0) >= x.hook(50,1) && x.hook(true,2) end", "01", false)]
+        [InlineData("fun main(x) ret x.hook(true,0) || x.hook(false,1) end", "0", true)]
+        [InlineData("fun main(x) ret x.hook(false,0) || x.hook(true,1) || x.hook(false,2) end", "01", true)]
+        [InlineData("fun main(x) ret x.hook(false,0) || x.hook(false,1) || x.hook(false,2) end", "012", false)]
+        public void ExprEvalOrderTest<T>(string str, string log, T expect)
+        {
+            var vm = CreateVM();
+            vm.ParseAndLoad(str);
+            vm.Compile();
+
+            var logger = new SequenceLogger();
+            var value = vm.Run("main", logger).Eval();
+            Assert.Equal(log, logger.Log);
+            Assert.Equal(expect, value);
+        }
+
+        /// <summary>
+        /// ジェネリクス関数の推論呼び出しのテスト
+        /// </summary>
+        [Theory]
+        [InlineData("fun main() ret generic.id(555) end", 555)]
+        [InlineData("fun main() ret Generic.id_static(555) end", 555)]
+        [InlineData("fun main() ret generic.test(55.3,23.3) end", "0 Generic Single:Single")]
+        [InlineData("fun main() ret generic.test(55,23.3) end", "1 Generic Int32:Single")]
+        [InlineData("fun main() ret generic.test(55,23) end", "2 Generic Int32:Int32")]
+        public void GenericFuncCallTest1<T>(string str,T expect)
+        {
+            var vm = CreateVM();
+            vm.StaticTypeRegister<Generic>();
+            vm.GlobalVariableRegister("generic", new Generic());
+            vm.ParseAndLoad(str);
+            vm.Compile();
+            Assert.Equal(expect, vm.Run("main").Eval());
+        }
+
+        /// <summary>
+        /// ジェネリクス関数の呼び出しのテスト
+        /// </summary>
+        [Theory]
+        [InlineData("fun main() ret generic.get_type<System.Int32>() end", "Int32")]
+        [InlineData("fun main() ret generic.get_type<System.Int32>(333) end", "Int32,333")]
+        [InlineData("fun main() ret generic.get_type<System.Int32,System.Boolean>() end", "Int32,Boolean")]
+        [InlineData("fun main() ret generic.get_type<System.Int32,System.Boolean>(false) end", "Int32,Boolean,False")]
+        [InlineData("fun main() ret Generic.get_type2<System.Int32>() end", "Int32")]
+        public void GenericFuncCallTest2<T>(string str, T expect)
+        {
+            var vm = CreateVM();
+            vm.StaticTypeRegister<Generic>();
+            vm.GlobalVariableRegister("generic", new Generic());
+            vm.ParseAndLoad(str);
+            vm.Compile();
+            Assert.Equal(expect, vm.Run("main").Eval());
         }
     }
 }

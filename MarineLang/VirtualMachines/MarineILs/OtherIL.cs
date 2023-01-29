@@ -66,6 +66,54 @@
         }
     }
 
+    /// <summary>
+    /// スタックの状態を変えずに、スタックの最後に積まれた値がFalseならJumpをする命令
+    /// </summary>
+    public struct JumpFalseNoPopIL : IMarineIL
+    {
+        public readonly int nextILIndex;
+
+        public JumpFalseNoPopIL(int nextILIndex)
+        {
+            this.nextILIndex = nextILIndex;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var condValue = (bool)vm.CurrentValue;
+            if (condValue == false) vm.nextILIndex = nextILIndex - 1;
+        }
+
+        public override string ToString()
+        {
+            return typeof(JumpFalseNoPopIL).Name + " " + nextILIndex;
+        }
+    }
+
+    /// <summary>
+    /// スタックの状態を変えずに、スタックの最後に積まれた値がTrueならJumpをする命令
+    /// </summary>
+    public struct JumpTrueNoPopIL : IMarineIL
+    {
+        public readonly int nextILIndex;
+
+        public JumpTrueNoPopIL(int nextILIndex)
+        {
+            this.nextILIndex = nextILIndex;
+        }
+
+        public void Run(LowLevelVirtualMachine vm)
+        {
+            var condValue = (bool)vm.CurrentValue;
+            if (condValue) vm.nextILIndex = nextILIndex - 1;
+        }
+
+        public override string ToString()
+        {
+            return typeof(JumpTrueNoPopIL).Name + " " + nextILIndex;
+        }
+    }
+
     public struct JumpIL : IMarineIL
     {
         public readonly int nextILIndex;

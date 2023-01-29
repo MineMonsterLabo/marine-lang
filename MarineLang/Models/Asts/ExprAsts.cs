@@ -622,6 +622,7 @@ namespace MarineLang.Models.Asts
         public Token funcNameToken;
         public ExprAst[] args;
         public Token rightParen;
+        public string[] genericTypeNames;
 
         public string FuncName => funcNameToken.text;
         public IEnumerable<string> NamespaceSettings
@@ -635,35 +636,37 @@ namespace MarineLang.Models.Asts
 
         private Position StartPosition => namespaceTokens.DefaultIfEmpty(funcNameToken).First().position;
 
-        public static FuncCallAst Create(Token[] namespaceTokens, Token funcNameToken, ExprAst[] args, Token rightParen)
+        public static FuncCallAst Create(Token[] namespaceTokens, Token funcNameToken, string[] genericTypeNames, ExprAst[] args, Token rightParen)
         {
             return new FuncCallAst
             {
                 namespaceTokens = namespaceTokens,
                 funcNameToken = funcNameToken,
+                genericTypeNames = genericTypeNames,
                 args = args,
                 rightParen = rightParen
             };
         }
 
-        public static FuncCallAst Create(Token[] namespaceTokens, string funcName, ExprAst[] args)
+        public static FuncCallAst Create(Token[] namespaceTokens, string funcName, string[] genericTypeNames, ExprAst[] args)
         {
             return new FuncCallAst
             {
                 namespaceTokens = namespaceTokens,
                 funcNameToken = new Token(TokenType.Id, funcName),
+                genericTypeNames = genericTypeNames,
                 args = args
             };
         }
 
-        public static FuncCallAst Create(string funcName, ExprAst[] args)
+        public static FuncCallAst Create(string funcName, string[] genericTypeNames, ExprAst[] args)
         {
-            return Create(new Token[] { }, funcName, args);
+            return Create(new Token[] { }, funcName, genericTypeNames, args);
         }
 
-        public static FuncCallAst Create(Token funcNameToken, ExprAst[] args, Token rightParen)
+        public static FuncCallAst Create(Token funcNameToken, string[] genericTypeNames, ExprAst[] args, Token rightParen)
         {
-            return Create(new Token[] { }, funcNameToken, args,rightParen);
+            return Create(new Token[] { }, funcNameToken, genericTypeNames, args, rightParen);
         }
 
         public override IEnumerable<T> Accept<T>(AstVisitor<T> astVisitor)

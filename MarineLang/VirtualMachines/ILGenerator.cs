@@ -367,9 +367,28 @@ namespace MarineLang.VirtualMachines
 
         void BinaryOpILGenerate(BinaryOpAst binaryOpAst, GenerateArgs generateArgs)
         {
-            ExprILGenerate(binaryOpAst.leftExpr, generateArgs);
-            ExprILGenerate(binaryOpAst.rightExpr, generateArgs);
-            marineILs.Add(new BinaryOpIL(binaryOpAst.opKind));
+            if (binaryOpAst.opKind == TokenType.OrOp)
+            {
+                ExprILGenerate(binaryOpAst.leftExpr, generateArgs);
+                var jumpInsertIndex = marineILs.Count;
+                marineILs.Add(null);
+                ExprILGenerate(binaryOpAst.rightExpr, generateArgs);
+                marineILs[jumpInsertIndex] = new JumpTrueNoPopIL(marineILs.Count);
+            }
+            else if (binaryOpAst.opKind == TokenType.AndOp)
+            {
+                ExprILGenerate(binaryOpAst.leftExpr, generateArgs);
+                var jumpInsertIndex = marineILs.Count;
+                marineILs.Add(null);
+                ExprILGenerate(binaryOpAst.rightExpr, generateArgs);
+                marineILs[jumpInsertIndex] = new JumpFalseNoPopIL(marineILs.Count);
+            }
+            else
+            {
+                ExprILGenerate(binaryOpAst.leftExpr, generateArgs);
+                ExprILGenerate(binaryOpAst.rightExpr, generateArgs);
+                marineILs.Add(new BinaryOpIL(binaryOpAst.opKind));
+            }
         }
 
         void VariableILGenerate(VariableAst variableAst, GenerateArgs generateArgs)
@@ -382,6 +401,7 @@ namespace MarineLang.VirtualMachines
                         VariableAst.Create(new Token(default, "_action", default)),
                         FuncCallAst.Create(
                             new Token(default, "get", default),
+                            new string[] { },
                             new[] { ValueAst.Create(captureIdx.Value, default) },
                             new Token(default, "")
                         )
@@ -440,8 +460,9 @@ namespace MarineLang.VirtualMachines
 
             foreach (var arg in funcCallAst.args)
                 ExprILGenerate(arg, generateArgs);
+
             marineILs.Add(
-                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length)
+                new InstanceCSharpFuncCallIL(csharpFuncName, funcCallAst.args.Length, GetGenericTypes(funcCallAst.genericTypeNames))
             );
         }
 
@@ -454,15 +475,35 @@ namespace MarineLang.VirtualMachines
                 ExprILGenerate(arg, generateArgs);
 
             var type = staticTypeDict[staticFuncCallAst.ClassName];
-            var methodBases =
-                csharpFuncName == "New" ?
-                    type.GetConstructors().Cast<MethodBase>() :
-                    type.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(e => e.Name == csharpFuncName);
 
-            marineILs.Add(
-                new StaticCSharpFuncCallIL(type, methodBases.ToArray(), csharpFuncName,
-                    funcCallAst.args.Length)
-            );
+            if(csharpFuncName == "New")
+            {
+                marineILs.Add(
+                    new StaticCSharpConstructorCallIL(
+                        type,
+                        type.GetConstructors(), 
+                        csharpFuncName,
+                        funcCallAst.args.Length
+                    )
+                );
+            }
+            else
+            {
+                var methodInfos=
+                    type.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .Where(e => e.Name == csharpFuncName)
+                    .ToArray();
+
+                marineILs.Add(
+                    new StaticCSharpFuncCallIL(
+                        type,
+                        methodInfos,
+                        csharpFuncName,
+                        funcCallAst.args.Length,
+                        GetGenericTypes(funcCallAst.genericTypeNames)
+                    )
+                );
+            }
         }
 
         void InstanceFieldILGenerate(InstanceFieldAst instanceFieldAst, GenerateArgs generateArgs)
@@ -533,6 +574,7 @@ namespace MarineLang.VirtualMachines
                     VariableAst.Create(new Token(default, "action_object_generator", default)),
                     FuncCallAst.Create(
                         new Token(default, "generate", default),
+                        new string[] { },
                         new ExprAst[]
                         {
                             ValueAst.Create(actionFuncName, default),
@@ -573,11 +615,10 @@ namespace MarineLang.VirtualMachines
         void DictionaryConstructILGenerate(DictionaryConstructAst dictionaryConstructAst, GenerateArgs generateArgs)
         {
             var type = typeof(Dictionary<string, object>);
-            var methodBases = type.GetConstructors().Cast<MethodBase>();
             var dictVarIdx = generateArgs.variables.CreateUnnamedLocalVariableIdx();
 
             marineILs.Add(
-                new StaticCSharpFuncCallIL(type, methodBases.ToArray(), "New",0)
+                new StaticCSharpConstructorCallIL(type, type.GetConstructors(), "New", 0)
             );
             marineILs.Add(new StoreIL(dictVarIdx));
             foreach (var keyValuePair in dictionaryConstructAst.dict)
@@ -600,6 +641,7 @@ namespace MarineLang.VirtualMachines
                         VariableAst.Create(new Token(default, "_action", default)),
                         FuncCallAst.Create(
                             new Token(default, "set", default),
+                            new string[] { },
                             new[] { ValueAst.Create(captureIdx.Value, default), reAssignmentAst.expr },
                             new Token(default, "")
                         )
@@ -730,6 +772,11 @@ namespace MarineLang.VirtualMachines
         void ValueILGenerate(ValueAst valueAst)
         {
             marineILs.Add(new PushValueIL(valueAst.value));
+        }
+
+        Type[] GetGenericTypes(string[] genericTypeNames)
+        {
+            return genericTypeNames?.Select(Type.GetType).ToArray();
         }
     }
 }
