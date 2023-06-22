@@ -68,10 +68,12 @@ term           =
                  variable |
                  dict_cons_literal;
 action_literal = '{' , action_variable_list , func_body , '}' ;
-func_call      = lower_id , param_list ;
+func_call      = lower_id , [type_param_list] , param_list ;
 indexers       = ( '[' , expr , ']' )+ ;
 param_list     = '(' , [ expr , { ',' , expr } ] , ')' ;
 variable_list  = '(' , [ variable , { ',' , variable } ] , ')' ;
+type_param_list 
+               = '<' , type_name , { ',' , type_name } , '>' ;
 action_variable_list  = '|' , [ variable , { ',' , variable } ] , '|' ;
 array_literal  = '[' [ expr , { ',' , expr } ] , [ ';' , int_literal ] , ']' ;
 macro          = macro_name , ? トークン文字列群 ? ;
@@ -81,6 +83,7 @@ dict_cons_key_value
                = lower_id , colon , expr ;
 variable       = lower_id;
 class_name     = upper_id;
+type_name      = id , { '.' , id } ;
 
 トークン
 

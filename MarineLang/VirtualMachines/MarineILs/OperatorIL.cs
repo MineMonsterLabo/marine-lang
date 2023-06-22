@@ -156,7 +156,7 @@ namespace MarineLang.VirtualMachines.MarineILs
               .ToArray();
 
             var methodInfo =
-                MethodBaseResolver.Select(
+                MethodResolver.Select(
                     methodInfos,
                     new[] { leftValueType, rightValue.GetType() }
                 );

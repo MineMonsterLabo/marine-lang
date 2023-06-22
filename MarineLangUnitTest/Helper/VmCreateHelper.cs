@@ -304,5 +304,43 @@ namespace MarineLangUnitTest.Helper
             Green,
             Blue
         }
+
+        public class SequenceLogger
+        {
+            public string Log { get; private set; } = "";
+            public int Hook(int v, int order)
+            {
+                Log += order;
+                return v;
+            }
+
+            public bool Hook(bool v, int order)
+            {
+                Log += order;
+                return v;
+            }
+        }
+
+        public class Generic
+        {
+            public T Id<T>(T v) => v;
+            public string GetType<T>() => typeof(T).Name;
+            public string GetType<T>(int aaa) => typeof(T).Name + "," + aaa;
+            public string GetType<T,TT>(TT aaa) => typeof(T).Name + "," + typeof(TT).Name + "," + aaa;
+            public string GetType<T, TT>() => typeof(T).Name + "," + typeof(TT).Name;
+
+            public static string GetType2<T>() => typeof(T).Name;
+
+            public static T IdStatic<T>(T v) => v;
+
+            public string Test<T, TT>(T _, TT __) 
+                => "2 Generic "+_.GetType().Name + ":" + __.GetType().Name;
+
+            public string Test<T>(T _, float __)
+                => "1 Generic " + _.GetType().Name + ":" + "Single";
+
+            public string Test(float _, float __)
+                => "0 Generic Single:Single";
+        }
     }
 }
