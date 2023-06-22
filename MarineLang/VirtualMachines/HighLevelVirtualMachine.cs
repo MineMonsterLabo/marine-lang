@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using MarineLang.BuildInObjects;
 using MarineLang.Models.Errors;
+using MarineLang.VirtualMachines.BinaryImage;
 using MarineLang.VirtualMachines.Dumps;
 using MarineLang.VirtualMachines.MarineILs;
 
@@ -47,10 +48,11 @@ namespace MarineLang.VirtualMachines
 
         public void GlobalFuncRegister(MethodInfo methodInfo, string methodName = null)
         {
-            methodInfoDict.AddCsharpFunc(methodName??methodInfo.Name, methodInfo);
+            methodInfoDict.AddCsharpFunc(methodName ?? methodInfo.Name, methodInfo);
         }
 
-        public void GlobalFuncRegister(IEnumerable<string> namespaceStrings, MethodInfo methodInfo, string methodName = null)
+        public void GlobalFuncRegister(IEnumerable<string> namespaceStrings, MethodInfo methodInfo,
+            string methodName = null)
         {
             methodInfoDict.AddCsharpFunc(namespaceStrings, methodName ?? methodInfo.Name, methodInfo);
         }
@@ -91,6 +93,16 @@ namespace MarineLang.VirtualMachines
             ILGeneratedData
                 = new ILGenerator(marineProgramUnitList.Values).Generate(methodInfoDict, staticTypeDict,
                     globalVariableDict.Keys.ToArray());
+        }
+
+        public void LoadCompiledBinaryImage(byte[] image)
+        {
+            ILGeneratedData = MarineBinaryImage.ReadImage(image);
+        }
+
+        public byte[] CreateCompiledBinaryImage()
+        {
+            return MarineBinaryImage.WriteImage(ILGeneratedData);
         }
 
         public void ClearProgram(uint programId)
@@ -172,7 +184,7 @@ namespace MarineLang.VirtualMachines
             catch (MarineILRuntimeException e)
             {
                 throw new MarineRuntimeException(
-                   new RuntimeErrorInfo(e.ILRuntimeErrorInfo, lowLevelVirtualMachine.GetDebugContexts())
+                    new RuntimeErrorInfo(e.ILRuntimeErrorInfo, lowLevelVirtualMachine.GetDebugContexts())
                 );
             }
             catch (Exception e)
@@ -180,8 +192,8 @@ namespace MarineLang.VirtualMachines
                 var currentIL = ILGeneratedData.marineILs[lowLevelVirtualMachine.nextILIndex];
                 var iLRuntimeErrorInfo = new ILRuntimeErrorInfo(currentIL, e.Message);
                 throw new MarineRuntimeException(
-                  new RuntimeErrorInfo(iLRuntimeErrorInfo, lowLevelVirtualMachine.GetDebugContexts()), e
-               );
+                    new RuntimeErrorInfo(iLRuntimeErrorInfo, lowLevelVirtualMachine.GetDebugContexts()), e
+                );
             }
         }
 

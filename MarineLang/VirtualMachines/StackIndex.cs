@@ -3,8 +3,8 @@ namespace MarineLang.VirtualMachines
 {
     public struct StackIndex
     {
-        readonly bool isAbsolute;
-        readonly int index;
+        public readonly bool isAbsolute;
+        public readonly int index;
 
         public StackIndex(int index, bool isAbsolute)
         {
