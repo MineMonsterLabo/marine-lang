@@ -10,7 +10,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
 {
     public class MarineBinaryImageWriter : BinaryWriter
     {
-        public bool IsDebugMode { get; set; } = true;
+        public ImageOptimization Optimization { get; set; }
 
         public MarineBinaryImageWriter(Stream input) : base(input)
         {
@@ -86,7 +86,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         protected virtual void WriteMarineIL(IMarineIL il)
         {
-            if (!IsDebugMode)
+            if (Optimization.HasFlag(ImageOptimization.NoDebug))
                 if (il is PushDebugContextIL || il is PopDebugContextIL)
                     return;
 
@@ -227,7 +227,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
                 case PushDebugContextIL pushDebugContext:
                     Write(pushDebugContext.debugContext);
                     break;
-                case PopDebugContextIL popDebugContext:
+                case PopDebugContextIL _:
                     // empty
                     break;
             }
@@ -250,13 +250,13 @@ namespace MarineLang.VirtualMachines.BinaryImage
             }
         }
 
-        public virtual void Write(StackIndex stackIndex)
+        public void Write(StackIndex stackIndex)
         {
             Write(stackIndex.isAbsolute);
             Write7BitEncodedInt(stackIndex.index);
         }
 
-        public virtual void Write(DebugContext debugContext)
+        public void Write(DebugContext debugContext)
         {
             Write(debugContext.ProgramUnitName);
             Write(debugContext.FuncName);
@@ -264,7 +264,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
             Write(debugContext.RangePosition.End);
         }
 
-        public virtual void Write(Position position)
+        public void Write(Position position)
         {
             Write7BitEncodedInt(position.column);
             Write7BitEncodedInt(position.line);
