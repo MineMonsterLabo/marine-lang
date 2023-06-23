@@ -40,76 +40,168 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
     public static class MarineILTypeExtension
     {
-        public static MarineILType GetMarineILType(this IMarineIL il)
+        public static void WriteMarineIL(this IMarineIL il, MarineBinaryImageWriter writer)
         {
             switch (il)
             {
                 case NoOpIL _:
-                    return MarineILType.NoOpIL;
-                case StaticCSharpFieldLoadIL _:
-                    return MarineILType.StaticCSharpFieldLoadIL;
-                case StaticCSharpFieldStoreIL _:
-                    return MarineILType.StaticCSharpFieldStoreIL;
-                case InstanceCSharpFieldLoadIL _:
-                    return MarineILType.InstanceCSharpFieldLoadIL;
-                case InstanceCSharpFieldStoreIL _:
-                    return MarineILType.InstanceCSharpFieldStoreIL;
-                case CSharpFuncCallIL _:
-                    return MarineILType.CSharpFuncCallIL;
-                case StaticCSharpFuncCallIL _:
-                    return MarineILType.StaticCSharpFuncCallIL;
-                case InstanceCSharpFuncCallIL _:
-                    return MarineILType.InstanceCSharpFuncCallIL;
-                case MarineFuncCallIL _:
-                    return MarineILType.MarineFuncCallIL;
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.NoOpIL);
+                    break;
+                case StaticCSharpFieldLoadIL staticCSharpFieldLoadIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.StaticCSharpFieldLoadIL);
+                    writer.Write(staticCSharpFieldLoadIl.type);
+                    writer.Write(staticCSharpFieldLoadIl.fieldName);
+                    break;
+                case StaticCSharpFieldStoreIL staticCSharpFieldStoreIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.StaticCSharpFieldStoreIL);
+                    writer.Write(staticCSharpFieldStoreIl.type);
+                    writer.Write(staticCSharpFieldStoreIl.fieldName);
+                    break;
+                case InstanceCSharpFieldLoadIL instanceCSharpFieldLoadIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.InstanceCSharpFieldLoadIL);
+                    writer.Write(instanceCSharpFieldLoadIl.fieldName);
+                    break;
+                case InstanceCSharpFieldStoreIL instanceCSharpFieldStoreIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.InstanceCSharpFieldStoreIL);
+                    writer.Write(instanceCSharpFieldStoreIl.fieldName);
+                    break;
+                case CSharpFuncCallIL cSharpFuncCallIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.CSharpFuncCallIL);
+                    writer.Write(cSharpFuncCallIl.methodInfo);
+                    writer.Write7BitEncodedIntPolyfill(cSharpFuncCallIl.argCount);
+                    break;
+                case StaticCSharpFuncCallIL staticCSharpFuncCallIl:
+                {
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.StaticCSharpFuncCallIL);
+                    writer.Write(staticCSharpFuncCallIl.type);
+                    writer.Write(staticCSharpFuncCallIl.funcName);
+
+                    var methods = staticCSharpFuncCallIl.methodInfos;
+                    writer.Write7BitEncodedIntPolyfill(methods.Length);
+                    foreach (var method in methods)
+                    {
+                        writer.Write(method);
+                    }
+
+                    var genericTypes = staticCSharpFuncCallIl.genericTypes;
+                    writer.Write7BitEncodedIntPolyfill(genericTypes.Length);
+                    foreach (var genericType in genericTypes)
+                    {
+                        writer.Write(genericType);
+                    }
+
+                    writer.Write7BitEncodedIntPolyfill(staticCSharpFuncCallIl.argCount);
+
+                    break;
+                }
+                case InstanceCSharpFuncCallIL instanceCSharpFuncCallIl:
+                {
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.InstanceCSharpFuncCallIL);
+                    writer.Write(instanceCSharpFuncCallIl.funcName);
+
+                    var genericTypes = instanceCSharpFuncCallIl.genericTypes;
+                    writer.Write7BitEncodedIntPolyfill(genericTypes.Length);
+                    foreach (var genericType in genericTypes)
+                    {
+                        writer.Write(genericType);
+                    }
+
+                    writer.Write7BitEncodedIntPolyfill(instanceCSharpFuncCallIl.argCount);
+
+                    break;
+                }
+                case MarineFuncCallIL marineFuncCallIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.MarineFuncCallIL);
+                    writer.Write(marineFuncCallIl.funcName);
+                    writer.Write7BitEncodedIntPolyfill(marineFuncCallIl.funcILIndex.Index);
+                    writer.Write7BitEncodedIntPolyfill(marineFuncCallIl.argCount);
+                    break;
                 case MoveNextIL _:
-                    return MarineILType.MoveNextIL;
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.MoveNextIL);
+                    break;
                 case GetIterCurrentL _:
-                    return MarineILType.GetIterCurrentIL;
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.GetIterCurrentIL);
+                    break;
                 case InstanceCSharpIndexerLoadIL _:
-                    return MarineILType.InstanceCSharpIndexerLoadIL;
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.InstanceCSharpIndexerLoadIL);
+                    break;
                 case InstanceCSharpIndexerStoreIL _:
-                    return MarineILType.InstanceCSharpIndexerStoreIL;
-                case BinaryOpIL _:
-                    return MarineILType.BinaryOpIL;
-                case UnaryOpIL _:
-                    return MarineILType.UnaryOpIL;
-                case RetIL _:
-                    return MarineILType.RetIL;
-                case JumpFalseIL _:
-                    return MarineILType.JumpFalseIL;
-                case JumpFalseNoPopIL _:
-                    return MarineILType.JumpFalseNoPopIL;
-                case JumpTrueNoPopIL _:
-                    return MarineILType.JumpTrueNoPopIL;
-                case JumpIL _:
-                    return MarineILType.JumpIL;
-                case BreakIL _:
-                    return MarineILType.BreakIL;
-                case StoreValueIL _:
-                    return MarineILType.StoreValueIL;
-                case PushValueIL _:
-                    return MarineILType.PushValueIL;
-                case StoreIL _:
-                    return MarineILType.StoreIL;
-                case LoadIL _:
-                    return MarineILType.LoadIL;
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.InstanceCSharpIndexerStoreIL);
+                    break;
+                case BinaryOpIL binaryOpIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.BinaryOpIL);
+                    writer.Write7BitEncodedIntPolyfill((int)binaryOpIl.opKind);
+                    break;
+                case UnaryOpIL unaryOpIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.UnaryOpIL);
+                    writer.Write7BitEncodedIntPolyfill((int)unaryOpIl.opKind);
+                    break;
+                case RetIL retIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.RetIL);
+                    writer.Write7BitEncodedIntPolyfill(retIl.argCount);
+                    break;
+                case JumpFalseIL jumpFalseIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.JumpFalseIL);
+                    writer.Write7BitEncodedIntPolyfill(jumpFalseIl.nextILIndex);
+                    break;
+                case JumpFalseNoPopIL jumpFalseNoPopIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.JumpFalseNoPopIL);
+                    writer.Write7BitEncodedIntPolyfill(jumpFalseNoPopIl.nextILIndex);
+                    break;
+                case JumpTrueNoPopIL jumpTrueNoPopIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.JumpTrueNoPopIL);
+                    writer.Write7BitEncodedIntPolyfill(jumpTrueNoPopIl.nextILIndex);
+                    break;
+                case JumpIL jumpIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.JumpIL);
+                    writer.Write7BitEncodedIntPolyfill(jumpIl.nextILIndex);
+                    break;
+                case BreakIL breakIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.BreakIL);
+                    writer.Write7BitEncodedIntPolyfill(breakIl.breakIndex.Index);
+                    break;
+                case StoreValueIL storeValueIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.StoreValueIL);
+                    storeValueIl.value.WriteConstValue(writer);
+                    writer.Write(storeValueIl.stackIndex);
+                    break;
+                case PushValueIL pushValueIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.PushValueIL);
+                    pushValueIl.value.WriteConstValue(writer);
+                    break;
+                case StoreIL storeIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.StoreIL);
+                    writer.Write(storeIl.stackIndex);
+                    break;
+                case LoadIL loadIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.LoadIL);
+                    writer.Write(loadIl.stackIndex);
+                    break;
                 case PopIL _:
-                    return MarineILType.PopIL;
-                case CreateArrayIL _:
-                    return MarineILType.CreateArrayIL;
-                case StackAllocIL _:
-                    return MarineILType.StackAllocIL;
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.PopIL);
+                    break;
+                case CreateArrayIL createArray:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.CreateArrayIL);
+                    writer.Write7BitEncodedIntPolyfill(createArray.initSize);
+                    writer.Write7BitEncodedIntPolyfill(createArray.size);
+                    break;
+                case StackAllocIL stackAllocIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.StackAllocIL);
+                    writer.Write7BitEncodedIntPolyfill(stackAllocIl.size);
+                    break;
                 case YieldIL _:
-                    return MarineILType.YieldIL;
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.YieldIL);
+                    break;
                 case PushYieldCurrentRegisterIL _:
-                    return MarineILType.PushYieldCurrentRegisterIL;
-                case PushDebugContextIL _:
-                    return MarineILType.PushDebugContextIL;
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.PushYieldCurrentRegisterIL);
+                    break;
+                case PushDebugContextIL pushDebugContext:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.PushDebugContextIL);
+                    writer.Write(pushDebugContext.debugContext);
+                    break;
                 case PopDebugContextIL _:
-                    return MarineILType.PopDebugContextIL;
-                default:
-                    return MarineILType.NoOpIL;
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.PopDebugContextIL);
+                    break;
             }
         }
     }

@@ -4,8 +4,10 @@
     {
         None,
 
-        NoDebug = 1
-        // Size = 2,
-        // StripCode = 4
+        NoDebug = 1,
+
+        NoHeaderAndMeta = 2
+        // Size = 4,
+        // StripCode = 8
     }
 }
