@@ -1,4 +1,8 @@
-﻿using MarineLang.VirtualMachines.MarineILs;
+﻿using System;
+using System.IO;
+using System.Reflection;
+using MarineLang.Models;
+using MarineLang.VirtualMachines.MarineILs;
 
 namespace MarineLang.VirtualMachines.BinaryImage
 {
@@ -30,17 +34,17 @@ namespace MarineLang.VirtualMachines.BinaryImage
         StoreIL,
         LoadIL,
         PopIL,
-        CreateArrayIL = 70,
+        CreateArrayIL = 80,
         StackAllocIL,
-        YieldIL = 80,
+        YieldIL = 90,
         PushYieldCurrentRegisterIL,
         PushDebugContextIL = 128,
         PopDebugContextIL,
     }
 
-    public static class MarineILTypeExtension
+    public static class MarineILTypeIOExtensions
     {
-        public static void WriteMarineIL(this IMarineIL il, MarineBinaryImageWriter writer)
+        public static void WriteMarineIL(this MarineBinaryImageWriter writer, IMarineIL il)
         {
             switch (il)
             {
@@ -160,14 +164,14 @@ namespace MarineLang.VirtualMachines.BinaryImage
                     writer.Write7BitEncodedIntPolyfill((int)MarineILType.BreakIL);
                     writer.Write7BitEncodedIntPolyfill(breakIl.breakIndex.Index);
                     break;
-                case StoreValueIL storeValueIl:
-                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.StoreValueIL);
-                    storeValueIl.value.WriteConstValue(writer);
-                    writer.Write(storeValueIl.stackIndex);
-                    break;
+                // case StoreValueIL storeValueIl:
+                //     writer.Write7BitEncodedIntPolyfill((int)MarineILType.StoreValueIL);
+                //     writer.WriteConstValue(storeValueIl.value);
+                //     writer.Write(storeValueIl.stackIndex);
+                //     break;
                 case PushValueIL pushValueIl:
                     writer.Write7BitEncodedIntPolyfill((int)MarineILType.PushValueIL);
-                    pushValueIl.value.WriteConstValue(writer);
+                    writer.WriteConstValue(pushValueIl.value);
                     break;
                 case StoreIL storeIl:
                     writer.Write7BitEncodedIntPolyfill((int)MarineILType.StoreIL);
@@ -202,6 +206,187 @@ namespace MarineLang.VirtualMachines.BinaryImage
                 case PopDebugContextIL _:
                     writer.Write7BitEncodedIntPolyfill((int)MarineILType.PopDebugContextIL);
                     break;
+
+                default:
+                    throw new InvalidDataException();
+            }
+        }
+
+        public static IMarineIL ReadMarineIL(this MarineBinaryImageReader reader)
+        {
+            var ilType = (MarineILType)reader.Read7BitEncodedIntPolyfill();
+            switch (ilType)
+            {
+                case MarineILType.NoOpIL:
+                    return new NoOpIL();
+                case MarineILType.StaticCSharpFieldLoadIL:
+                {
+                    var type = reader.ReadType();
+                    var fieldName = reader.ReadString();
+                    return new StaticCSharpFieldLoadIL(type, fieldName);
+                }
+                case MarineILType.StaticCSharpFieldStoreIL:
+                {
+                    var type = reader.ReadType();
+                    var fieldName = reader.ReadString();
+                    return new StaticCSharpFieldStoreIL(type, fieldName);
+                }
+                case MarineILType.InstanceCSharpFieldLoadIL:
+                {
+                    var fieldName = reader.ReadString();
+                    return new InstanceCSharpFieldLoadIL(fieldName);
+                }
+                case MarineILType.InstanceCSharpFieldStoreIL:
+                {
+                    var fieldName = reader.ReadString();
+                    return new InstanceCSharpFieldStoreIL(fieldName);
+                }
+                case MarineILType.CSharpFuncCallIL:
+                {
+                    var methodInfo = reader.ReadMethodInfo();
+                    var argCount = reader.Read7BitEncodedIntPolyfill();
+                    return new CSharpFuncCallIL(methodInfo, argCount);
+                }
+                case MarineILType.StaticCSharpFuncCallIL:
+                {
+                    var type = reader.ReadType();
+                    var funcName = reader.ReadString();
+                    var methodCount = reader.Read7BitEncodedIntPolyfill();
+                    var methods = new MethodInfo[methodCount];
+                    for (int i = 0; i < methodCount; i++)
+                    {
+                        methods[i] = reader.ReadMethodInfo();
+                    }
+
+                    var typeCount = reader.Read7BitEncodedIntPolyfill();
+                    var types = new Type[typeCount];
+                    for (int i = 0; i < typeCount; i++)
+                    {
+                        types[i] = reader.ReadType();
+                    }
+
+                    var argCount = reader.Read7BitEncodedIntPolyfill();
+
+                    return new StaticCSharpFuncCallIL(type, methods, funcName, argCount, types);
+                }
+                case MarineILType.InstanceCSharpFuncCallIL:
+                {
+                    var funcName = reader.ReadString();
+                    var typeCount = reader.Read7BitEncodedIntPolyfill();
+                    var types = new Type[typeCount];
+                    for (int i = 0; i < typeCount; i++)
+                    {
+                        types[i] = reader.ReadType();
+                    }
+
+                    var argCount = reader.Read7BitEncodedIntPolyfill();
+
+                    return new InstanceCSharpFuncCallIL(funcName, argCount, types);
+                }
+                case MarineILType.MarineFuncCallIL:
+                {
+                    var funcName = reader.ReadString();
+                    var ilIndex = new FuncILIndex
+                    {
+                        Index = reader.Read7BitEncodedIntPolyfill()
+                    };
+                    var argCount = reader.Read7BitEncodedIntPolyfill();
+                    return new MarineFuncCallIL(funcName, ilIndex, argCount);
+                }
+                case MarineILType.MoveNextIL:
+                    return new MoveNextIL();
+                case MarineILType.GetIterCurrentIL:
+                    return new GetIterCurrentL();
+                case MarineILType.InstanceCSharpIndexerLoadIL:
+                    return new InstanceCSharpIndexerLoadIL();
+                case MarineILType.InstanceCSharpIndexerStoreIL:
+                    return new InstanceCSharpIndexerStoreIL();
+                case MarineILType.BinaryOpIL:
+                {
+                    var opKind = (TokenType)reader.Read7BitEncodedIntPolyfill();
+                    return new BinaryOpIL(opKind);
+                }
+                case MarineILType.UnaryOpIL:
+                {
+                    var opKind = (TokenType)reader.Read7BitEncodedIntPolyfill();
+                    return new UnaryOpIL(opKind);
+                }
+                case MarineILType.RetIL:
+                {
+                    var argCount = reader.Read7BitEncodedIntPolyfill();
+                    return new RetIL(argCount);
+                }
+                case MarineILType.JumpFalseIL:
+                {
+                    var ilIndex = reader.Read7BitEncodedIntPolyfill();
+                    return new JumpFalseIL(ilIndex);
+                }
+                case MarineILType.JumpFalseNoPopIL:
+                {
+                    var ilIndex = reader.Read7BitEncodedIntPolyfill();
+                    return new JumpFalseNoPopIL(ilIndex);
+                }
+                case MarineILType.JumpTrueNoPopIL:
+                {
+                    var ilIndex = reader.Read7BitEncodedIntPolyfill();
+                    return new JumpTrueNoPopIL(ilIndex);
+                }
+                case MarineILType.JumpIL:
+                {
+                    var ilIndex = reader.Read7BitEncodedIntPolyfill();
+                    return new JumpIL(ilIndex);
+                }
+                case MarineILType.BreakIL:
+                {
+                    var breakIndex = new BreakIndex
+                    {
+                        Index = reader.Read7BitEncodedIntPolyfill()
+                    };
+                    return new BreakIL(breakIndex);
+                }
+                // case MarineILType.StoreValueIL:
+                //     return new StoreValueIL();
+                case MarineILType.PushValueIL:
+                {
+                    var value = reader.ReadConstValue();
+                    return new PushValueIL(value);
+                }
+                case MarineILType.StoreIL:
+                {
+                    var stackIndex = reader.ReadStackIndex();
+                    return new StoreIL(stackIndex);
+                }
+                case MarineILType.LoadIL:
+                {
+                    var stackIndex = reader.ReadStackIndex();
+                    return new LoadIL(stackIndex);
+                }
+                case MarineILType.PopIL:
+                    return new PopIL();
+                case MarineILType.CreateArrayIL:
+                {
+                    var initSize = reader.Read7BitEncodedIntPolyfill();
+                    var size = reader.Read7BitEncodedIntPolyfill();
+                    return new CreateArrayIL(initSize, size);
+                }
+                case MarineILType.StackAllocIL:
+                {
+                    var size = reader.Read7BitEncodedIntPolyfill();
+                    return new StackAllocIL(size);
+                }
+                case MarineILType.YieldIL:
+                    return new YieldIL();
+                case MarineILType.PushYieldCurrentRegisterIL:
+                    return new PushYieldCurrentRegisterIL();
+                case MarineILType.PushDebugContextIL:
+                {
+                    var debugContext = reader.ReadDebugContext();
+                    return new PushDebugContextIL(debugContext);
+                }
+                case MarineILType.PopDebugContextIL:
+                    return new PopDebugContextIL();
+                default:
+                    throw new InvalidDataException();
             }
         }
     }

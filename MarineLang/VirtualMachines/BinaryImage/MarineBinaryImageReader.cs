@@ -1,13 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using MarineLang.Models;
 using MarineLang.VirtualMachines.MarineILs;
 
 namespace MarineLang.VirtualMachines.BinaryImage
 {
     public class MarineBinaryImageReader : BinaryReader
     {
+        public ImageOptimization Optimization { get; set; }
+
         public MarineBinaryImageReader(Stream input) : base(input)
         {
         }
@@ -23,14 +28,17 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         public ILGeneratedData ReadImage()
         {
-            if (!ReadHeader())
-                throw new InvalidDataException("Image header not match.");
+            if (!Optimization.HasFlag(ImageOptimization.NoHeaderAndMeta))
+            {
+                if (!ReadHeader())
+                    throw new InvalidDataException("Image header not match.");
 
-            var version = ReadUInt16();
-            ValidateVersion(version);
+                var version = ReadUInt16();
+                ValidateVersion(version);
 
-            var metadata = ReadMetadata();
-            ValidateMetadata(metadata);
+                var metadata = ReadMetadata();
+                ValidateMetadata(metadata);
+            }
 
             var namespaceTable = ReadNamespaceTable();
             var ilData = ReadMarineILs();
@@ -79,9 +87,60 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         protected virtual IReadOnlyList<IMarineIL> ReadMarineILs()
         {
-            List<IMarineIL> ILs = new List<IMarineIL>();
+            List<IMarineIL> iLs = new List<IMarineIL>();
 
-            return ILs;
+            var count = this.Read7BitEncodedIntPolyfill();
+            for (int i = 0; i < count; i++)
+            {
+                var il = this.ReadMarineIL();
+                iLs.Add(il);
+            }
+
+            return iLs;
+        }
+
+        public virtual Type ReadType()
+        {
+            return Type.GetType(ReadString());
+        }
+
+        public virtual MethodInfo ReadMethodInfo()
+        {
+            var type = ReadType();
+            var name = ReadString();
+
+            var count = this.Read7BitEncodedIntPolyfill();
+            var parameters = new Type[count];
+            for (int i = 0; i < count; i++)
+            {
+                parameters[i] = ReadType();
+            }
+
+            return type.GetMethod(name,
+                BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        }
+
+        public StackIndex ReadStackIndex()
+        {
+            var isAbsolute = ReadBoolean();
+            var index = this.Read7BitEncodedIntPolyfill();
+            return new StackIndex(index, isAbsolute);
+        }
+
+        public DebugContext ReadDebugContext()
+        {
+            var programUnitName = ReadString();
+            var funcName = ReadString();
+            var range = new RangePosition(ReadPosition(), ReadPosition());
+            return new DebugContext(programUnitName, funcName, range);
+        }
+
+        public Position ReadPosition()
+        {
+            var column = this.Read7BitEncodedIntPolyfill();
+            var line = this.Read7BitEncodedIntPolyfill();
+            var index = this.Read7BitEncodedIntPolyfill();
+            return new Position(index, line, column);
         }
     }
 }

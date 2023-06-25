@@ -6,7 +6,8 @@ namespace MarineLang.VirtualMachines
 {
     public class NamespaceTable
     {
-        private readonly Dictionary<string, NamespaceTable> childrenNamespaceTableDict = new Dictionary<string, NamespaceTable>();
+        private readonly Dictionary<string, NamespaceTable> childrenNamespaceTableDict =
+            new Dictionary<string, NamespaceTable>();
 
         private readonly Dictionary<string, FuncILIndex> funcILIndexDict = new Dictionary<string, FuncILIndex>();
 
@@ -82,7 +83,8 @@ namespace MarineLang.VirtualMachines
             return child.GetFuncILIndex(funcName);
         }
 
-        public bool TryGetFuncILIndex(IEnumerable<string> namespaceStrings, string funcName, out FuncILIndex funcILIndex)
+        public bool TryGetFuncILIndex(IEnumerable<string> namespaceStrings, string funcName,
+            out FuncILIndex funcILIndex)
         {
             var child = GetOrCreateChildNamespace(namespaceStrings.GetEnumerator());
             return child.TryGetFuncILIndex(funcName, out funcILIndex);
@@ -151,6 +153,20 @@ namespace MarineLang.VirtualMachines
                 {
                     namespaceTable.childrenNamespaceTableDict.Add(pair.Key, list[pair.Value]);
                 }
+            }
+
+            var root = list[0];
+            childrenNamespaceTableDict.Clear();
+            funcILIndexDict.Clear();
+
+            foreach (var namespaceTable in root.childrenNamespaceTableDict)
+            {
+                childrenNamespaceTableDict.Add(namespaceTable.Key, namespaceTable.Value);
+            }
+
+            foreach (var funcIlIndex in root.funcILIndexDict)
+            {
+                funcILIndexDict.Add(funcIlIndex.Key, funcIlIndex.Value);
             }
         }
 

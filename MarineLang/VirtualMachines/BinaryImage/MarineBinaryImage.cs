@@ -4,7 +4,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
 {
     public class MarineBinaryImage
     {
-        public const int IMAGE_VERSION = 1;
+        public const ushort IMAGE_VERSION = 1;
         public const string BUILD_MARINE_VERSION_KEY = "LanguageVersion";
         public const string BUILD_TIME_STAMP_KEY = "TimeStamp"; 
         

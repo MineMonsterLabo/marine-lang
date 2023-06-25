@@ -83,17 +83,12 @@ namespace MarineLang.VirtualMachines.BinaryImage
             this.Write7BitEncodedIntPolyfill(ilData.Count);
             foreach (var il in ilData)
             {
-                WriteMarineIL(il);
+                if (Optimization.HasFlag(ImageOptimization.NoDebug))
+                    if (il is PushDebugContextIL || il is PopDebugContextIL)
+                        continue;
+
+                this.WriteMarineIL(il);
             }
-        }
-
-        protected virtual void WriteMarineIL(IMarineIL il)
-        {
-            if (Optimization.HasFlag(ImageOptimization.NoDebug))
-                if (il is PushDebugContextIL || il is PopDebugContextIL)
-                    return;
-
-            il.WriteMarineIL(this);
         }
 
         public virtual void Write(Type type)
@@ -104,9 +99,10 @@ namespace MarineLang.VirtualMachines.BinaryImage
         public virtual void Write(MethodInfo methodInfo)
         {
             Write(methodInfo.DeclaringType);
+            Write(methodInfo.Name);
 
             var parameters = methodInfo.GetParameters();
-            Write7BitEncodedInt(parameters.Length);
+            this.Write7BitEncodedIntPolyfill(parameters.Length);
             foreach (var parameter in parameters)
             {
                 Write(parameter.ParameterType);
@@ -116,7 +112,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
         public void Write(StackIndex stackIndex)
         {
             Write(stackIndex.isAbsolute);
-            Write7BitEncodedInt(stackIndex.index);
+            this.Write7BitEncodedIntPolyfill(stackIndex.index);
         }
 
         public void Write(DebugContext debugContext)
@@ -129,9 +125,9 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         public void Write(Position position)
         {
-            Write7BitEncodedInt(position.column);
-            Write7BitEncodedInt(position.line);
-            Write7BitEncodedInt(position.index);
+            this.Write7BitEncodedIntPolyfill(position.column);
+            this.Write7BitEncodedIntPolyfill(position.line);
+            this.Write7BitEncodedIntPolyfill(position.index);
         }
     }
 }
