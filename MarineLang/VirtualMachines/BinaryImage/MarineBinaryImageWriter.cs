@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using MarineLang.Models;
@@ -80,7 +81,12 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         protected virtual void WriteMarineILs(IReadOnlyList<IMarineIL> ilData)
         {
-            this.Write7BitEncodedIntPolyfill(ilData.Count);
+            this.Write7BitEncodedIntPolyfill(ilData.Count(il =>
+            {
+                if (!Optimization.HasFlag(ImageOptimization.NoDebug)) return true;
+
+                return !(il is PushDebugContextIL) && !(il is PopDebugContextIL);
+            }));
             foreach (var il in ilData)
             {
                 if (Optimization.HasFlag(ImageOptimization.NoDebug))

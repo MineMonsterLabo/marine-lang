@@ -1,5 +1,8 @@
-﻿namespace MarineLang.VirtualMachines.BinaryImage
+﻿using System;
+
+namespace MarineLang.VirtualMachines.BinaryImage
 {
+    [Flags]
     public enum ImageOptimization
     {
         None,

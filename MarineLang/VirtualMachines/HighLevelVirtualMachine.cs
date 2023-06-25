@@ -95,14 +95,14 @@ namespace MarineLang.VirtualMachines
                     globalVariableDict.Keys.ToArray());
         }
 
-        public void LoadCompiledBinaryImage(byte[] image)
+        public void LoadCompiledBinaryImage(byte[] image, ImageOptimization optimization = ImageOptimization.None)
         {
-            ILGeneratedData = MarineBinaryImage.ReadImage(image);
+            ILGeneratedData = MarineBinaryImage.ReadImage(image, optimization);
         }
 
-        public byte[] CreateCompiledBinaryImage()
+        public byte[] CreateCompiledBinaryImage(ImageOptimization optimization = ImageOptimization.None)
         {
-            return MarineBinaryImage.WriteImage(ILGeneratedData);
+            return MarineBinaryImage.WriteImage(ILGeneratedData, optimization);
         }
 
         public void ClearProgram(uint programId)
