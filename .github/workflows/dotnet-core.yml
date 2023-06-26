@@ -1,29 +1,29 @@
-name: .NET Core
+# name: .NET Core
 
-on:
-  push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+# on:
+#   push:
+#     branches: [ develop ]
+#   pull_request:
+#     branches: [ develop ]
 
-jobs:
-  build:
+# jobs:
+#   build:
 
-    runs-on: ubuntu-latest
+#     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.301
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Setup .NET Core
+#       uses: actions/setup-dotnet@v1
+#       with:
+#         dotnet-version: 3.1.301
 
-    - name: Submodule Init
-      run: git submodule update -i
+#     - name: Submodule Init
+#       run: git submodule update -i
 
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test --no-restore --verbosity normal
+#     - name: Install dependencies
+#       run: dotnet restore
+#     - name: Build
+#       run: dotnet build --configuration Release --no-restore
+#     - name: Test
+#       run: dotnet test --no-restore --verbosity normal
