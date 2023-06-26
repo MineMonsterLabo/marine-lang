@@ -1146,7 +1146,7 @@ end", 1)]
         vm.ParseAndLoad(str);
         vm.Compile();
 
-        Assert.Throws<NotSupportedException>(() => vm.CreateCompiledBinaryImage);
+        Assert.Throws<NotSupportedException>(() => vm.CreateCompiledBinaryImage());
     }
 
     /// <summary>
