@@ -33,7 +33,11 @@ namespace MarineLang.VirtualMachines.BinaryImage
             };
             writer.WriteImage(data);
 
-            return stream.ToArray();
+            var image = stream.ToArray();
+            writer.Dispose();
+            stream.Dispose();
+
+            return image;
         }
     }
 }
