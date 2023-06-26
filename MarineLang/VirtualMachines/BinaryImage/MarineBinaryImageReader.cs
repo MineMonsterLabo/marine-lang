@@ -113,11 +113,32 @@ namespace MarineLang.VirtualMachines.BinaryImage
             var parameters = new Type[count];
             for (int i = 0; i < count; i++)
             {
-                parameters[i] = ReadType();
+                var isGenericParam = ReadBoolean();
+                if (!isGenericParam)
+                    parameters[i] = ReadType();
             }
 
             return type.GetMethod(name,
-                BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic |
+                BindingFlags.InvokeMethod, null, parameters, null);
+        }
+
+        public virtual ConstructorInfo ReadConstructorInfo()
+        {
+            var type = ReadType();
+
+            var count = this.Read7BitEncodedIntPolyfill();
+            var parameters = new Type[count];
+            for (int i = 0; i < count; i++)
+            {
+                var isGenericParam = ReadBoolean();
+                if (!isGenericParam)
+                    parameters[i] = ReadType();
+            }
+
+            return type.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic |
+                BindingFlags.CreateInstance, null, parameters, null);
         }
 
         public StackIndex ReadStackIndex()

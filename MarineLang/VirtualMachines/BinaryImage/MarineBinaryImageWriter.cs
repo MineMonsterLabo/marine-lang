@@ -111,7 +111,27 @@ namespace MarineLang.VirtualMachines.BinaryImage
             this.Write7BitEncodedIntPolyfill(parameters.Length);
             foreach (var parameter in parameters)
             {
-                Write(parameter.ParameterType);
+                Write(parameter.ParameterType.IsGenericParameter);
+                if (!parameter.ParameterType.IsGenericParameter)
+                    Write(parameter.ParameterType);
+                else
+                    throw new NotSupportedException();
+            }
+        }
+
+        public virtual void Write(ConstructorInfo constructorInfo)
+        {
+            Write(constructorInfo.DeclaringType);
+
+            var parameters = constructorInfo.GetParameters();
+            this.Write7BitEncodedIntPolyfill(parameters.Length);
+            foreach (var parameter in parameters)
+            {
+                Write(parameter.ParameterType.IsGenericParameter);
+                if (!parameter.ParameterType.IsGenericParameter)
+                    Write(parameter.ParameterType);
+                else
+                    throw new NotSupportedException();
             }
         }
 

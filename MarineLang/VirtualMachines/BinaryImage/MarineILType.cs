@@ -17,6 +17,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
         StaticCSharpFuncCallIL,
         InstanceCSharpFuncCallIL,
         MarineFuncCallIL,
+        StaticCSharpConstructorCallIL,
         MoveNextIL = 30,
         GetIterCurrentIL,
         InstanceCSharpIndexerLoadIL = 40,
@@ -104,10 +105,14 @@ namespace MarineLang.VirtualMachines.BinaryImage
                     writer.Write(instanceCSharpFuncCallIl.funcName);
 
                     var genericTypes = instanceCSharpFuncCallIl.genericTypes;
-                    writer.Write7BitEncodedIntPolyfill(genericTypes.Length);
-                    foreach (var genericType in genericTypes)
+                    writer.Write(genericTypes != null);
+                    if (genericTypes != null)
                     {
-                        writer.Write(genericType);
+                        writer.Write7BitEncodedIntPolyfill(genericTypes.Length);
+                        foreach (var genericType in genericTypes)
+                        {
+                            writer.Write(genericType);
+                        }
                     }
 
                     writer.Write7BitEncodedIntPolyfill(instanceCSharpFuncCallIl.argCount);
@@ -119,6 +124,20 @@ namespace MarineLang.VirtualMachines.BinaryImage
                     writer.Write(marineFuncCallIl.funcName);
                     writer.Write7BitEncodedIntPolyfill(marineFuncCallIl.funcILIndex.Index);
                     writer.Write7BitEncodedIntPolyfill(marineFuncCallIl.argCount);
+                    break;
+                case StaticCSharpConstructorCallIL constructorCallIl:
+                    writer.Write7BitEncodedIntPolyfill((int)MarineILType.StaticCSharpConstructorCallIL);
+                    writer.Write(constructorCallIl.type);
+                    writer.Write(constructorCallIl.funcName);
+
+                    var constructors = constructorCallIl.constructorInfos;
+                    writer.Write7BitEncodedIntPolyfill(constructors.Length);
+                    foreach (var constructor in constructors)
+                    {
+                        writer.Write(constructor);
+                    }
+
+                    writer.Write7BitEncodedIntPolyfill(constructorCallIl.argCount);
                     break;
                 case MoveNextIL _:
                     writer.Write7BitEncodedIntPolyfill((int)MarineILType.MoveNextIL);
@@ -272,11 +291,17 @@ namespace MarineLang.VirtualMachines.BinaryImage
                 case MarineILType.InstanceCSharpFuncCallIL:
                 {
                     var funcName = reader.ReadString();
-                    var typeCount = reader.Read7BitEncodedIntPolyfill();
-                    var types = new Type[typeCount];
-                    for (int i = 0; i < typeCount; i++)
+
+                    Type[] types = null;
+                    var hasGenericTypes = reader.ReadBoolean();
+                    if (hasGenericTypes)
                     {
-                        types[i] = reader.ReadType();
+                        var typeCount = reader.Read7BitEncodedIntPolyfill();
+                        types = new Type[typeCount];
+                        for (int i = 0; i < typeCount; i++)
+                        {
+                            types[i] = reader.ReadType();
+                        }
                     }
 
                     var argCount = reader.Read7BitEncodedIntPolyfill();
@@ -292,6 +317,21 @@ namespace MarineLang.VirtualMachines.BinaryImage
                     };
                     var argCount = reader.Read7BitEncodedIntPolyfill();
                     return new MarineFuncCallIL(funcName, ilIndex, argCount);
+                }
+                case MarineILType.StaticCSharpConstructorCallIL:
+                {
+                    var type = reader.ReadType();
+                    var funcName = reader.ReadString();
+
+                    var constructorCount = reader.Read7BitEncodedIntPolyfill();
+                    var constructors = new ConstructorInfo[constructorCount];
+                    for (int i = 0; i < constructorCount; i++)
+                    {
+                        constructors[i] = reader.ReadConstructorInfo();
+                    }
+
+                    var argCount = reader.Read7BitEncodedIntPolyfill();
+                    return new StaticCSharpConstructorCallIL(type, constructors, funcName, argCount);
                 }
                 case MarineILType.MoveNextIL:
                     return new MoveNextIL();
