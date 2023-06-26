@@ -16,7 +16,7 @@ namespace MarineLang.VirtualMachines.MarineILs
         }
     }
 
-    public struct GetIterCurrentL : IMarineIL
+    public struct GetIterCurrentIL : IMarineIL
     {
         public void Run(LowLevelVirtualMachine vm)
         {
@@ -26,7 +26,7 @@ namespace MarineLang.VirtualMachines.MarineILs
 
         public override string ToString()
         {
-            return typeof(GetIterCurrentL).Name;
+            return typeof(GetIterCurrentIL).Name;
         }
     }
 }

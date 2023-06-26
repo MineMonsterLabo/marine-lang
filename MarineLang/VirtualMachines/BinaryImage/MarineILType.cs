@@ -142,7 +142,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
                 case MoveNextIL _:
                     writer.Write7BitEncodedIntPolyfill((int)MarineILType.MoveNextIL);
                     break;
-                case GetIterCurrentL _:
+                case GetIterCurrentIL _:
                     writer.Write7BitEncodedIntPolyfill((int)MarineILType.GetIterCurrentIL);
                     break;
                 case InstanceCSharpIndexerLoadIL _:
@@ -336,7 +336,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
                 case MarineILType.MoveNextIL:
                     return new MoveNextIL();
                 case MarineILType.GetIterCurrentIL:
-                    return new GetIterCurrentL();
+                    return new GetIterCurrentIL();
                 case MarineILType.InstanceCSharpIndexerLoadIL:
                     return new InstanceCSharpIndexerLoadIL();
                 case MarineILType.InstanceCSharpIndexerStoreIL:
