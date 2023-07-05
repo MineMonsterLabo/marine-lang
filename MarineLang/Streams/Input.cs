@@ -1,22 +1,23 @@
 ﻿using MarineLang.Models;
 using MarineLang.ParserCore;
 using System;
+using System.Collections.Generic;
 
 namespace MarineLang.Inputs
 {
     public abstract class Input<T> : IInput<T>
     {
-        protected readonly T[] items;
+        protected readonly IReadOnlyList<T> items;
 
         public int Index { get; private set; }
-        public bool IsEnd => items.Length <= Index;
+        public bool IsEnd => items.Count <= Index;
 
         public T Current => items[Index];
-        public T LastCurrent => items[Math.Min(Index, items.Length - 1)];
+        public T LastCurrent => items[Math.Min(Index, items.Count - 1)];
 
         public abstract RangePosition RangePosition { get; }
 
-        public Input(T[] items, int index)
+        public Input(IReadOnlyList<T> items, int index)
         {
             this.items = items;
             Index = index;

@@ -96,6 +96,14 @@ namespace MarineLang.Models.Asts
         public abstract IEnumerable<IAst> GetChildrenWithThis();
     }
 
+    public static class ExprAstExtention
+    {
+        public static ExprAst AsExprAst(this ExprAst exprAst)
+        {
+            return exprAst;
+        }
+    }
+
     public class ErrorExprAst : ExprAst
     {
         public override RangePosition Range => new RangePosition();

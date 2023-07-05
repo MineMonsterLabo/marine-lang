@@ -141,9 +141,11 @@ namespace MarineLang.LexicalAnalysis
 
         static public Parse.Parser<Token> GetCharToken(char c, TokenType tokenType)
         {
+            var charParser = Parse.Char(c);
+
             return
                 from position in Parse.Positioned
-                from character in Parse.Char(c)
+                from character in charParser
                 select new Token(tokenType, character.ToString(), position.Start);
         }
 
@@ -154,9 +156,11 @@ namespace MarineLang.LexicalAnalysis
 
         static public Parse.Parser<Token> GetStringToken(string str, TokenType tokenType)
         {
+            var textParser = Parse.String(str);
+
             return
                 from position in Parse.Positioned
-                from text in Parse.String(str)
+                from text in textParser
                 select new Token(tokenType, text, position.Start);
         }
 
@@ -190,9 +194,10 @@ namespace MarineLang.LexicalAnalysis
 
         static public Parse.Parser<Token> GetIntLiteralToken()
         {
+            var textParser = Parse.OneMany(Parse.Verify(char.IsDigit)).Text();
             return
                 from position in Parse.Positioned
-                from text in Parse.OneMany(Parse.Verify(char.IsDigit)).Text()
+                from text in textParser
                 select new Token(TokenType.Int, text, position.Start);
         }
 

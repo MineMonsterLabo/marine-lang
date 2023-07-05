@@ -11,7 +11,7 @@ namespace MarineLang.LexicalAnalysis
         public IEnumerable<Token> GetTokens(string str)
         {
             IInput<char> input = CharInput.Create(str);
-            return LexicalParser.Main()(input).Result.Unwrap();
+            return LexicalParser.Main()(input).ToResult().Unwrap();
         }
     }
 }

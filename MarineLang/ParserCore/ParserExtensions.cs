@@ -3,6 +3,7 @@ using MarineLang.Models.Errors;
 using MineUtil;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MarineLang.ParserCore
 {
@@ -13,8 +14,8 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                if (result.Result.IsError)
-                    return result.ReplaceError<T>(func(result.Remain.RangePosition));
+                if (result.IsError)
+                    return result.MapErrorStack<T>(func(result.Remain.RangePosition));
                 return result;
             };
         }
@@ -40,7 +41,7 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                if (result.Result.IsError)
+                if (result.IsError)
                     return result.CastError<TT>();
                 return result.ChainRight(parser2(result.Remain));
             };
@@ -51,7 +52,7 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                if (result.Result.IsOk)
+                if (result.IsOk)
                 {
                     return result.ChainLeft(parser2(result.Remain));
                 }
@@ -64,7 +65,7 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                if (result.Result.IsError)
+                if (result.IsError)
                     return result.CastError<TT>();
                 return result.ChainRight(func(result.Result.RawValue, result.Remain)(result.Remain));
             };
@@ -83,33 +84,30 @@ namespace MarineLang.ParserCore
             return parser.Bind((t, _) => selector(t).Select(u => projector(t, u)));
         }
 
-        public static Parse<I>.Parser<TT> BindResult<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, IInput<I>, IResult<TT, ParseErrorInfo>> func)
+        public static Parse<I>.Parser<TT> BindResult<T, TT, I>
+            (this Parse<I>.Parser<T> parser, Func<T, IInput<I>, IResult<TT, IEnumerable<ParseErrorInfo>>> func)
         {
             return input =>
             {
                 var result = parser(input);
-                if (result.Result.IsError)
+                if (result.IsError)
                     return result.CastError<TT>();
-                return result.SetResult(func(result.Result.RawValue, result.Remain));
-            };
-        }
 
-        public static Parse<I>.Parser<TT> BindResult<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, IResult<TT, ParseErrorInfo>> func)
-        {
-            return BindResult(parser, (value, _) => func(value));
+                return result.Bind(v => ParseResult.FromResult(func(v, result.Remain), result.Remain));
+            };
         }
 
         public static Parse<I>.Parser<TT> Map<T, TT, I>(this Parse<I>.Parser<T> parser, Func<T, TT> func)
         {
-            return parser.BindResult(t => Result.Ok<TT, ParseErrorInfo>(func(t)));
+            return input => parser(input).Map(func);
         }
 
-        public static Parse<I>.Parser<T> ErrorRetry<T, I>(this Parse<I>.Parser<T> parser, Func<IParseResult<T, I>, T> func)
+        public static Parse<I>.Parser<T> ErrorRetry<T, I>(this Parse<I>.Parser<T> parser, Func<ParseResult<T, I>, T> func)
         {
             return input =>
             {
                 var result = parser(input);
-                if (result.Result.IsError)
+                if (result.IsError)
                     return ParseResult.NewOk(func(result), result.Remain);
                 return result;
             };
@@ -127,7 +125,7 @@ namespace MarineLang.ParserCore
                 {
                     var parseResult = parser(input);
 
-                    if (parseResult.Result.IsError)
+                    if (parseResult.IsError)
                         return parseResult.SetRemain(input);
 
                     return parseResult;
@@ -141,7 +139,7 @@ namespace MarineLang.ParserCore
                 {
                     var parseResult = parser(input);
 
-                    if (parseResult.Result.IsError)
+                    if (parseResult.IsError)
                         return parseResult.SetRemain(remain);
 
                     return parseResult;
@@ -158,7 +156,7 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var parseResult = parser(input);
-                if (parseResult.Result.IsError)
+                if (parseResult.IsError)
                 {
                     return ParseResult.NewOk(defaultValue, parseResult.Remain);
                 }
@@ -166,32 +164,35 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parse<I>.Parser<List<T>> Concat<T, I>(this IEnumerable<Parse<I>.Parser<T>> parsers)
+        public static Parse<I>.Parser<IEnumerable<T>> Concat<T, I>(this IEnumerable<Parse<I>.Parser<T>> parsers)
         {
             return input =>
             {
-                var list = new List<T>();
-                var parseResult = ParseResult.NewOk(default(T), input);
+                var parseResult = ParseResult.NewOk(Enumerable.Empty<T>(), input);
 
                 foreach (var parser in parsers)
                 {
-                    parseResult = parseResult.ChainRight(parser(parseResult.Remain));
-                    if (parseResult.Result.IsError)
+                    parseResult = parseResult.Append(parser(parseResult.Remain));
+                    if (parseResult.IsError)
                     {
-                        return parseResult.CastError<List<T>>();
+                        return parseResult;
                     }
-                    list.Add(parseResult.Result.Unwrap());
                 }
-                return parseResult.Ok(list);
+                return parseResult;
             };
         }
 
         public static Parse<I>.Parser<T> Where<T, I>(this Parse<I>.Parser<T> parser, Func<T, bool> predicate)
         {
+            return parser.WhereQuiet(predicate).NamedError(pos => new ParseErrorInfo("Where", pos));
+        }
+
+        public static Parse<I>.Parser<T> WhereQuiet<T, I>(this Parse<I>.Parser<T> parser, Func<T, bool> predicate)
+        {
             return parser.BindResult(
-                (t, input) => predicate(t) ?
-                    Result.Ok<T, ParseErrorInfo>(t) :
-                    Result.Error<T, ParseErrorInfo>(new ParseErrorInfo("Where", input.RangePosition))
+                (t, _) => predicate(t) ?
+                    Result.Ok<T, IEnumerable<ParseErrorInfo>>(t) :
+                    Result.Error<T, IEnumerable<ParseErrorInfo>>(Enumerable.Empty<ParseErrorInfo>())
             );
         }
 
@@ -205,7 +206,7 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                return result.Result.IsError ? result.Ok(value) : result;
+                return result.IsError ? result.Ok(value) : result;
             };
         }
 
@@ -214,15 +215,23 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                return result.Result.IsError ? result.SetRemain(swallowParser(result.Remain).Remain) : result;
+                return result.IsError ? result.SetRemain(swallowParser(result.Remain).Remain) : result;
             };
         }
 
-        public static Parse<I>.Parser<T> Debug<T, I>(this Parse<I>.Parser<T> parser)
+        public static Parse<I>.Parser<TT> UpCast<I, T, TT>(this Parse<I>.Parser<T> parser)
+            where T : TT
+        {
+            return parser.Map(t => (TT)t);
+        }
+
+        public static Parse<I>.Parser<T> DebugPrint<T, I>(this Parse<I>.Parser<T> parser,string tag)
         {
             return input =>
             {
                 var result = parser(input);
+                var nextToken = result.Remain.IsEnd ? "eof" : result.Remain.Current.ToString();
+                result.ToResult().DoOk(v => System.Diagnostics.Debug.Print($"[{tag}] value: [{v}], nextToken: [{nextToken}]"));
                 return result;
             };
         }
