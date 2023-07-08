@@ -1,5 +1,6 @@
 ﻿using MarineLang.Models;
 using MarineLang.ParserCore;
+using System.Collections.Generic;
 
 namespace MarineLang.Inputs
 {
@@ -7,12 +8,12 @@ namespace MarineLang.Inputs
     {
         public override RangePosition RangePosition => LastCurrent.rangePosition;
 
-        public static TokenInput Create(Token[] tokens)
+        public static TokenInput Create(IReadOnlyList<Token> tokens)
         {
             return new TokenInput(tokens);
         }
 
-        TokenInput(Token[] tokens, int index = 0) : base(tokens, index)
+        TokenInput(IReadOnlyList<Token> tokens, int index = 0) : base(tokens, index)
         {
         }
 

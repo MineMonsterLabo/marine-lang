@@ -12,12 +12,12 @@ namespace MarineLang.PresetMacroPlugins
 {
     public class ConstExprPlugin : IExprMacroPlugin
     {
-        public IResult<ExprAst, ParseErrorInfo> Replace(SyntaxParser marineParser, List<Token> tokens)
+        public IResult<ExprAst, IEnumerable<ParseErrorInfo>> Replace(SyntaxParser marineParser, List<Token> tokens)
         {
             var vm = new HighLevelVirtualMachine();
             return
-                marineParser.ParseExpr()(TokenInput.Create(tokens.ToArray()))
-                .Result.Select(exprAst =>
+                marineParser.ParseExpr()(TokenInput.Create(tokens))
+                .ToResult().Select(exprAst =>
                 {
                     var programAst = ProgramAst.Create(
                             new[]{
@@ -30,7 +30,7 @@ namespace MarineLang.PresetMacroPlugins
                         );
                     vm.LoadProgram(new MarineProgramUnit(programAst));
                     vm.Compile();
-                    return ValueAst.Create(vm.Run("main").Eval());
+                    return ValueAst.Create(vm.Run("main").Eval()).AsExprAst();
                 });
         }
     }
