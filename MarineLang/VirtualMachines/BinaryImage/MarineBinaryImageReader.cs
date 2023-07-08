@@ -88,13 +88,12 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         protected virtual IReadOnlyList<IMarineIL> ReadMarineILs()
         {
-            List<IMarineIL> iLs = new List<IMarineIL>();
-
             var count = this.Read7BitEncodedIntPolyfill();
+            IMarineIL[] iLs = new IMarineIL[count];
             for (int i = 0; i < count; i++)
             {
                 var il = this.ReadMarineIL();
-                iLs.Add(il);
+                iLs[i] = il;
             }
 
             return iLs;
