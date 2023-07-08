@@ -84,7 +84,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
         {
             if (Optimization.HasFlag(ImageOptimization.NoDebug))
             {
-                this.Write7BitEncodedIntPolyfill(ilData.Count(il => il.IsDebugIL()));
+                this.Write7BitEncodedIntPolyfill(ilData.Count(il => !il.IsDebugIL()));
             }
             else
             {
