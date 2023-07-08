@@ -81,17 +81,19 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         protected virtual void WriteMarineILs(IReadOnlyList<IMarineIL> ilData)
         {
-            this.Write7BitEncodedIntPolyfill(ilData.Count(il =>
+            if (Optimization.HasFlag(ImageOptimization.NoDebug))
             {
-                if (!Optimization.HasFlag(ImageOptimization.NoDebug)) return true;
-
-                return !(il is PushDebugContextIL) && !(il is PopDebugContextIL);
-            }));
+                this.Write7BitEncodedIntPolyfill(ilData.Count(il => il.IsDebugIL()));
+            }
+            else
+            {
+                this.Write7BitEncodedIntPolyfill(ilData.Count);
+            }
+            
             foreach (var il in ilData)
             {
-                if (Optimization.HasFlag(ImageOptimization.NoDebug))
-                    if (il is PushDebugContextIL || il is PopDebugContextIL)
-                        continue;
+                if (Optimization.HasFlag(ImageOptimization.NoDebug) && il.IsDebugIL())
+                    continue;
 
                 this.WriteMarineIL(il);
             }
