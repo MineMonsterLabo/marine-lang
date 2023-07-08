@@ -92,7 +92,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
             IMarineIL[] iLs = new IMarineIL[count];
             for (int i = 0; i < count; i++)
             {
-                var il = this.ReadMarineIL();
+                var il = ReadMarineIL();
                 iLs[i] = il;
             }
 
