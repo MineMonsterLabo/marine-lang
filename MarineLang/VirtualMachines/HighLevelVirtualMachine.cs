@@ -51,8 +51,7 @@ namespace MarineLang.VirtualMachines
             methodInfoDict.AddCsharpFunc(methodName ?? methodInfo.Name, methodInfo);
         }
 
-        public void GlobalFuncRegister(IEnumerable<string> namespaceStrings, MethodInfo methodInfo,
-            string methodName = null)
+        public void GlobalFuncRegister(IEnumerable<string> namespaceStrings, MethodInfo methodInfo, string methodName = null)
         {
             methodInfoDict.AddCsharpFunc(namespaceStrings, methodName ?? methodInfo.Name, methodInfo);
         }
