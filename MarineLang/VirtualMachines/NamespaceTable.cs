@@ -83,8 +83,7 @@ namespace MarineLang.VirtualMachines
             return child.GetFuncILIndex(funcName);
         }
 
-        public bool TryGetFuncILIndex(IEnumerable<string> namespaceStrings, string funcName,
-            out FuncILIndex funcILIndex)
+        public bool TryGetFuncILIndex(IEnumerable<string> namespaceStrings, string funcName, out FuncILIndex funcILIndex)
         {
             var child = GetOrCreateChildNamespace(namespaceStrings.GetEnumerator());
             return child.TryGetFuncILIndex(funcName, out funcILIndex);
