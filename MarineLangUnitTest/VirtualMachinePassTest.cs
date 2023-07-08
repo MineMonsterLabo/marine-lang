@@ -24,13 +24,13 @@ namespace MarineLangUnitTest
             RunImageReturnCheck(vm, expected);
         }
 
-        public void RunImageReturnCheck<RET>(HighLevelVirtualMachine vm, RET expected)
+        internal void RunImageReturnCheck<RET>(HighLevelVirtualMachine vm, RET expected)
         {
             var loadImageVmRet = RunImage(vm, "main");
             Assert.Equal(expected, loadImageVmRet.Value);
         }
 
-        public MarineValue RunImage(HighLevelVirtualMachine vm, string funcName, params object[] args)
+        internal MarineValue RunImage(HighLevelVirtualMachine vm, string funcName, params object[] args)
         {
             var image = vm.CreateCompiledBinaryImage();
             var loadImageVm = CreateVM();
@@ -38,7 +38,7 @@ namespace MarineLangUnitTest
             return loadImageVm.Run(funcName, args);
         }
 
-        public MarineValue RunImage(HighLevelVirtualMachine vm, string[] namespaces, string funcName, params object[] args)
+        internal MarineValue RunImage(HighLevelVirtualMachine vm, string[] namespaces, string funcName, params object[] args)
         {
             var image = vm.CreateCompiledBinaryImage();
             var loadImageVm = CreateVM();
@@ -46,7 +46,7 @@ namespace MarineLangUnitTest
             return loadImageVm.Run(namespaces, funcName, args);
         }
 
-        public MarineValue RunImage(HighLevelVirtualMachine vm, HighLevelVirtualMachine execVm, string funcName, params object[] args)
+        internal MarineValue RunImage(HighLevelVirtualMachine vm, HighLevelVirtualMachine execVm, string funcName, params object[] args)
         {
             var image = vm.CreateCompiledBinaryImage();
             execVm.LoadCompiledBinaryImage(image);
