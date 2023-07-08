@@ -43,12 +43,12 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         private void WriteHeader()
         {
-            Write(MarineBinaryImage.ImageHeader);
+            Write(MarineBinaryImageConstants.ImageHeader);
         }
 
         private void WriteVersion()
         {
-            Write(MarineBinaryImage.IMAGE_VERSION);
+            Write(MarineBinaryImageConstants.IMAGE_VERSION);
         }
 
         private void WriteMetadata()
@@ -57,8 +57,8 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
             var version =
                 $"{ThisAssembly.Git.SemVer.Major}.{ThisAssembly.Git.SemVer.Minor}.{ThisAssembly.Git.SemVer.Patch}";
-            metadata[MarineBinaryImage.BUILD_MARINE_VERSION_KEY] = version;
-            metadata[MarineBinaryImage.BUILD_TIME_STAMP_KEY] = DateTime.Now.Ticks.ToString();
+            metadata[MarineBinaryImageConstants.BUILD_MARINE_VERSION_KEY] = version;
+            metadata[MarineBinaryImageConstants.BUILD_TIME_STAMP_KEY] = DateTime.Now.Ticks.ToString();
 
             OverrideMetadata(metadata);
 

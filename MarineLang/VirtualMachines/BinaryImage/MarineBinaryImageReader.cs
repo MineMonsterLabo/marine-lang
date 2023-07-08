@@ -49,7 +49,7 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         private bool ReadHeader()
         {
-            var constantHeader = MarineBinaryImage.ImageHeader;
+            var constantHeader = MarineBinaryImageConstants.ImageHeader;
             var header = ReadBytes(constantHeader.Length);
             return header.SequenceEqual(constantHeader);
         }
