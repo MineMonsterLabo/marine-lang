@@ -39,7 +39,7 @@ namespace MarineLang.SyntaxAnalysis
         public SyntaxParseResult(ProgramAst programAst, IEnumerable<ParseErrorInfo> parseErrorInfos)
         {
             this.programAst = programAst;
-            this.parseErrorInfos = parseErrorInfos;
+            this.parseErrorInfos = parseErrorInfos ?? Enumerable.Empty<ParseErrorInfo>();
         }
     }
 }

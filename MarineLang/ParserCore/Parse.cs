@@ -9,223 +9,226 @@ namespace MarineLang.ParserCore
 {
     public static class Parse<I>
     {
-        public delegate IParseResult<T, I> Parser<out T>(IInput<I> input);
+        public delegate ParseResult<T, I> Parser<T>(IInput<I> input);
 
-        public static Parser<List<T>> Many<T>(Parser<T> parser)
+        public static Parser<ACC> FoldIf<T, ACC>
+            (IEnumerable<Parser<T>> parsers, ACC seed, Func<ParseResult<ACC, I>, Parser<T>, int, (ParseResult<ACC, I>, bool)> func)
         {
             return
                 input =>
                 {
-                    var list = new List<T>();
-                    var parseResult = ParseResult.NewOk(default(T), input);
+                    var index = 0;
 
-                    while (parseResult.Remain.IsEnd == false)
+                    (ParseResult<ACC, I>, bool) Func(ParseResult<ACC, I> parseResult, Parser<T> parser)
                     {
-                        var parseResult2 = parseResult.ChainRight(parser(parseResult.Remain));
+                        var (acc, continueFlag) = func(parseResult, parser, index);
+                        index++;
+                        return (acc, continueFlag && acc.IsOk);
+                    };
 
-                        if (parseResult2.Result.IsError)
-                        {
-                            parseResult = parseResult.SetRemain(parseResult2.Remain);
-                            break;
-                        }
-                        parseResult = parseResult2;
-                        list.Add(parseResult.Result.Unwrap());
-                    }
-                    return parseResult.Ok(list);
+                    return parsers.AggregateIf(ParseResult.NewOk(seed, input), Func);
                 };
         }
 
-        public static Parser<List<T>> ManyUntilEnd<T>(Parser<T> parser)
-        {
-            return
-                input =>
-                {
-                    var list = new List<T>();
-                    var parseResult = ParseResult.NewOk(default(T), input);
+        public static Parser<ACC> FoldIf<T, ACC>
+           (IEnumerable<Parser<T>> parsers, ACC seed, Func<ParseResult<ACC, I>, Parser<T>, (ParseResult<ACC, I>, bool)> func)
+           => FoldIf(parsers, seed, (acc, x, _) => func(acc, x));
 
-                    while (parseResult.Remain.IsEnd == false)
-                    {
-                        parseResult = parseResult.ChainRight(parser(parseResult.Remain));
-                        if (parseResult.Result.IsError)
-                            return parseResult.CastError<List<T>>();
-                        list.Add(parseResult.Result.Unwrap());
-                    }
-                    return parseResult.Ok(list);
-                };
+        public static Parser<ACC> FoldIfCheckEnd<T, ACC>
+           (IEnumerable<Parser<T>> parsers, ACC seed, Func<ParseResult<ACC, I>, Parser<T>, int, (ParseResult<ACC, I>, bool)> func)
+        {
+            (ParseResult<ACC, I>, bool) Func(ParseResult<ACC, I> parseResult, Parser<T> parser, int index)
+            {
+                return parseResult.Remain.IsEnd ? (parseResult, false) : func(parseResult, parser, index);
+            };
+
+            return FoldIf(parsers, seed, Func);
         }
 
-        public static Parser<List<T>> ManyUntilEndStackError<T>(Parser<T> parser)
+        public static Parser<ACC> FoldIfCheckEnd<T, ACC>
+           (IEnumerable<Parser<T>> parsers, ACC seed, Func<ParseResult<ACC, I>, Parser<T>, (ParseResult<ACC, I>, bool)> func)
+            => FoldIfCheckEnd(parsers, seed, (acc, x, _) => func(acc, x));
+
+        public static Parser<IEnumerable<T>> Many<T>(Parser<T> parser)
         {
-            return
-                input =>
+            (ParseResult<IEnumerable<T>, I>, bool) Func(ParseResult<IEnumerable<T>, I> parseResult, Parser<T> _)
+            {
+                var parseResult2 = parser(parseResult.Remain);
+
+                if (parseResult2.IsError)
                 {
-                    var list = new List<T>();
-                    var parseResult = ParseResult.NewOk(default(T), input);
+                    return (parseResult.SetRemain(parseResult2.Remain), false);
+                }
+                return (parseResult.Append(parseResult2), true);
+            };
 
-                    while (parseResult.Remain.IsEnd == false)
-                    {
-                        var parseResult2 = parseResult.ChainRight(parser(parseResult.Remain));
-
-                        if (parseResult2.Result.IsError && parseResult.Remain.Index == parseResult2.Remain.Index)
-                        {
-                            parseResult = parseResult2.Ok(parseResult.Result.RawValue);
-                            break;
-                        }
-
-                        if (parseResult2.Result.IsError)
-                        {
-                            parseResult = parseResult2.Ok(parseResult.Result.RawValue);
-                            continue;
-                        }
-
-                        parseResult = parseResult2;
-                        list.Add(parseResult.Result.Unwrap());
-                    }
-                    return parseResult.Ok(list);
-                };
+            return FoldIfCheckEnd(parser.Infinity(), Enumerable.Empty<T>(), Func);
         }
 
-        public static Parser<List<T>> OneMany<T>(Parser<T> parser)
+        public static Parser<IEnumerable<T>> ManyUntilEnd<T>(Parser<T> parser)
         {
+            return FoldIfCheckEnd(parser.Infinity(), Enumerable.Empty<T>(),
+                (parseResult, _) => (parseResult.Append(parser(parseResult.Remain)), true));
+        }
+
+        public static Parser<IEnumerable<T>> ManyUntilEndStackError<T>(Parser<T> parser)
+        {
+            return FoldIfCheckEnd(parser.Infinity(), Enumerable.Empty<T>(),
+                (parseResult, parser2) =>
+                {
+                    var parseResult2 = parseResult.Append(parser2(parseResult.Remain));
+
+                    if (parseResult2.IsError && parseResult.Remain.Index == parseResult2.Remain.Index)
+                    {
+                        return (parseResult2.Ok(parseResult.Result.RawValue), false);
+                    }
+
+                    if (parseResult2.IsError)
+                    {
+                        return (parseResult2.Ok(parseResult.Result.RawValue), true);
+                    }
+
+                    return (parseResult2, true);
+                });
+        }
+
+        public static Parser<IEnumerable<T>> OneMany<T>(Parser<T> parser)
+        {
+            var manyParser = Many(parser);
+
             return
                 input =>
                 {
-                    var result = Many(parser)(input);
-                    if (result.Result.IsError == false && result.Result.RawValue.Count == 0)
-                        return result.Error<List<T>>(new ParseErrorInfo("OneMany", input.RangePosition));
+                    var result = manyParser(input);
+                    if (result.IsError == false && !result.Result.RawValue.Any())
+                        return result.Error<IEnumerable<T>>(new ParseErrorInfo("OneMany", input.RangePosition));
                     return result;
                 };
         }
 
-        public static Parser<object[]> Parsers(params Parser<object>[] parsers)
+        public static Parser<object[]> ParsersArray(params Parser<object>[] parsers)
         {
-            var values = new object[parsers.Length];
+            return Parsers(parsers.AsEnumerable()).Map(objects => objects.ToArray());
+        }
 
-            return
-                input =>
+        public static Parser<IEnumerable<object>> Parsers(IEnumerable<Parser<object>> parsers)
+        {
+            return Positioned.Bind(pos =>
+            {
+                (ParseResult<IEnumerable<object>, I>, bool) Func(ParseResult<IEnumerable<object>, I> parseResult, Parser<object> parser)
                 {
-                    var parseResult = ParseResult.NewOk(default(object), input);
-
-                    for (var i = 0; i < parsers.Length; i++)
-                    {
-                        parseResult = parseResult.ChainRight(parsers[i](parseResult.Remain));
-                        if (parseResult.Result.IsError)
-                            return parseResult.CastError<object[]>();
-                        if (parseResult.Remain.IsEnd && i + 1 != parsers.Length)
-                            return parseResult.Error<object[]>(new ParseErrorInfo("Parsers", input.RangePosition));
-                        values[i] = parseResult.Result.Unwrap();
-                    }
-                    return parseResult.Ok(values);
+                    if (parseResult.Remain.IsEnd)
+                        return (parseResult.Error(new ParseErrorInfo("Parsers", pos)), false);
+                    return (parseResult.Append(parser(parseResult.Remain)), true);
                 };
+
+                return FoldIf(parsers, Enumerable.Empty<object>(), Func);
+            });
         }
 
         public static Parser<(T1, T2)> Tuple<T1, T2>(Parser<T1> parser1, Parser<T2> parser2)
         {
-            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>)
+            return ParsersArray(parser1.UpCast<I, T1, object>(), parser2.UpCast<I, T2, object>())
                 .Map(objects => ((T1)objects[0], (T2)objects[1]));
         }
 
         public static Parser<(T1, T2, T3)> Tuple<T1, T2, T3>(Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3)
         {
-            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>)
+            return ParsersArray(parser1.UpCast<I, T1, object>(), parser2.UpCast<I, T2, object>(), parser3.UpCast<I, T3, object>())
                 .Map(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2]));
         }
 
         public static Parser<(T1, T2, T3, T4)> Tuple<T1, T2, T3, T4>(Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4)
         {
-            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>)
+            return
+                ParsersArray(
+                    parser1.UpCast<I, T1, object>(),
+                    parser2.UpCast<I, T2, object>(),
+                    parser3.UpCast<I, T3, object>(),
+                    parser4.UpCast<I, T4, object>()
+                )
                 .Map(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3]));
         }
 
         public static Parser<(T1, T2, T3, T4, T5)> Tuple<T1, T2, T3, T4, T5>
             (Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4, Parser<T5> parser5)
         {
-            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>, parser5 as Parser<object>)
+            return
+                ParsersArray(
+                    parser1.UpCast<I, T1, object>(),
+                    parser2.UpCast<I, T2, object>(),
+                    parser3.UpCast<I, T3, object>(),
+                    parser4.UpCast<I, T4, object>(),
+                    parser5.UpCast<I, T5, object>()
+                )
                 .Map(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4]));
         }
 
         public static Parser<(T1, T2, T3, T4, T5, T6)> Tuple<T1, T2, T3, T4, T5, T6>
             (Parser<T1> parser1, Parser<T2> parser2, Parser<T3> parser3, Parser<T4> parser4, Parser<T5> parser5, Parser<T6> parser6)
         {
-            return Parsers(parser1 as Parser<object>, parser2 as Parser<object>, parser3 as Parser<object>, parser4 as Parser<object>, parser5 as Parser<object>, parser6 as Parser<object>)
+            return
+                ParsersArray(
+                    parser1.UpCast<I, T1, object>(),
+                    parser2.UpCast<I, T2, object>(),
+                    parser3.UpCast<I, T3, object>(),
+                    parser4.UpCast<I, T4, object>(),
+                    parser5.UpCast<I, T5, object>(),
+                    parser6.UpCast<I, T6, object>()
+                )
                 .Map(objects => ((T1)objects[0], (T2)objects[1], (T3)objects[2], (T4)objects[3], (T5)objects[4], (T6)objects[5]));
         }
 
         public static Parser<T> Or<T>(params Parser<T>[] parsers)
         {
-            return
-                input =>
-                {
-                    IParseResult<T, I> lastParseResult = null;
-                    foreach (var parser in parsers)
-                    {
-                        lastParseResult = parser(input);
-                        input = lastParseResult.Remain;
-                        if (lastParseResult.Result.IsError == false)
-                            return lastParseResult;
-                    }
-                    return lastParseResult;
-                };
+            (ParseResult<IOption<T>, I>, bool) Func(ParseResult<IOption<T>, I> parseResult, Parser<T> parser)
+            {
+                var parseResult2 = parser(parseResult.Remain);
+                return parseResult2.IsError ? (parseResult2.Ok(Option.None<T>()), true) : (parseResult2.Map(Option.Some), false);
+            };
+
+            return FoldIf(parsers, Option.None<T>(), Func).WhereQuiet(option => option.IsSome).Map(option => option.RawValue);
         }
 
         //入力を消費するエラーが発生したら、即座に終了するOr
         public static Parser<T> OrConsumedError<T>(params Parser<T>[] parsers)
         {
-            return
-                input =>
-                {
-                    IParseResult<T, I> lastParseResult = null;
-                    foreach (var parser in parsers)
-                    {
-                        lastParseResult = parser(input);
-                        if (lastParseResult.Remain.Index != input.Index && lastParseResult.Result.IsError)
-                            return lastParseResult;
-                        input = lastParseResult.Remain;
-                        if (lastParseResult.Result.IsOk)
-                            return lastParseResult;
-                    }
-                    return lastParseResult;
-                };
+            (ParseResult<IOption<T>, I>, bool) Func(ParseResult<IOption<T>, I> parseResult, Parser<T> parser)
+            {
+                var parseResult2 = parser(parseResult.Remain);
+                if (parseResult2.Remain.Index != parseResult.Remain.Index && parseResult2.IsError)
+                    return (parseResult2.Ok(Option.None<T>()), false);
+                return parseResult2.IsError ? (parseResult2.Ok(Option.None<T>()), true) : (parseResult2.Map(Option.Some), false);
+            };
+
+            return FoldIf(parsers, Option.None<T>(), Func).WhereQuiet(option => option.IsSome).Map(option => option.RawValue);
         }
 
-        public static Parser<T[]> Separated<T, TT>(Parser<T> parser, Parser<TT> separateParser)
+        public static Parser<IEnumerable<T>> Separated<T, TT>(Parser<T> parser, Parser<TT> separateParser)
         {
-            return input =>
+            (ParseResult<IEnumerable<T>, I>, bool) Func(ParseResult<IEnumerable<T>, I> parseResult, Parser<T> _, int index)
             {
-                var isFirst = true;
-                var list = new List<T>();
+                var parseResult2 = parseResult.ChainLeft(separateParser(parseResult.Remain));
 
-                var parseResult = ParseResult.NewOk(default(T), input);
-
-                while (parseResult.Remain.IsEnd == false)
+                if (index != 0 && parseResult2.IsError)
                 {
-                    var parseResult2 = parseResult.ChainLeft(separateParser(parseResult.Remain));
-
-                    if (isFirst == false && parseResult2.Result.IsError)
-                    {
-                        parseResult = parseResult.SetRemain(parseResult2.Remain);
-                        break;
-                    }
-
-                    parseResult2 = parseResult.ChainRight(parser(parseResult2.Remain));
-
-                    if (parseResult2.Result.IsError && isFirst == false)
-                        return parseResult2.CastError<T[]>();
-
-                    isFirst = false;
-
-                    if (parseResult2.Result.IsError)
-                    {
-                        parseResult = parseResult.SetRemain(parseResult2.Remain);
-                        break;
-                    }
-
-                    parseResult = parseResult2;
-
-                    list.Add(parseResult.Result.Unwrap());
+                    return (parseResult.SetRemain(parseResult2.Remain), false);
                 }
-                return parseResult.Ok(list.ToArray());
+
+                parseResult2 = parseResult.Append(parser(parseResult2.Remain));
+
+                if (parseResult2.IsError && index != 0)
+                    return (parseResult2, false);
+
+                if (parseResult2.IsError)
+                {
+                    return (parseResult.SetRemain(parseResult2.Remain), false);
+                }
+
+                return (parseResult2, true);
             };
+
+            return FoldIfCheckEnd(parser.Infinity(), Enumerable.Empty<T>(), Func);
         }
 
         public static Parser<I> Verify(Func<I, bool> test)
@@ -270,73 +273,49 @@ namespace MarineLang.ParserCore
             };
         }
 
-        public static Parser<List<T>> Until<T, TT>(Parser<T> parser, Parser<TT> until)
+        public static Parser<IEnumerable<T>> Until<T, TT>(Parser<T> parser, Parser<TT> until)
         {
-            return input =>
+            (ParseResult<IEnumerable<T>, I>, bool) Func(ParseResult<IEnumerable<T>, I> parseResult, Parser<T> _)
             {
-                var list = new List<T>();
-                var parseResult = ParseResult.NewOk(default(T), input);
-
-                while (parseResult.Remain.IsEnd == false)
+                var untilParseResult = parseResult.ChainLeft(until(parseResult.Remain));
+                if (untilParseResult.IsOk)
                 {
-                    var untilParseResult = parseResult.ChainLeft(until(parseResult.Remain));
-                    if (untilParseResult.Result.IsOk)
-                    {
-                        parseResult = untilParseResult;
-                        break;
-                    }
-
-                    parseResult = parseResult.SetRemain(untilParseResult.Remain);
-
-                    parseResult = parseResult.ChainRight(parser(parseResult.Remain));
-
-                    if (parseResult.Result.IsError)
-                        return parseResult.CastError<List<T>>();
-
-                    list.Add(parseResult.Result.Unwrap());
+                    return (untilParseResult, false);
                 }
-                return parseResult.Ok(list);
+
+                parseResult = parseResult
+                    .SetRemain(untilParseResult.Remain)
+                    .Append(parser(parseResult.Remain));
+
+                return (parseResult, parseResult.IsOk);
             };
+
+            return FoldIfCheckEnd(parser.Infinity(), Enumerable.Empty<T>(), Func);
         }
 
-        public static Parser<List<T>> UntilStackError<T, TT>(Parser<T> parser, Parser<TT> until)
+        public static Parser<IEnumerable<T>> UntilStackError<T, TT>(Parser<T> parser, Parser<TT> until)
         {
-            return input =>
+            (ParseResult<IEnumerable<T>, I>, bool) Func(ParseResult<IEnumerable<T>, I> parseResult, Parser<T> _)
             {
-                var list = new List<T>();
-                var parseResult = ParseResult.NewOk(default(T), input);
-
-                while (parseResult.Remain.IsEnd == false)
+                var untilParseResult = parseResult.ChainLeft(until(parseResult.Remain));
+                if (untilParseResult.IsOk)
                 {
-                    var untilParseResult = parseResult.ChainLeft(until(parseResult.Remain));
-                    if (untilParseResult.Result.IsOk)
-                    {
-                        parseResult = untilParseResult;
-                        break;
-                    }
-
-                    parseResult = parseResult.SetRemain(untilParseResult.Remain);
-
-                    var parseResult2 = parseResult.ChainRight(parser(parseResult.Remain));
-
-                    if (parseResult2.Result.IsError && parseResult.Remain.Index == parseResult2.Remain.Index)
-                    {
-                        parseResult = parseResult2.Ok(parseResult.Result.RawValue);
-                        break;
-                    }
-
-                    if (parseResult2.Result.IsError)
-                    {
-                        parseResult = parseResult2.Ok(parseResult.Result.RawValue);
-                        continue;
-                    }
-
-                    parseResult = parseResult2;
-
-                    list.Add(parseResult.Result.Unwrap());
+                    return (untilParseResult, false);
                 }
-                return parseResult.Ok(list);
+
+                parseResult = parseResult.SetRemain(untilParseResult.Remain);
+                var parseResult2 = parser(parseResult.Remain);
+
+                if (parseResult2.IsError)
+                {
+                    var isContinue = parseResult.Remain.Index != parseResult2.Remain.Index;
+                    return (parseResult.ChainRight(parseResult2).Ok(parseResult.Result.RawValue), isContinue);
+                }
+
+                return (parseResult.Append(parseResult2), true);
             };
+
+            return FoldIfCheckEnd(parser.Infinity(), Enumerable.Empty<T>(), Func);
         }
 
         public static readonly Parser<Unit> End =
@@ -350,7 +329,7 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = except(input);
-                if (result.Result.IsOk)
+                if (result.IsOk)
                     return result.Error<Unit>(new ParseErrorInfo("Except", input.RangePosition));
                 return ParseResult.NewOk(Unit.Value, result.Remain);
             };
@@ -366,7 +345,7 @@ namespace MarineLang.ParserCore
             return input =>
             {
                 var result = parser(input);
-                if (result.Result.IsOk)
+                if (result.IsOk)
                     return ParseResult.NewOk(Option.Some(result.Result.RawValue), result.Remain);
                 return ParseResult.NewOk(Option.None<T>(), input);
             };
