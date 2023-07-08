@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using MarineLang.Models.Errors;
@@ -19,6 +20,37 @@ namespace MarineLangUnitTest
             var ret = vm.Run<RET>("main");
 
             Assert.Equal(expected, ret.Value);
+            
+            RunImageReturnCheck(vm, expected);
+        }
+
+        public void RunImageReturnCheck<RET>(HighLevelVirtualMachine vm, RET expected)
+        {
+            var loadImageVmRet = RunImage(vm, "main");
+            Assert.Equal(expected, loadImageVmRet.Value);
+        }
+
+        public MarineValue RunImage(HighLevelVirtualMachine vm, string funcName, params object[] args)
+        {
+            var image = vm.CreateCompiledBinaryImage();
+            var loadImageVm = CreateVM();
+            loadImageVm.LoadCompiledBinaryImage(image);
+            return loadImageVm.Run(funcName, args);
+        }
+
+        public MarineValue RunImage(HighLevelVirtualMachine vm, string[] namespaces, string funcName, params object[] args)
+        {
+            var image = vm.CreateCompiledBinaryImage();
+            var loadImageVm = CreateVM();
+            loadImageVm.LoadCompiledBinaryImage(image);
+            return loadImageVm.Run(namespaces, funcName, args);
+        }
+
+        public MarineValue RunImage(HighLevelVirtualMachine vm, HighLevelVirtualMachine execVm, string funcName, params object[] args)
+        {
+            var image = vm.CreateCompiledBinaryImage();
+            execVm.LoadCompiledBinaryImage(image);
+            return execVm.Run(funcName, args);
         }
 
         [Theory]
@@ -145,7 +177,11 @@ fun f() let a=3 ret a end
 
             var ret = vm.Run<int>("main", 12, 8);
 
-            Assert.Equal(20, ret.Value);
+            var expected = 20;
+            Assert.Equal(expected, ret.Value);
+            
+            var imageValue = RunImage(vm, "main", new object[]{ 12, 8 });
+            Assert.Equal(expected, imageValue.Value);
         }
 
         [Theory]
@@ -456,6 +492,9 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).Value.invoke([y]).Va
             var value = ret.Eval();
 
             Assert.Equal(expected, value);
+            
+            var imageValue = RunImage(vm, "main");
+            Assert.Equal(expected, imageValue.Eval());
         }
 
         [Fact]
@@ -479,7 +518,10 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).Value.invoke([y]).Va
 
             Assert.True(ret.IsCoroutine);
 
-            Assert.Equal(new object[] { null, 9, 'c', 123}, ret.Coroutine);
+            var expected = new object[] { null, 9, 'c', 123 };
+            Assert.Equal(expected, ret.Coroutine);
+            
+            var imageValue = RunImage(vm, "main");
         }
 
         [Theory]
@@ -498,6 +540,9 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).Value.invoke([y]).Va
             var value = ret.Eval();
 
             Assert.Equal(expected, value);
+            
+            var imageValue = RunImage(vm, "main");
+            Assert.Equal(expected, imageValue.Eval());
         }
 
         [Fact]
@@ -520,7 +565,11 @@ fun main()ret{|f|ret{|x|ret f.invoke([{|y|ret x.invoke([x]).Value.invoke([y]).Va
 
             Assert.True(ret.IsCoroutine);
 
-            Assert.Equal(new object[] { 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6}, ret.Coroutine);
+            var expected = new object[] { 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6 };
+            Assert.Equal(expected, ret.Coroutine);
+
+            var imageValue = RunImage(vm, "main");
+            Assert.Equal(expected, imageValue.Coroutine);
         }
 
         [Theory]
@@ -745,6 +794,8 @@ end", 1)]
             Assert.NotNull(vm);
             var ret = vm.Run<Dictionary<string, object>>("main").Value;
             Assert.Empty(ret);
+            
+            RunImageReturnCheck(vm, new Dictionary<string, object>());
         }
 
         [Fact]
@@ -757,6 +808,12 @@ end", 1)]
             Assert.Equal(33, ret["a"]);
             Assert.True(ret.ContainsKey("b"));
             Assert.Equal(true, ret["b"]);
+
+            var imageValue = (Dictionary<string, object>)RunImage(vm, "main").Value;
+            Assert.True(imageValue.ContainsKey("a"));
+            Assert.Equal(33, imageValue["a"]);
+            Assert.True(imageValue.ContainsKey("b"));
+            Assert.Equal(true, imageValue["b"]);
         }
 
         [Theory]
@@ -779,6 +836,9 @@ end", 1)]
 
             Assert.Equal(5, vm.Run<int>("hoge").Eval());
             Assert.Equal(3, vm.Run<int>("fuga").Eval());
+            
+            Assert.Equal(5, RunImage(vm, "hoge").Eval());
+            Assert.Equal(3, RunImage(vm, "fuga").Eval());
 
             vm.ClearAllPrograms();
 
@@ -797,6 +857,10 @@ end", 1)]
             Assert.NotNull(programUnit);
             Assert.Equal(programUnit.NamespaceStrings, removeNamespace);
 
+            Assert.Equal(9, RunImage(vm, "hoge").Eval());
+            Assert.Equal(30, RunImage(vm, removeNamespace, "fuga").Eval());
+            Assert.Equal(1, RunImage(vm, "piyo").Eval());
+            Assert.Equal(100, RunImage(vm, removeNamespace, "test").Eval());
 
             vm.ClearProgram(removeProgramId);
             vm.Compile();
@@ -830,6 +894,11 @@ end", 1)]
             Assert.Equal(2525, vm.Run<int>("bbb").Eval());
             Assert.Equal(88, vm.Run<int>(new[] { "hoge" }, "aaa").Eval());
             Assert.Equal(100, vm.Run<int>(new[] { "hoge", "fuga" }, "aaa").Eval());
+            
+            Assert.Equal(25, RunImage(vm, "aaa").Eval());
+            Assert.Equal(2525, RunImage(vm, "bbb").Eval());
+            Assert.Equal(88, RunImage(vm,new[] { "hoge" }, "aaa").Eval());
+            Assert.Equal(100, RunImage(vm,new[] { "hoge", "fuga" }, "aaa").Eval());
         }
 
         [Fact]
@@ -842,6 +911,8 @@ end", 1)]
             vm.Compile();
 
             Assert.Equal(188, vm.Run<int>("aaa").Eval());
+            
+            Assert.Equal(188, RunImage(vm, "aaa").Eval());
         }
 
         [Fact]
@@ -854,6 +925,8 @@ end", 1)]
             vm.Compile();
 
             Assert.Equal(188, vm.Run<int>("aaa").Eval());
+            
+            Assert.Equal(188, RunImage(vm, "aaa").Eval());
         }
 
         [Fact]
@@ -865,6 +938,8 @@ end", 1)]
             vm.Compile();
 
             Assert.Equal(16, vm.Run<int>(new[] { "foobar" }, "bbb").Eval());
+            
+            Assert.Equal(16, RunImage(vm, new[] { "foobar" }, "bbb").Eval());
         }
 
         [Fact]
@@ -877,6 +952,8 @@ end", 1)]
             vm.Compile();
 
             Assert.Equal(18, vm.Run<int>("bbb").Eval());
+            
+            Assert.Equal(18, RunImage(vm, "bbb").Eval());
         }
 
         [Fact]
@@ -889,6 +966,8 @@ end", 1)]
             vm.Compile();
 
             Assert.Equal(555, vm.Run<int>(new[] { "foobar" }, "bbb").Eval());
+            
+            Assert.Equal(555, RunImage(vm, new[] { "foobar" }, "bbb").Eval());
         }
 
         [Fact]
@@ -902,6 +981,8 @@ end", 1)]
             vm.Compile();
 
             Assert.Equal(555, vm.Run<int>(new[] { "foobar" }, "main").Eval());
+            
+            Assert.Equal(555, RunImage(vm, new[] { "foobar" }, "main").Eval());
         }
 
         [Fact]
@@ -913,6 +994,8 @@ end", 1)]
             vm.Compile();
 
             Assert.Equal(123, vm.Run<int>(new[] { "foobar" }, "main").Eval());
+            
+            Assert.Equal(123, RunImage(vm, new[] { "foobar" }, "main").Eval());
         }
 
         public static int Ret10()
@@ -938,6 +1021,9 @@ end", 1)]
 
             Assert.Equal(123+10, vm.Run<int>(new[] { "foobar" }, "main1").Eval());
             Assert.Equal(123, vm.Run<int>(new[] { "foobar" }, "main2").Eval());
+
+            Assert.Equal(123+10, RunImage(vm, new[] { "foobar" }, "main1").Eval());
+            Assert.Equal(123, RunImage(vm, new[] { "foobar" }, "main2").Eval());
         }
 
         [Theory]
@@ -974,6 +1060,11 @@ end", 1)]
             var value = vm.Run("main", logger).Eval();
             Assert.Equal(log, logger.Log);
             Assert.Equal(expect, value);
+
+            var imageLogger = new SequenceLogger();
+            var imageValue = RunImage(vm, "main", imageLogger).Eval();
+            Assert.Equal(log, imageLogger.Log);
+            Assert.Equal(expect, imageValue);
         }
 
         /// <summary>
@@ -981,11 +1072,11 @@ end", 1)]
         /// </summary>
         [Theory]
         [InlineData("fun main() ret generic.id(555) end", 555)]
-        [InlineData("fun main() ret Generic.id_static(555) end", 555)]
+        [InlineData("fun main() ret Generic.id_static(555) end", 555, true)]
         [InlineData("fun main() ret generic.test(55.3,23.3) end", "0 Generic Single:Single")]
         [InlineData("fun main() ret generic.test(55,23.3) end", "1 Generic Int32:Single")]
         [InlineData("fun main() ret generic.test(55,23) end", "2 Generic Int32:Int32")]
-        public void GenericFuncCallTest1<T>(string str,T expect)
+        public void GenericFuncCallTest1<T>(string str, T expect, bool isAotCheck = false)
         {
             var vm = CreateVM();
             vm.StaticTypeRegister<Generic>();
@@ -993,6 +1084,14 @@ end", 1)]
             vm.ParseAndLoad(str);
             vm.Compile();
             Assert.Equal(expect, vm.Run("main").Eval());
+
+            var imageVm = CreateVM();
+            imageVm.StaticTypeRegister<Generic>();
+            imageVm.GlobalVariableRegister("generic", new Generic());
+            if (isAotCheck)
+                Assert.Throws<NotSupportedException>(() => RunImage(vm, imageVm, "main").Eval());
+            else
+                Assert.Equal(expect, RunImage(vm, imageVm, "main").Eval());
         }
 
         /// <summary>
@@ -1012,6 +1111,11 @@ end", 1)]
             vm.ParseAndLoad(str);
             vm.Compile();
             Assert.Equal(expect, vm.Run("main").Eval());
+            
+            var imageVm = CreateVM();
+            imageVm.StaticTypeRegister<Generic>();
+            imageVm.GlobalVariableRegister("generic", new Generic());
+            Assert.Equal(expect, RunImage(vm, imageVm, "main").Eval());
         }
     }
 }
