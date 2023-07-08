@@ -61,8 +61,8 @@ namespace MarineLang.VirtualMachines.BinaryImage
 
         private IReadOnlyDictionary<string, string> ReadMetadata()
         {
-            var dict = new Dictionary<string, string>();
             var count = this.Read7BitEncodedIntPolyfill();
+            var dict = new Dictionary<string, string>(count);
             for (int i = 0; i < count; i++)
             {
                 var key = ReadString();
