@@ -19,5 +19,10 @@ namespace MarineLang.VirtualMachines.MarineILs
                   )
               );
         }
+        
+        public static bool IsDebugIL(this IMarineIL marineIL)
+        {
+            return marineIL is PushDebugContextIL || marineIL is PopDebugContextIL;
+        }
     }
 }
