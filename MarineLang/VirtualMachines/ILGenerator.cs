@@ -601,7 +601,7 @@ namespace MarineLang.VirtualMachines
             marineILs.Add(new MoveNextIL());
             marineILs.Add(new JumpFalseIL(jumpIndex + 7));
             marineILs.Add(new LoadIL(iterVariable));
-            marineILs.Add(new GetIterCurrentL());
+            marineILs.Add(new GetIterCurrentIL());
             marineILs.Add(new YieldIL());
             marineILs.Add(new JumpIL(jumpIndex));
             marineILs.Add(new PushYieldCurrentRegisterIL());
